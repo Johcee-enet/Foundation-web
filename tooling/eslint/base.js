@@ -28,6 +28,23 @@ const config = {
       { checksVoidReturn: { attributes: false } },
     ],
     "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
+
+    // Allow escaping the compiler
+    "@typescript-eslint/ban-ts-comment": "error",
+
+    // Allow explicit `any`s
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-implicit-any": "off",
+
+    // START: Allow implicit `any`s
+    "@typescript-eslint/no-unsafe-argument": "off",
+    "@typescript-eslint/no-unsafe-assignment": "off",
+    "@typescript-eslint/no-unsafe-call": "off",
+    "@typescript-eslint/no-unsafe-member-access": "off",
+    "@typescript-eslint/no-unsafe-return": "off",
+    // END: Allow implicit `any`s
+
+    "@typescript-eslint/no-non-null-assertion": "off",
   },
   ignorePatterns: [
     "**/*.config.js",

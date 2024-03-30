@@ -1,144 +1,347 @@
-import { useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Link, Stack } from "expo-router";
-import { FlashList } from "@shopify/flash-list";
+import {
+  exchangeCodeAsync,
+  makeRedirectUri,
+  refreshAsync,
+  TokenResponse,
+  useAuthRequest,
+} from "expo-auth-session";
+import { Image } from "expo-image";
+import { Link, router } from "expo-router";
+// import BottomSheet, { BottomSheetMethods } from "@devvie/bottom-sheet";
+import * as WebBrowser from "expo-web-browser";
+import { getData, storeData } from "@/storageUtils";
+import { Env } from "@env";
+import { FontAwesome6 } from "@expo/vector-icons";
+import { useAction } from "convex/react";
 
-import type { RouterOutputs } from "~/utils/api";
-import { api } from "~/utils/api";
+import { api } from "@acme/api/src/convex/_generated/api";
 
-function PostCard(props: {
-  post: RouterOutputs["post"]["all"][number];
-  onDelete: () => void;
-}) {
-  return (
-    <View className="flex flex-row rounded-lg bg-muted p-4">
-      <View className="flex-grow">
-        <Link
-          asChild
-          href={{
-            pathname: "/post/[id]",
-            params: { id: props.post.id },
-          }}
-        >
-          <Pressable className="">
-            <Text className=" text-xl font-semibold text-primary">
-              {props.post.title}
-            </Text>
-            <Text className="mt-2 text-foreground">{props.post.content}</Text>
-          </Pressable>
-        </Link>
-      </View>
-      <Pressable onPress={props.onDelete}>
-        <Text className="font-bold uppercase text-primary">Delete</Text>
-      </Pressable>
-    </View>
-  );
-}
+WebBrowser.maybeCompleteAuthSession();
+const discovery = {
+  authorizationEndpoint: "https://twitter.com/i/oauth2/authorize",
+  tokenEndpoint: "https://twitter.com/i/oauth2/token",
+  revocationEndpoint: "https://twitter.com/i/oauth2/revoke",
+};
 
-function CreatePost() {
-  const utils = api.useUtils();
+export default function Register() {
+  const [email, setEmail] = useState("");
+  const [referreeCode, setReferreeCode] = useState("");
+  const [password, setPassword] = useState("");
+  const [userIsOnboarded, setUserIsOnbaorded] = useState(false);
 
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  // Code after return from twitter auth
+  const [authCode, setAuthCode] = useState<string>();
 
-  const { mutate, error } = api.post.create.useMutation({
-    async onSuccess() {
-      setTitle("");
-      setContent("");
-      await utils.post.all.invalidate();
+  const initiateUser = useAction(api.onboarding.initializeNewUser);
+  const loginUser = useAction(api.onboarding.loginUser);
+
+  const redirectUri = makeRedirectUri({
+    scheme: "com.enetminer.enet",
+    // path: "redirect",
+    isTripleSlashed: true,
+  });
+
+  // Twitter auth test
+  const [request, response, promptAsync] = useAuthRequest(
+    {
+      clientId: Env.TWITTER_CLIENT_ID,
+      redirectUri,
+      usePKCE: true,
+      scopes: [
+        "tweet.read",
+        "tweet.write",
+        "users.read",
+        "like.write",
+        "list.read",
+        "follows.write",
+        "follows.read",
+        "list.read",
+        "offline.access",
+      ],
     },
-  });
-
-  return (
-    <View className="mt-4 flex gap-2">
-      <TextInput
-        className=" items-center rounded-md border border-input bg-background px-3 text-lg leading-[1.25] text-foreground"
-        value={title}
-        onChangeText={setTitle}
-        placeholder="Title"
-      />
-      {error?.data?.zodError?.fieldErrors.title && (
-        <Text className="mb-2 text-destructive">
-          {error.data.zodError.fieldErrors.title}
-        </Text>
-      )}
-      <TextInput
-        className="items-center rounded-md border border-input bg-background px-3  text-lg leading-[1.25] text-foreground"
-        value={content}
-        onChangeText={setContent}
-        placeholder="Content"
-      />
-      {error?.data?.zodError?.fieldErrors.content && (
-        <Text className="mb-2 text-destructive">
-          {error.data.zodError.fieldErrors.content}
-        </Text>
-      )}
-      <Pressable
-        className="flex items-center rounded bg-primary p-2"
-        onPress={() => {
-          mutate({
-            title,
-            content,
-          });
-        }}
-      >
-        <Text className="text-foreground">Create</Text>
-      </Pressable>
-      {error?.data?.code === "UNAUTHORIZED" && (
-        <Text className="mt-2 text-destructive">
-          You need to be logged in to create a post
-        </Text>
-      )}
-    </View>
+    discovery,
   );
-}
 
-export default function Index() {
-  const utils = api.useUtils();
+  useEffect(() => {
+    console.log(request, redirectUri);
+    if (response && response?.type === "success") {
+      const { code } = response.params;
+      setAuthCode(code);
+      console.log(code, ":::Auth response code");
+    } else {
+      console.log(response, ":::Response from auth attempt");
+    }
+  }, [response]);
 
-  const postQuery = api.post.all.useQuery();
+  // Handle access_token exchange after twitter auth
+  useEffect(() => {
+    if (authCode && !!authCode.length) {
+      exchangeCodeForToken().catch((result) =>
+        console.log(result, ":::Resutl"),
+      );
+    }
 
-  const deletePostMutation = api.post.delete.useMutation({
-    onSettled: () => utils.post.all.invalidate().then(),
-  });
+    async function exchangeCodeForToken() {
+      const tokenResponse: TokenResponse = await exchangeCodeAsync(
+        { code: authCode!, redirectUri, clientId: Env.TWITTER_CLIENT_ID },
+        discovery,
+      );
+
+      console.log(tokenResponse, ":::Token response after redirect");
+
+      // Store the returned data
+      await storeData("@enet-store/isOnboarded", true);
+      await storeData("@enet0-store/token", {
+        access: tokenResponse.accessToken,
+        refresh: tokenResponse.refreshToken,
+      });
+
+      // Get basic user info before proceeding
+      // const userInfo = await fetchUserInfoAsync(tokenResponse, discovery);
+      // Call the
+    }
+  }, [authCode]);
+
+  // Handle user return after onboarding into the applicaiton
+  useEffect(() => {
+    getUserLocalData().catch((result) => console.log(result, ":::Resutl"));
+    async function getUserLocalData() {
+      try {
+        const isOnboarded = await getData("@enet-store/isOnboarded", true);
+        if (!isOnboarded) {
+          setUserIsOnbaorded(false);
+          console.log(isOnboarded, "Is false");
+          return;
+        } else {
+          setUserIsOnbaorded(true);
+          // Refresh token
+          const token = (await getData("@enet-store/token", true)) as Record<
+            string,
+            any
+          >;
+          if (!token) {
+            return;
+          } else {
+            // If token object is available then refresh the token and fetch new user details
+            const newToken = await refreshAsync(
+              { refreshToken: token?.refresh, clientId: Env.TWITTER_CLIENT_ID },
+              discovery,
+            );
+            console.log(newToken);
+
+            // Pass it to tweep fetch user badic details and redirect to dashboard
+          }
+        }
+      } catch (e: any) {
+        return Alert.alert("Onboarding error", e.message ?? e.toString());
+      }
+    }
+  }, [userIsOnboarded]);
 
   return (
-    <SafeAreaView className=" bg-background">
-      {/* Changes page title visible on the header */}
-      <Stack.Screen options={{ title: "Home Page" }} />
-      <View className="h-full w-full bg-background p-4">
-        <Text className="pb-2 text-center text-5xl font-bold text-foreground">
-          Create <Text className="text-primary">T3</Text> Turbo
-        </Text>
+    <SafeAreaView className="bg-[#EBEBEB]">
+      <KeyboardAvoidingView behavior={"position"}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView className="min-h-screen w-full bg-white">
+            <View className="flex h-auto w-full flex-col items-center justify-center rounded-b-[35px] bg-[#EBEBEB] py-8">
+              <Image
+                source={require("../../../assets/miner_onboard_img-1.png")}
+                style={{ width: 170, height: 170, alignItems: "center" }}
+              />
+              <Text
+                style={{ fontSize: 24 }}
+                className="font-[nunito] text-[24px] font-medium tracking-normal"
+              >
+                Welcome to Enetwallet
+              </Text>
+              <Text className="font-[nunito] text-[14px] font-light tracking-widest">
+                THE Web3 STANDARD
+              </Text>
+            </View>
+            <View className="flex h-auto w-full flex-col items-center justify-center px-[20px] py-5">
+              <Text className="mb-[27px] font-[nunito] text-xl font-medium">
+                Input your email address
+              </Text>
+              <TextInput
+                placeholder="Email address"
+                className="mb-[16px] w-full rounded-md bg-[#EBEBEB] px-6 py-4 font-[nunito] text-lg font-medium text-black placeholder:font-light placeholder:text-black"
+                onChangeText={(text) => setEmail(text)}
+              />
+              {!userIsOnboarded && (
+                <TextInput
+                  placeholder="Referral"
+                  className="w-full rounded-md bg-[#EBEBEB] px-6 py-4 font-[nunito] text-lg font-medium text-black placeholder:font-light placeholder:text-black"
+                  value={referreeCode}
+                  onChangeText={(text) => setReferreeCode(text)}
+                />
+              )}
+              {userIsOnboarded && (
+                <TextInput
+                  placeholder="Password"
+                  value={password}
+                  className="w-full rounded-md bg-[#EBEBEB] px-6 py-4 font-[nunito] text-lg font-medium text-black placeholder:font-light placeholder:text-black"
+                  onChangeText={(text) => setPassword(text)}
+                />
+              )}
+              <View className="w-full items-end justify-center">
+                {!userIsOnboarded && (
+                  <Link
+                    className="font-[nunito] font-medium text-blue-500"
+                    href="/"
+                    onPress={async (e) => {
+                      e.preventDefault();
+                      await storeData("@enet-store/isOnboarded", true);
 
-        <Pressable
-          onPress={() => void utils.post.all.invalidate()}
-          className="flex items-center rounded-lg bg-primary p-2"
-        >
-          <Text className="text-foreground"> Refresh posts</Text>
-        </Pressable>
+                      setUserIsOnbaorded(true);
+                    }}
+                  >
+                    Login
+                  </Link>
+                )}
+                {userIsOnboarded && (
+                  <Link
+                    className="font-[nunito] font-medium text-blue-500"
+                    href="/"
+                    onPress={async (e) => {
+                      e.preventDefault();
+                      await storeData("@enet-store/isOnboarded", false);
 
-        <View className="py-2">
-          <Text className="font-semibold italic text-primary">
-            Press on a post
-          </Text>
-        </View>
+                      setUserIsOnbaorded(false);
+                    }}
+                  >
+                    Signup
+                  </Link>
+                )}
+              </View>
+            </View>
 
-        <FlashList
-          data={postQuery.data}
-          estimatedItemSize={20}
-          ItemSeparatorComponent={() => <View className="h-2" />}
-          renderItem={(p) => (
-            <PostCard
-              post={p.item}
-              onDelete={() => deletePostMutation.mutate(p.item.id)}
-            />
-          )}
-        />
+            <View className="flex h-auto w-full flex-col items-center justify-center px-[20px]">
+              <View className="flex w-full flex-row items-center justify-center gap-3">
+                <Link
+                  suppressHighlighting
+                  href="/"
+                  className="flex flex-1 items-center justify-center overflow-hidden rounded-lg bg-black p-4 text-center font-[nunito] text-lg font-normal text-white transition-colors"
+                  onPress={async (e) => {
+                    try {
+                      e.preventDefault();
+                      // return router.push("/(main)/history");
+                      //
 
-        <CreatePost />
-      </View>
+                      // TODO: If user is onboarded already, then login
+                      if (userIsOnboarded) {
+                        if (!email.length || !password.length) {
+                          return Alert.alert(
+                            "Onbaording error",
+                            "Valid email or password must be entered",
+                          );
+                        }
+
+                        const user = await loginUser({ email, password });
+                        const userId = user?._id;
+                        // Store data to local storage
+                        await storeData("@enet-store/user", { email, userId });
+                        // @ts-expect-error something went wrong routing
+                        return router.push({
+                          pathname: "/(main)/dashboard",
+                          params: { email, userId, nickname: user?.nickname },
+                        });
+                      }
+
+                      if (!email.length) {
+                        return Alert.alert(
+                          "Onbaording error",
+                          "Valid email must be entered",
+                        );
+                      }
+
+                      // TODO: call server convex function to store users email and referral then send OTP to email address
+                      const userId = await initiateUser({
+                        referreeCode: !referreeCode.length
+                          ? referreeCode.trim()
+                          : undefined,
+                        email: email.trim(),
+                      });
+
+                      console.log(userId, ":::Result of stored user");
+
+                      // Store data to local storage
+                      await storeData("@enet-store/user", { email, userId });
+                      await storeData("@enet-store/isOnboarded", true);
+
+                      // @ts-expect-error something went wrong routing
+                      router.push({
+                        pathname: "/(onboarding)/otp",
+                        params: { email, userId },
+                      });
+                    } catch (e: any) {
+                      Alert.alert("Onboarding error", e.message);
+                    }
+                  }}
+                >
+                  {userIsOnboarded ? "Login" : "Signup"}
+                  {/* <Text className=""></Text> */}
+                </Link>
+                <Link
+                  suppressHighlighting
+                  href="/"
+                  disabled={!request}
+                  className="flex w-16 max-w-16 items-center justify-center overflow-hidden rounded-lg bg-black p-4 text-center font-[nunito] text-lg font-normal text-white transition-colors"
+                  onPress={async (e) => {
+                    e.preventDefault();
+
+                    console.log("Twitter button");
+
+                    await promptAsync({
+                      dismissButtonStyle: "close",
+                    });
+                  }}
+                >
+                  <FontAwesome6 name="x-twitter" size={20} color="white" />
+                </Link>
+              </View>
+
+              <Text className="mt-4 text-center font-[nunito] leading-6 text-black sm:max-w-xl">
+                By continuing, you agree to our{" "}
+                <Link
+                  // suppressHighlighting
+                  className="text-[#15BDCF]"
+                  href="/"
+                  onPress={async (e) => {
+                    // Call bottom sheet slider to display terms
+                    await WebBrowser.openBrowserAsync("https://");
+                  }}
+                >
+                  terms of service
+                </Link>{" "}
+                and{" "}
+                <Link
+                  // suppressHighlighting
+                  className="text-[#15BDCF]"
+                  href="/"
+                  onPress={async () => {
+                    await WebBrowser.openBrowserAsync("https://");
+                  }}
+                >
+                  privacy policy
+                </Link>
+                .
+              </Text>
+            </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

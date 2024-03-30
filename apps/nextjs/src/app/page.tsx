@@ -1,42 +1,126 @@
-import { Suspense } from "react";
+"use client";
 
-import { api } from "~/trpc/server";
-import { AuthShowcase } from "./_components/auth-showcase";
+import { useQueryWithAuth } from "@convex-dev/convex-lucia-auth/react";
+
+import type { Doc } from "@acme/api/src/convex/_generated/dataModel";
+import { api } from "@acme/api/src/convex/_generated/api";
+import MainLayout from "@acme/ui/src/components/layout/main";
 import {
-  CreatePostForm,
-  PostCardSkeleton,
-  PostList,
-} from "./_components/posts";
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@acme/ui/src/components/ui/avatar";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@acme/ui/src/components/ui/card";
+import { Overview } from "@acme/ui/src/components/ui/overview";
 
-export const runtime = "edge";
-
-export default async function HomePage() {
-  // You can await this here if you don't want to show Suspense fallback below
-  const posts = api.post.all();
-
+export default function Home() {
+  const data = useQueryWithAuth(api.adminQueries.dashboardData, {});
   return (
-    <main className="container h-screen py-16">
-      <div className="flex flex-col items-center justify-center gap-4">
-        <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-          Create <span className="text-primary">T3</span> Turbo
-        </h1>
-        <AuthShowcase />
-
-        <CreatePostForm />
-        <div className="w-full max-w-2xl overflow-y-scroll">
-          <Suspense
-            fallback={
-              <div className="flex w-full flex-col gap-4">
-                <PostCardSkeleton />
-                <PostCardSkeleton />
-                <PostCardSkeleton />
-              </div>
-            }
-          >
-            <PostList posts={posts} />
-          </Suspense>
-        </div>
+    <MainLayout>
+      <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-4">
+          <CardHeader>
+            <CardTitle>Overview</CardTitle>
+          </CardHeader>
+          <CardContent className="pl-2">
+            <Overview />
+          </CardContent>
+        </Card>
+        <Card className="col-span-3">
+          <CardHeader>
+            <CardTitle>Recent Users</CardTitle>
+            <CardDescription>New users onboarded.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RecentUsers recentUsers={data ? data.recentUsers : undefined} />
+          </CardContent>
+        </Card>
       </div>
-    </main>
+    </MainLayout>
+  );
+}
+
+function RecentUsers({
+  recentUsers,
+}: {
+  recentUsers: Doc<"user">[] | undefined;
+}) {
+  console.log(recentUsers);
+  return (
+    <div className="space-y-8">
+      {(recentUsers ? recentUsers : []).map((user, i) => (
+        <div key={i} className="flex items-center">
+          <Avatar className="h-9 w-9">
+            <AvatarImage src="/avatars/01.png" alt="Avatar" />
+            <AvatarFallback>
+              {user.nickname?.substring(0, 2).toUpperCase() ?? "OM"}
+            </AvatarFallback>
+          </Avatar>
+          <div className="ml-4 space-y-1">
+            <p className="text-sm font-medium leading-none">
+              {user?.nickname ?? "Olivia Martin"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {user?.email ?? "olivia.martin@email.com"}
+            </p>
+          </div>
+          <div className="ml-auto font-medium">
+            +$EN {user?.minedCount?.toLocaleString("en-US") ?? "1,999.00"}
+          </div>
+        </div>
+      ))}
+      {/* <div className="flex items-center">
+        <Avatar className="flex h-9 w-9 items-center justify-center space-y-0 border">
+          <AvatarImage src="/avatars/02.png" alt="Avatar" />
+          <AvatarFallback>JL</AvatarFallback>
+        </Avatar>
+        <div className="ml-4 space-y-1">
+          <p className="text-sm font-medium leading-none">Jackson Lee</p>
+          <p className="text-muted-foreground text-sm">jackson.lee@email.com</p>
+        </div>
+        <div className="ml-auto font-medium">+$39.00</div>
+      </div>
+      <div className="flex items-center">
+        <Avatar className="h-9 w-9">
+          <AvatarImage src="/avatars/03.png" alt="Avatar" />
+          <AvatarFallback>IN</AvatarFallback>
+        </Avatar>
+        <div className="ml-4 space-y-1">
+          <p className="text-sm font-medium leading-none">Isabella Nguyen</p>
+          <p className="text-muted-foreground text-sm">
+            isabella.nguyen@email.com
+          </p>
+        </div>
+        <div className="ml-auto font-medium">+$299.00</div>
+      </div>
+      <div className="flex items-center">
+        <Avatar className="h-9 w-9">
+          <AvatarImage src="/avatars/04.png" alt="Avatar" />
+          <AvatarFallback>WK</AvatarFallback>
+        </Avatar>
+        <div className="ml-4 space-y-1">
+          <p className="text-sm font-medium leading-none">William Kim</p>
+          <p className="text-muted-foreground text-sm">will@email.com</p>
+        </div>
+        <div className="ml-auto font-medium">+$99.00</div>
+      </div>
+      <div className="flex items-center">
+        <Avatar className="h-9 w-9">
+          <AvatarImage src="/avatars/05.png" alt="Avatar" />
+          <AvatarFallback>SD</AvatarFallback>
+        </Avatar>
+        <div className="ml-4 space-y-1">
+          <p className="text-sm font-medium leading-none">Sofia Davis</p>
+          <p className="text-muted-foreground text-sm">sofia.davis@email.com</p>
+        </div>
+        <div className="ml-auto font-medium">+$39.00</div>
+      </div> */}
+    </div>
   );
 }
