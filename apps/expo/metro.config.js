@@ -31,8 +31,8 @@ function withMonorepoPaths(config) {
 
   // #2 - Resolve modules within the project's `node_modules` first, then all monorepo modules
   config.resolver.nodeModulesPaths = [
-    path.resolve(projectRoot, "node_modules"),
     path.resolve(workspaceRoot, "node_modules"),
+    path.resolve(projectRoot, "node_modules"),
   ];
 
   return config;

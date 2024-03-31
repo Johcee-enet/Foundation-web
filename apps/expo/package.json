@@ -1,10 +1,10 @@
 {
   "name": "@acme/expo",
   "version": "0.1.0",
+  "main": "index.tsx",
   "private": true,
-  "main": "expo-router/entry",
   "scripts": {
-    "clean": "git clean -xdf android .expo .turbo node_modules",
+    "clean": "git clean -xdf .expo .turbo node_modules",
     "dev": "APP_ENV=local bunx expo run:android",
     "dev:android": "expo start --android",
     "dev:ios": "expo start --ios",
@@ -43,7 +43,7 @@
     "nativewind": "~4.0.36",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "react-native": "0.73.4",
+    "react-native": "0.73.6",
     "react-native-awesome-slider": "^2.5.1",
     "react-native-confirmation-code-field": "^7.3.2",
     "react-native-css-interop": "~0.0.34",

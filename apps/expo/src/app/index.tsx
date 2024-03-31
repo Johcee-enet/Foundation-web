@@ -157,7 +157,7 @@ export default function Register() {
           <ScrollView className="min-h-screen w-full bg-white">
             <View className="flex h-auto w-full flex-col items-center justify-center rounded-b-[35px] bg-[#EBEBEB] py-8">
               <Image
-                source={require("../../../assets/miner_onboard_img-1.png")}
+                source={require("../../assets/miner_onboard_img-1.png")}
                 style={{ width: 170, height: 170, alignItems: "center" }}
               />
               <Text
@@ -320,7 +320,9 @@ export default function Register() {
                   href="/"
                   onPress={async (e) => {
                     // Call bottom sheet slider to display terms
-                    await WebBrowser.openBrowserAsync("https://");
+                    await WebBrowser.openBrowserAsync(
+                      "https://enetecosystem.gitbook.io/foundation/terms-and-conditions",
+                    );
                   }}
                 >
                   terms of service
@@ -331,7 +333,9 @@ export default function Register() {
                   className="text-[#15BDCF]"
                   href="/"
                   onPress={async () => {
-                    await WebBrowser.openBrowserAsync("https://");
+                    await WebBrowser.openBrowserAsync(
+                      "https://enetecosystem.gitbook.io/foundation/privacy-policy",
+                    );
                   }}
                 >
                   privacy policy

@@ -128,7 +128,7 @@ export default function DashboardHeader({
                         text: "Cancel",
                         style: "cancel",
                         onPress: () => {
-                          /Empty block**/;
+                          /*Empty block*/
                         },
                       },
                       {
@@ -162,7 +162,7 @@ export default function DashboardHeader({
                           text: "Cancel",
                           style: "cancel",
                           onPress: () => {
-                            /Empty block**/;
+                            /*Empty block*/
                           },
                         },
                         {
