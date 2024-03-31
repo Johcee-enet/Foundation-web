@@ -1,5 +1,5 @@
-import { defineSchema, defineTable } from "convex/server";
 import { authTables } from "@convex-dev/convex-lucia-auth";
+import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema(
@@ -97,6 +97,11 @@ export default defineSchema(
       name: v.string(),
       logoStorageId: v.id("_storage"),
       isApproved: v.boolean(),
+    }),
+    config: defineTable({
+      miningCount: v.float64(),
+      miningHours: v.number(),
+      xpCount: v.float64(),
     }),
   },
   // If you ever get an error about schema mismatch

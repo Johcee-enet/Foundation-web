@@ -1,3 +1,4 @@
+import type { TokenResponse } from "expo-auth-session";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -14,19 +15,17 @@ import {
   exchangeCodeAsync,
   makeRedirectUri,
   refreshAsync,
-  TokenResponse,
   useAuthRequest,
 } from "expo-auth-session";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
-// import BottomSheet, { BottomSheetMethods } from "@devvie/bottom-sheet";
 import * as WebBrowser from "expo-web-browser";
 import { getData, storeData } from "@/storageUtils";
 import { Env } from "@env";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { useAction } from "convex/react";
 
-import { api } from "@acme/api/src/convex/_generated/api";
+import { api } from "@acme/api/convex/_generated/api";
 
 WebBrowser.maybeCompleteAuthSession();
 const discovery = {
@@ -48,10 +47,13 @@ export default function Register() {
   const loginUser = useAction(api.onboarding.loginUser);
 
   const redirectUri = makeRedirectUri({
+    // native: "com.enetminer.enet/",
     scheme: "com.enetminer.enet",
-    // path: "redirect",
+    path: "/",
     isTripleSlashed: true,
   });
+
+  console.log(redirectUri, ":::Redirect URI");
 
   // Twitter auth test
   const [request, response, promptAsync] = useAuthRequest(
@@ -155,25 +157,26 @@ export default function Register() {
       <KeyboardAvoidingView behavior={"position"}>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView className="min-h-screen w-full bg-white">
-            <View className="flex h-auto w-full flex-col items-center justify-center rounded-b-[35px] bg-[#EBEBEB] py-8">
+            <View className="flex h-auto w-full flex-col items-center justify-center gap-4 rounded-b-[35px] bg-[#EBEBEB] py-6">
               <Image
-                source={require("../../assets/miner_onboard_img-1.png")}
+                source={require("../../assets/foundation_logo.png")}
                 style={{ width: 170, height: 170, alignItems: "center" }}
               />
               <Text
                 style={{ fontSize: 24 }}
-                className="font-[nunito] text-[24px] font-medium tracking-normal"
+                className="font-[nunito] text-[24px] font-bold tracking-normal"
               >
-                Welcome to Enetwallet
+                Welcome to Foundation
               </Text>
               <Text className="font-[nunito] text-[14px] font-light tracking-widest">
                 THE Web3 STANDARD
               </Text>
             </View>
             <View className="flex h-auto w-full flex-col items-center justify-center px-[20px] py-5">
-              <Text className="mb-[27px] font-[nunito] text-xl font-medium">
+              {/* <Text className="mb-[27px] font-[nunito] text-xl font-medium">
                 Input your email address
-              </Text>
+              </Text> */}
+              <View style={{ marginVertical: 10 }} />
               <TextInput
                 placeholder="Email address"
                 className="mb-[16px] w-full rounded-md bg-[#EBEBEB] px-6 py-4 font-[nunito] text-lg font-medium text-black placeholder:font-light placeholder:text-black"
@@ -198,7 +201,7 @@ export default function Register() {
               <View className="w-full items-end justify-center">
                 {!userIsOnboarded && (
                   <Link
-                    className="font-[nunito] font-medium text-blue-500"
+                    className="font-[nunito] text-lg font-semibold text-blue-500"
                     href="/"
                     onPress={async (e) => {
                       e.preventDefault();
@@ -212,7 +215,7 @@ export default function Register() {
                 )}
                 {userIsOnboarded && (
                   <Link
-                    className="font-[nunito] font-medium text-blue-500"
+                    className="font-[nunito] text-lg font-semibold text-blue-500"
                     href="/"
                     onPress={async (e) => {
                       e.preventDefault();
@@ -231,7 +234,7 @@ export default function Register() {
               <View className="flex w-full flex-row items-center justify-center gap-3">
                 <Link
                   suppressHighlighting
-                  href="/"
+                  href="/#"
                   className="flex flex-1 items-center justify-center overflow-hidden rounded-lg bg-black p-4 text-center font-[nunito] text-lg font-normal text-white transition-colors"
                   onPress={async (e) => {
                     try {
@@ -252,7 +255,7 @@ export default function Register() {
                         const userId = user?._id;
                         // Store data to local storage
                         await storeData("@enet-store/user", { email, userId });
-                        // @ts-expect-error something went wrong routing
+
                         return router.push({
                           pathname: "/(main)/dashboard",
                           params: { email, userId, nickname: user?.nickname },
@@ -280,7 +283,6 @@ export default function Register() {
                       await storeData("@enet-store/user", { email, userId });
                       await storeData("@enet-store/isOnboarded", true);
 
-                      // @ts-expect-error something went wrong routing
                       router.push({
                         pathname: "/(onboarding)/otp",
                         params: { email, userId },
@@ -295,13 +297,14 @@ export default function Register() {
                 </Link>
                 <Link
                   suppressHighlighting
-                  href="/"
+                  href="/#"
                   disabled={!request}
                   className="flex w-16 max-w-16 items-center justify-center overflow-hidden rounded-lg bg-black p-4 text-center font-[nunito] text-lg font-normal text-white transition-colors"
                   onPress={async (e) => {
                     e.preventDefault();
 
-                    console.log("Twitter button");
+                    console.log("Twitter button", redirectUri);
+                    return;
 
                     await promptAsync({
                       dismissButtonStyle: "close",
@@ -312,13 +315,14 @@ export default function Register() {
                 </Link>
               </View>
 
-              <Text className="mt-4 text-center font-[nunito] leading-6 text-black sm:max-w-xl">
+              <Text className="mx-5 mt-8 text-center font-[nunito] text-lg leading-6 text-black">
                 By continuing, you agree to our{" "}
                 <Link
                   // suppressHighlighting
                   className="text-[#15BDCF]"
-                  href="/"
+                  href="/#"
                   onPress={async (e) => {
+                    e.preventDefault();
                     // Call bottom sheet slider to display terms
                     await WebBrowser.openBrowserAsync(
                       "https://enetecosystem.gitbook.io/foundation/terms-and-conditions",
@@ -331,8 +335,9 @@ export default function Register() {
                 <Link
                   // suppressHighlighting
                   className="text-[#15BDCF]"
-                  href="/"
-                  onPress={async () => {
+                  href="/#"
+                  onPress={async (e) => {
+                    e.preventDefault();
                     await WebBrowser.openBrowserAsync(
                       "https://enetecosystem.gitbook.io/foundation/privacy-policy",
                     );

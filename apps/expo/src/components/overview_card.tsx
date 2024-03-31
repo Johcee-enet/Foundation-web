@@ -1,4 +1,4 @@
-import { FC } from "react";
+import type { FC } from "react";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { ImageBackground } from "expo-image";

@@ -22,7 +22,7 @@ import {
   Octicons,
 } from "@expo/vector-icons";
 
-import type { Doc } from "@acme/api/src/convex/_generated/dataModel";
+import type { Doc } from "@acme/api/convex/_generated/dataModel";
 
 // import { useMutation, useQuery } from "convex/react";
 // import { api } from "@acme/api/src/convex/_generated/api";

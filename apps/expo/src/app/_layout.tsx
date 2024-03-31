@@ -30,7 +30,6 @@ export default function Layout() {
         any
       >;
       if (user) {
-        // @ts-expect-error pathname error
         router.replace({ pathname: "/(main)/dashboard", params: { ...user } });
       }
     }

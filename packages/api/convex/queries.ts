@@ -1,6 +1,8 @@
-import { Id } from "./_generated/dataModel";
-import { action, internalQuery, query } from "./_generated/server";
 import { v } from "convex/values";
+
+import { Id } from "./_generated/dataModel";
+import { internalQuery, query } from "./_generated/server";
+
 // import { DataModel } from "./_generated/dataModel"
 
 // Get User OTP secret from the db and return
@@ -17,7 +19,7 @@ export const getOTPSecret = internalQuery({
       throw new Error("No user exists with that email");
     }
 
-    return user?.otpSecret as string;
+    return user.otpSecret!;
   },
 });
 
@@ -42,7 +44,7 @@ export const getUserDetails = query({
   },
 });
 
-function calculateRank(users: Array<any>, userId: Id<"user">): number {
+function calculateRank(users: any[], userId: Id<"user">): number {
   const sortedUsers = users.slice().sort((a, b) => b.xpCount - a.xpCount);
   const userIndex = sortedUsers.findIndex((user) => user._id === userId);
   return userIndex + 1; // Adding 1 because array index starts from 0 but rank starts from 1
@@ -134,17 +136,14 @@ export const getOnlyXpHistory = query({
   },
 });
 
-
 export const fetchTasks = query({
-  handler: async ({db}) => {
+  handler: async ({ db }) => {
     return await db.query("tasks").collect();
-  }
-})
-
+  },
+});
 
 export const fetchEvents = query({
-  handler: async ({db, storage}) => {
-    
+  handler: async ({ db, storage }) => {
     const events = await db.query("events").collect();
 
     return await Promise.all(
@@ -154,7 +153,7 @@ export const fetchEvents = query({
         //   throw new Error("No company found");
         // }
         const logoUrl = await storage.getUrl(
-          company?.logoStorageId as Id<"_storage">
+          company?.logoStorageId as Id<"_storage">,
         );
 
         return {
@@ -164,7 +163,7 @@ export const fetchEvents = query({
             logoUrl: logoUrl ?? "",
           },
         };
-      })
+      }),
     );
-  }
-})
+  },
+});

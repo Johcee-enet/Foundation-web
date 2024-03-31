@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction } from "react";
+import type { Dispatch, FC, SetStateAction } from "react";
 import {
   Alert,
   Modal,
@@ -21,8 +21,8 @@ import {
 } from "@expo/vector-icons";
 import { useMutation } from "convex/react";
 
-import type { Id } from "@acme/api/src/convex/_generated/dataModel";
-import { api } from "@acme/api/src/convex/_generated/api";
+import type { Id } from "@acme/api/convex/_generated/dataModel";
+import { api } from "@acme/api/convex/_generated/api";
 
 export default function DashboardHeader({
   top,

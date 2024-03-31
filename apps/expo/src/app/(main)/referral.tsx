@@ -21,8 +21,8 @@ import { SimpleLineIcons } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
 import { useQuery } from "convex/react";
 
-import type { Id } from "@acme/api/src/convex/_generated/dataModel";
-import { api } from "@acme/api/src/convex/_generated/api";
+import type { Id } from "@acme/api/convex/_generated/dataModel";
+import { api } from "@acme/api/convex/_generated/api";
 
 export default function ReferralPage() {
   const { top } = useSafeAreaInsets();

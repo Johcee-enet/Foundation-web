@@ -1,10 +1,11 @@
 // TODO: Create convex action to store user data, create OTP and send email with novu
-import { action, mutation, query } from "./_generated/server";
-import { v } from "convex/values";
-import { internal } from "./_generated/api";
-import { customAlphabet } from "nanoid";
-import { Id } from "./_generated/dataModel";
 import bcrypt from "bcryptjs";
+import { v } from "convex/values";
+import { customAlphabet } from "nanoid";
+
+import type { Id } from "./_generated/dataModel";
+import { internal } from "./_generated/api";
+import { action, mutation } from "./_generated/server";
 
 // Random OTP code
 const generateOTPCode = customAlphabet("0123456789", 6);
@@ -159,7 +160,7 @@ export const isNicknameValid = mutation({
 
     const users = await ctx.db.query("user").collect();
 
-    if (!users || !users.length) return true;
+    if (!users.length) return true;
 
     const isNotValid: boolean = users.some(
       (user) => user?.nickname === nickname,

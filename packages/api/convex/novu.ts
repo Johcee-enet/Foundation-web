@@ -1,12 +1,13 @@
 "use node";
 
-import { internalAction } from "./_generated/server";
-import { v } from "convex/values";
 // novu
 import { Novu } from "@novu/node";
+import { v } from "convex/values";
+
+import { internalAction } from "./_generated/server";
 
 // init novu
-const novu = new Novu(process.env.NOVU_API_KEY as string);
+const novu = new Novu(process.env.NOVU_API_KEY!);
 
 export const triggerOTPWorkflow = internalAction({
   args: { userId: v.string(), email: v.string(), otp: v.string() },

@@ -11,7 +11,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: "portrait",
   icon: "./assets/icon.png",
   splash: {
-    image: "./assets/splash.png",
+    image: "./assets/new_splash.png",
     resizeMode: "contain",
     backgroundColor: "#F5F5F5",
   },

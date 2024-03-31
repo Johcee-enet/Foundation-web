@@ -17,8 +17,8 @@ import Header from "@/components/header";
 import { FlashList } from "@shopify/flash-list";
 import { useQuery } from "convex/react";
 
-import type { Doc, Id } from "@acme/api/src/convex/_generated/dataModel";
-import { api } from "@acme/api/src/convex/_generated/api";
+import type { Doc, Id } from "@acme/api/convex/_generated/dataModel";
+import { api } from "@acme/api/convex/_generated/api";
 
 export default function HistoryPage() {
   const params = useLocalSearchParams();

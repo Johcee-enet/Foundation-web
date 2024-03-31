@@ -25,8 +25,8 @@ import { Link, router, Stack, useLocalSearchParams } from "expo-router";
 import Header from "@/components/header";
 import { useAction } from "convex/react";
 
-import type { Id } from "@acme/api/src/convex/_generated/dataModel";
-import { api } from "@acme/api/src/convex/_generated/api";
+import type { Id } from "@acme/api/convex/_generated/dataModel";
+import { api } from "@acme/api/convex/_generated/api";
 
 const CELL_COUNT = 6;
 

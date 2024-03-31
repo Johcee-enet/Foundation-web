@@ -20,8 +20,8 @@ import Header from "@/components/header";
 import Input from "@/components/input";
 import { useAction } from "convex/react";
 
-import type { Id } from "@acme/api/src/convex/_generated/dataModel";
-import { api } from "@acme/api/src/convex/_generated/api";
+import type { Id } from "@acme/api/convex/_generated/dataModel";
+import { api } from "@acme/api/convex/_generated/api";
 
 const checkPasswordStrength = (password: string): number => {
   const regex = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-zA-Z]).{8,}$/;

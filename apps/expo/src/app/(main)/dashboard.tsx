@@ -35,8 +35,8 @@ import { MaterialIcons, Octicons } from "@expo/vector-icons";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { format } from "date-fns";
 
-import type { Doc, Id } from "@acme/api/src/convex/_generated/dataModel";
-import { api } from "@acme/api/src/convex/_generated/api";
+import type { Doc, Id } from "@acme/api/convex/_generated/dataModel";
+import { api } from "@acme/api/convex/_generated/api";
 
 export type EventType = Partial<Doc<"events">> & {
   company: Partial<Doc<"company">> & { logoUrl: string };
@@ -301,7 +301,6 @@ export default function DashboardPage() {
 
                 <TouchableOpacity
                   onPress={() =>
-                    // @ts-expect-error routing
                     router.push({ pathname: "/(main)/referral", params })
                   }
                   className="flex w-full flex-row items-start justify-start gap-3 rounded-xl border border-dashed border-[#B3B2B2]/50 bg-[#EBEBEB] p-4"
