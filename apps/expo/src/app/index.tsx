@@ -77,7 +77,6 @@ export default function Register() {
   );
 
   useEffect(() => {
-    console.log(request, redirectUri);
     if (response && response?.type === "success") {
       const { code } = response.params;
       setAuthCode(code);
@@ -114,7 +113,7 @@ export default function Register() {
       // const userInfo = await fetchUserInfoAsync(tokenResponse, discovery);
       // Call the
     }
-  }, [authCode]);
+  }, [authCode, redirectUri]);
 
   // Handle user return after onboarding into the applicaiton
   useEffect(() => {
