@@ -54,7 +54,10 @@ export default function ReferralPage() {
             />
 
             <View className="flex h-full w-full flex-1 flex-col py-4">
-              <View className="flex w-full flex-col px-[20px]">
+              <View
+                style={{ gap: 10 }}
+                className="flex w-full flex-col px-[20px]"
+              >
                 <Text
                   style={{ fontSize: 20, fontWeight: "500" }}
                   className="font-[nunito]"
@@ -77,10 +80,13 @@ export default function ReferralPage() {
                     await copyToClipboard();
                     Alert.alert("Link copied to clipboard");
                   }}
-                  className="flex w-36 flex-row items-center justify-center gap-2 rounded-lg bg-black py-2"
+                  className="flex w-36 flex-row items-center justify-center gap-2 rounded-lg bg-black px-3 py-2"
                 >
                   <SimpleLineIcons name="share-alt" size={18} color="white" />
-                  <Text className="font-[nunito] text-lg text-white">
+                  <Text
+                    style={{ fontSize: 13 }}
+                    className="font-[nunito] text-white"
+                  >
                     Share code
                   </Text>
                 </TouchableOpacity>
