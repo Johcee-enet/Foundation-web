@@ -1,4 +1,4 @@
-import type { TokenResponse } from "expo-auth-session";
+// import type { TokenResponse } from "expo-auth-session";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  exchangeCodeAsync,
+  // exchangeCodeAsync,
   makeRedirectUri,
   refreshAsync,
   useAuthRequest,
@@ -21,6 +21,7 @@ import { Image } from "expo-image";
 import { Link, router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { getData, storeData } from "@/storageUtils";
+import { TwitterAuth } from "@/twitterUtils";
 import { Env } from "@env";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { useAction } from "convex/react";
@@ -97,8 +98,9 @@ export default function Register() {
         .catch((error: any) =>
           console.log(error.message ?? error.toString(), ":::Resutl"),
         );
-    } else {
-      Alert.alert("Authcode was not saved");
+    } else if (!authCode && !response) {
+      // Only run after authing
+      Alert.alert("Authcode was not saved or returned after authentication");
     }
 
     async function exchangeCodeForToken() {
@@ -109,29 +111,32 @@ export default function Register() {
         ":::Requirements for exchange",
       );
       try {
-        const tokenResponse = await exchangeCodeAsync(
-          { code: authCode!, redirectUri, clientId: Env.TWITTER_CLIENT_ID },
-          discovery,
-        );
+        // Get TwitterAuth namespace
+        if (authCode && redirectUri && request) {
+          const tokenResponse = await TwitterAuth.exchangeCodeForToken({
+            code: authCode,
+            clientId: Env.TWITTER_CLIENT_ID,
+            redirectUrl: redirectUri,
+            codeVerifier: request.codeChallenge!,
+          });
+          console.log(tokenResponse, ":::Token response");
+          return;
 
-        console.log(tokenResponse, ":::Token response after redirect");
+          // Store the returned data
+          storeData("@enet-store/isOnboarded", true);
+          storeData("@enet0-store/token", {
+            access: tokenResponse.accessToken,
+            refresh: tokenResponse.refreshToken,
+          });
 
-        // Store the returned data
-        storeData("@enet-store/isOnboarded", true);
-        storeData("@enet0-store/token", {
-          access: tokenResponse.accessToken,
-          refresh: tokenResponse.refreshToken,
-        });
-
-        // Get basic user info before proceeding
-        // const userInfo = await fetchUserInfoAsync(tokenResponse, discovery);
-        // Call the
+          // Get basic user info before proceeding
+        }
       } catch (err: any) {
         console.log(err.message ?? err.toString(), ":::Error");
         throw new Error(err);
       }
     }
-  }, [authCode, redirectUri]);
+  }, [authCode, redirectUri, response, request]);
 
   // Handle user return after onboarding into the applicaiton
   useEffect(() => {
