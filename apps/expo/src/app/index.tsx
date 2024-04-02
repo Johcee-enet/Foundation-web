@@ -104,8 +104,8 @@ export default function Register() {
       console.log(tokenResponse, ":::Token response after redirect");
 
       // Store the returned data
-      await storeData("@enet-store/isOnboarded", true);
-      await storeData("@enet0-store/token", {
+      storeData("@enet-store/isOnboarded", true);
+      storeData("@enet0-store/token", {
         access: tokenResponse.accessToken,
         refresh: tokenResponse.refreshToken,
       });
@@ -121,7 +121,7 @@ export default function Register() {
     getUserLocalData().catch((result) => console.log(result, ":::Resutl"));
     async function getUserLocalData() {
       try {
-        const isOnboarded = await getData("@enet-store/isOnboarded", true);
+        const isOnboarded = getData("@enet-store/isOnboarded", true);
         if (!isOnboarded) {
           setUserIsOnbaorded(false);
           console.log(isOnboarded, "Is false");
@@ -129,7 +129,7 @@ export default function Register() {
         } else {
           setUserIsOnbaorded(true);
           // Refresh token
-          const token = (await getData("@enet-store/token", true)) as Record<
+          const token = getData("@enet-store/token", true) as Record<
             string,
             any
           >;
@@ -203,9 +203,9 @@ export default function Register() {
                   <Link
                     className="font-[nunito] text-lg font-semibold text-blue-500"
                     href="/"
-                    onPress={async (e) => {
+                    onPress={(e) => {
                       e.preventDefault();
-                      await storeData("@enet-store/isOnboarded", true);
+                      storeData("@enet-store/isOnboarded", true);
 
                       setUserIsOnbaorded(true);
                     }}
@@ -217,9 +217,9 @@ export default function Register() {
                   <Link
                     className="font-[nunito] text-lg font-semibold text-blue-500"
                     href="/"
-                    onPress={async (e) => {
+                    onPress={(e) => {
                       e.preventDefault();
-                      await storeData("@enet-store/isOnboarded", false);
+                      storeData("@enet-store/isOnboarded", false);
 
                       setUserIsOnbaorded(false);
                     }}
@@ -254,7 +254,7 @@ export default function Register() {
                         const user = await loginUser({ email, password });
                         const userId = user?._id;
                         // Store data to local storage
-                        await storeData("@enet-store/user", { email, userId });
+                        storeData("@enet-store/user", { email, userId });
 
                         return router.push({
                           pathname: "/(main)/dashboard",
@@ -280,8 +280,8 @@ export default function Register() {
                       console.log(userId, ":::Result of stored user");
 
                       // Store data to local storage
-                      await storeData("@enet-store/user", { email, userId });
-                      await storeData("@enet-store/isOnboarded", true);
+                      storeData("@enet-store/user", { email, userId });
+                      storeData("@enet-store/isOnboarded", true);
 
                       router.push({
                         pathname: "/(onboarding)/otp",
@@ -304,7 +304,6 @@ export default function Register() {
                     e.preventDefault();
 
                     console.log("Twitter button", redirectUri);
-                    return;
 
                     await promptAsync({
                       dismissButtonStyle: "close",
