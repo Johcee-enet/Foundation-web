@@ -1,10 +1,10 @@
 import type { EventType } from "@/app/(main)/dashboard";
-import React, { Suspense, useRef, useState } from "react";
+import type { EmbedResponse } from "@/twitterUtils";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  ScrollView,
   Text,
-  // useWindowDimensions,
-  // Touchable,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -13,13 +13,12 @@ import Carousel from "react-native-reanimated-carousel";
 import { useSafeAreaFrame } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { useLocalSearchParams } from "expo-router";
+import { tweetEmbed } from "@/twitterUtils";
 import {
   AntDesign,
-  Feather,
   FontAwesome5,
   FontAwesome6,
   MaterialIcons,
-  Octicons,
 } from "@expo/vector-icons";
 
 import type { Doc } from "@acme/api/convex/_generated/dataModel";
@@ -72,82 +71,119 @@ export default function TaskBoostCard({
 
   return (
     <View className="mb-32 flex w-full flex-col gap-2">
-      <View className="flex w-full flex-row rounded-md bg-white p-2">
-        <TouchableOpacity
+      <View style={{ borderRadius: 12 }} className="w-full bg-white p-2">
+        <View
           style={{
-            backgroundColor: sliderIndex === 0 ? "black" : "transparent",
-          }}
-          className="flex w-1/3 flex-row items-center justify-center gap-2 rounded-xl p-3 transition-colors"
-          onPress={() => {
-            // @ts-expect-error something went wrong carousel scroll
-            sliderRef.current.scrollTo({ index: 0, animated: true });
-            setSliderIndex(0);
+            backgroundColor: "#EBEBEB",
+            borderRadius: 11,
+            width: "100%",
+            display: "flex",
+            flexDirection: "row",
           }}
         >
-          <Octicons
-            name="database"
-            size={16}
-            color={sliderIndex === 0 ? "white" : "black"}
-          />
-          <Text
-            className="font-[nunito] transition-colors"
+          <TouchableOpacity
             style={{
-              color: sliderIndex === 0 ? "white" : "black",
+              backgroundColor: sliderIndex === 0 ? "black" : "transparent",
+              borderRadius: 11,
+            }}
+            className="flex w-1/3 flex-row items-center justify-center gap-1 rounded-xl p-3 transition-colors"
+            onPress={() => {
+              // @ts-expect-error something went wrong carousel scroll
+              sliderRef.current.scrollTo({ index: 0, animated: true });
+              setSliderIndex(0);
             }}
           >
-            Tasks
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={{
-            backgroundColor: sliderIndex === 1 ? "black" : "transparent",
-          }}
-          className="flex w-1/3 flex-row items-center justify-center gap-2 rounded-xl p-3 transition-colors"
-          onPress={() => {
-            // @ts-expect-error something went wrong carousel scroll
-            sliderRef.current.scrollTo({ index: 1, animated: true });
-            setSliderIndex(1);
-          }}
-        >
-          <MaterialIcons
-            name="double-arrow"
-            size={16}
-            color={sliderIndex === 1 ? "white" : "black"}
-          />
-          <Text
-            className="font-[nunito] transition-colors"
+            {sliderIndex === 0 ? (
+              <Image
+                source={require("../../assets/main/icons/tasks_coin_white.png")}
+                style={{ width: 16, height: 16 }}
+                resizeMode="contain"
+              />
+            ) : (
+              <Image
+                source={require("../../assets/main/icons/tasks_coin_black.png")}
+                style={{ width: 16, height: 16 }}
+                resizeMode="contain"
+              />
+            )}
+            <Text
+              className="font-[nunito] transition-colors"
+              style={{
+                color: sliderIndex === 0 ? "white" : "black",
+              }}
+            >
+              Tasks
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={{
-              color: sliderIndex === 1 ? "white" : "black",
+              backgroundColor: sliderIndex === 1 ? "black" : "transparent",
+              borderRadius: 11,
+            }}
+            className="flex w-1/3 flex-row items-center justify-center gap-1 rounded-xl p-3 transition-colors"
+            onPress={() => {
+              // @ts-expect-error something went wrong carousel scroll
+              sliderRef.current.scrollTo({ index: 1, animated: true });
+              setSliderIndex(1);
             }}
           >
-            Events
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={{
-            backgroundColor: sliderIndex === 2 ? "black" : "transparent",
-          }}
-          className="flex w-1/3 flex-row items-center justify-center gap-2 rounded-xl p-3 transition-colors"
-          onPress={() => {
-            // @ts-expect-error something went wrong carousel scroll
-            sliderRef.current.scrollTo({ index: 2, animated: true });
-            setSliderIndex(2);
-          }}
-        >
-          <Feather
-            name="zap"
-            size={16}
-            color={sliderIndex === 2 ? "white" : "black"}
-          />
-          <Text
-            className="font-[nunito] transition-colors"
+            {sliderIndex === 1 ? (
+              <Image
+                source={require("../../assets/main/icons/events_double_arrow_white.png")}
+                style={{ width: 20, height: 20 }}
+                resizeMode="contain"
+              />
+            ) : (
+              <Image
+                source={require("../../assets/main/icons/events_double_arrow_black.png")}
+                style={{ width: 20, height: 20 }}
+                resizeMode="contain"
+              />
+            )}
+            <Text
+              className="font-[nunito] transition-colors"
+              style={{
+                color: sliderIndex === 1 ? "white" : "black",
+              }}
+            >
+              Events
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={{
-              color: sliderIndex === 2 ? "white" : "black",
+              backgroundColor: sliderIndex === 2 ? "black" : "transparent",
+              borderRadius: 11,
+            }}
+            className="flex w-1/3 flex-row items-center justify-center gap-1 rounded-xl p-3 transition-colors"
+            onPress={() => {
+              // @ts-expect-error something went wrong carousel scroll
+              sliderRef.current.scrollTo({ index: 2, animated: true });
+              setSliderIndex(2);
             }}
           >
-            Boosts
-          </Text>
-        </TouchableOpacity>
+            {sliderIndex === 2 ? (
+              <Image
+                source={require("../../assets/main/icons/boosts_flash_white.png")}
+                style={{ width: 16, height: 16 }}
+                resizeMode="contain"
+              />
+            ) : (
+              <Image
+                source={require("../../assets/main/icons/boosts_flash_black.png")}
+                style={{ width: 16, height: 16 }}
+                resizeMode="contain"
+              />
+            )}
+            <Text
+              className="font-[nunito] transition-colors"
+              style={{
+                color: sliderIndex === 2 ? "white" : "black",
+              }}
+            >
+              Boosts
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
       <Carousel
         ref={sliderRef}
@@ -171,17 +207,23 @@ export default function TaskBoostCard({
           /**/
         }}
         defaultIndex={0}
-        renderItem={({ index, item }) => {
-          console.log(item, ":::Items of carousel");
-
+        renderItem={({ index }) => {
           if (index === 0) {
             return (
-              <Tasks
-                key={index}
-                tasks={tasks}
-                params={{ userId: userId as string, ...params }}
-                onTaskPressed={onTaskPressed}
-              />
+              <ScrollView
+                style={{
+                  paddingBottom: 35,
+                  height: "100%",
+                }}
+                contentInsetAdjustmentBehavior="always"
+              >
+                <Tasks
+                  key={index}
+                  tasks={tasks}
+                  params={{ userId: userId as string, ...params }}
+                  onTaskPressed={onTaskPressed}
+                />
+              </ScrollView>
             );
           }
 
@@ -258,9 +300,23 @@ const Tasks: React.FC<ITaskProps> = ({ tasks, onTaskPressed }) => {
   console.log(tasks, ":::Tasks and events");
 
   return (
-    <View className="flex w-full flex-1 flex-col items-center justify-start gap-4 bg-white p-6 pb-14">
+    <View
+      style={{
+        paddingBottom: 35,
+        height: "100%",
+        alignItems: "center",
+        justifyContent: "flex-start",
+        gap: 24,
+        display: "flex",
+        flex: 1,
+        width: "100%",
+        flexDirection: "column",
+        backgroundColor: "white",
+        padding: 24,
+      }}
+    >
       <Text className="font-[nunito] text-xl text-black">
-        Simple task for more XP&aposs
+        Simple task for more XP's
       </Text>
       {/* <Text className="font-[nunito] -mt-3 text-lg text-black/50">
       10,000 XP Challenge
@@ -281,13 +337,13 @@ const Tasks: React.FC<ITaskProps> = ({ tasks, onTaskPressed }) => {
                 icons[task?.action.channel]
               }
             </View>
-            <View className="flex flex-col items-start justify-center gap-2">
+            <View className="flex flex-1 flex-col items-start justify-center gap-2">
               <Text className="font-[nunito] text-lg">{task?.name}</Text>
-              <Text className=" font-[nunito]">
+              <Text className="text-wrap font-[nunito]">
                 +{task?.reward.toLocaleString("en-US")} XP
               </Text>
             </View>
-            <View className="flex-1" />
+            {/* <View className="flex-1" /> */}
             <MaterialIcons
               name="keyboard-arrow-right"
               size={24}
@@ -371,7 +427,7 @@ const Events: React.FC<IEventProps> = ({ events, onEventPressed }) => {
               <View className="flex flex-col items-start justify-center gap-2">
                 <Text className="font-[nunito] text-lg">{event?.title}</Text>
                 <Text className="font-[nunito]">
-                  +{event?.reward.toLocaleString("en-US")} XP
+                  +{(event.reward ?? 0).toLocaleString("en-US")} XP
                 </Text>
               </View>
               <View className="flex-1" />
@@ -457,9 +513,11 @@ interface ITaskRenderProps {
   onCloseEvent: () => void;
   renderView: ({
     task,
+    embedData,
     // ref,
   }: {
     task: Doc<"tasks">;
+    embedData: EmbedResponse | undefined;
     // ref: React.MutableRefObject<BottomSheetMethods>;
   }) => React.ReactNode | JSX.Element;
 }
@@ -468,6 +526,22 @@ export const TaskRenderer: React.FC<ITaskRenderProps> = ({
   onCloseEvent,
   renderView,
 }) => {
+  const [embedData, setEmbedData] = useState<EmbedResponse | undefined>();
+
+  useEffect(() => {
+    setembedData().catch((error) =>
+      console.log(error, ":::Fetching embed data"),
+    );
+    async function setembedData() {
+      if (task) {
+        const embedData = await tweetEmbed({
+          tweetUrl: task?.action?.link,
+        });
+        setEmbedData(embedData);
+      }
+    }
+  }, [task]);
+
   return (
     <View className="flex h-full w-full flex-col items-center justify-between rounded-lg p-4 pb-24">
       <View className="flex w-full flex-row items-center justify-between">
@@ -481,7 +555,7 @@ export const TaskRenderer: React.FC<ITaskRenderProps> = ({
           <AntDesign name="close" size={24} color="black" />
         </TouchableOpacity>
       </View>
-      {renderView({ task })}
+      {renderView({ task, embedData })}
     </View>
   );
 };

@@ -1,7 +1,6 @@
 import type { BottomSheetMethods } from "@devvie/bottom-sheet";
 import { useEffect, useRef, useState } from "react";
 import {
-  // useWindowDimensions,
   Alert,
   Button,
   Keyboard,
@@ -22,6 +21,7 @@ import {
 import { WebView } from "react-native-webview";
 import { Image } from "expo-image";
 import { router, Stack, useLocalSearchParams } from "expo-router";
+// import { checkCountdown } from "@/appUtils";
 import ClaimModal from "@/components/claim_modal";
 import DashboardHeader from "@/components/dashboard_header";
 import { Overview } from "@/components/overview_card";
@@ -33,7 +33,7 @@ import TaskBoostCard, {
 import BottomSheet from "@devvie/bottom-sheet";
 import { MaterialIcons, Octicons } from "@expo/vector-icons";
 import { useAction, useMutation, useQuery } from "convex/react";
-import { format } from "date-fns";
+import { addHours, differenceInSeconds, formatDuration } from "date-fns";
 
 import type { Doc, Id } from "@acme/api/convex/_generated/dataModel";
 import { api } from "@acme/api/convex/_generated/api";
@@ -47,7 +47,7 @@ export type EventType = Partial<Doc<"events">> & {
 export default function DashboardPage() {
   const params = useLocalSearchParams();
   const { top, bottom } = useSafeAreaInsets();
-  const { height } = useSafeAreaFrame();
+  const { height, width } = useSafeAreaFrame();
   const [modalVisible, setModalVisible] = useState(false);
 
   // Fetch users data
@@ -84,6 +84,63 @@ export default function DashboardPage() {
 
   // console.log(bottom, top, ":::Bottom Top, size", height, height - top);
 
+  // Embeding
+  // const [tweetEmbedHeight, setTweetEmbedHeight] = useState<number>();
+  const [remaining, setRemaining] = useState<string>();
+  // countdown
+  useEffect(() => {
+    // Function to check if the countdown has ended
+
+    if (userDetail?.mineActive) {
+      checkCountdown({
+        startTime: userDetail.mineStartTime ?? Date.now(),
+        countdownDuration: userDetail?.mineHours,
+      });
+    }
+
+    function checkCountdown({
+      startTime,
+      countdownDuration = 6,
+    }: {
+      startTime: number;
+      countdownDuration: number;
+    }) {
+      // Set the start time of the countdown
+      // const startTime = new Date();
+
+      // Define the duration for the countdown (6 hours)
+      // const countdownDuration = 6;
+
+      // Calculate the end time for the countdown
+      const endTime = addHours(startTime, countdownDuration);
+
+      const currentTime = Date.now();
+      const remainingTime = differenceInSeconds(endTime, currentTime);
+
+      if (remainingTime <= 0) {
+        console.log("Countdown ended. Performing action...");
+        // Perform the action here
+      } else {
+        const formattedRemainingTime = formatDuration(
+          { seconds: remainingTime },
+          { format: ["hours", "minutes", "seconds"] },
+        );
+        const hours = Math.floor(remainingTime / 3600);
+        const minutes = Math.floor((remainingTime % 3600) / 60);
+        const seconds = remainingTime % 60;
+        console.log(`${hours} hours, ${minutes} minutes, ${seconds} seconds`);
+        console.log(`Time remaining: ${formattedRemainingTime}`);
+        // Check again after 1 second
+        setTimeout(
+          () => checkCountdown({ startTime, countdownDuration }),
+          1000,
+        );
+
+        setRemaining(`${hours}h ${minutes}m ${seconds}s`);
+      }
+    }
+  }, [userDetail, remaining]);
+
   return (
     <SafeAreaView
       className="bg-background"
@@ -99,10 +156,10 @@ export default function DashboardPage() {
             <View
               // style={{ bottom: bottom + 92 }}
               style={{
-                height: 100,
-                bottom: 100 - Math.max(bottom, 17),
+                height: 90,
+                bottom: 90 - Math.max(bottom, 17),
               }}
-              className="absolute left-0 right-0 z-50 flex w-full flex-col items-center justify-center gap-3 bg-white"
+              className="absolute left-0 right-0 z-50 flex w-full flex-col items-center justify-center gap-1 bg-white"
             >
               {!userDetail?.mineActive &&
                 (userDetail?.redeemableCount ?? 0) <= 0 && (
@@ -146,7 +203,7 @@ export default function DashboardPage() {
               {userDetail?.mineActive && userDetail?.redeemableCount >= 0 && (
                 <TouchableOpacity className="flex flex-row items-center gap-3 rounded-full border border-gray-600 bg-black px-4 py-3 shadow-lg drop-shadow-md">
                   <Text className="font-[nunito] font-medium text-white">
-                    Mining at {userDetail?.miningRate} $EN/hr
+                    Mining at {userDetail?.miningRate} $FOUND/hr
                   </Text>
                   <Octicons name="database" size={20} color="white" />
                 </TouchableOpacity>
@@ -159,19 +216,24 @@ export default function DashboardPage() {
                     className="flex flex-row items-center gap-3 rounded-full border border-gray-600 bg-black px-4 py-3 shadow-lg drop-shadow-md"
                   >
                     <Text className="font-[nunito] font-medium text-white">
-                      Claim reward $EN {userDetail?.redeemableCount}
+                      Claim reward $FOUND {userDetail?.redeemableCount}
                     </Text>
                     {/* <Octicons name="database" size={20} color="white" /> */}
                   </TouchableOpacity>
                 )}
               <Text className="font-[nunito]">
-                {userDetail &&
-                  format(
-                    userDetail?.mineStartTime
-                      ? userDetail.mineStartTime
-                      : Date.now(),
-                    "HH mm ss",
-                  )}
+                {
+                  userDetail && userDetail?.mineActive && remaining
+
+                  // format(
+                  //   userDetail?.mineStartTime
+                  //     ? userDetail.mineStartTime
+                  //     : Date.now(),
+                  //   "HH mm ss",
+                  // )
+                }
+
+                {userDetail && !userDetail?.mineActive && "5h 59m 59s"}
               </Text>
 
               <ClaimModal
@@ -208,7 +270,7 @@ export default function DashboardPage() {
                         />
                         <View className="flex flex-col items-start justify-center gap-1">
                           <Text className="text-lg font-normal text-black">
-                            {userDetail?.miningRate} $EN/hour
+                            {userDetail?.miningRate} $FOUND/hour
                           </Text>
                           <Text className="font-lighter text-sm text-black">
                             Mined by Auto Bot
@@ -243,7 +305,7 @@ export default function DashboardPage() {
                         [
                           "Boost your Auto Mining Bot to increase your mining time",
                           "Auto Mining will be enabled after one hour of inactivity.",
-                          "Boost your Mining Speed to earn more $EN per hour",
+                          "Boost your Mining Speed to earn more $FOUND per hour",
                         ][Math.floor(Math.random() * 3)]
                       }
                     </Text>
@@ -274,7 +336,7 @@ export default function DashboardPage() {
 
               <TouchableOpacity
                 activeOpacity={1}
-                className="flex h-full w-full flex-col px-[20px] py-6 pb-32"
+                className="flex h-full w-full flex-col px-[20px] pb-32"
               >
                 <StatsCard
                   minedCount={userDetail?.minedCount ?? 0}
@@ -283,10 +345,14 @@ export default function DashboardPage() {
                   redeemableCount={userDetail?.redeemableCount ?? 0}
                 />
 
-                <View className="my-4" />
-
-                <View className="mt-4 flex w-full flex-col gap-2">
-                  <Text className="font-[nunito] text-xl font-medium">
+                <View
+                  style={{ marginTop: 17 }}
+                  className="flex w-full flex-col gap-2"
+                >
+                  <Text
+                    style={{ fontSize: 16, fontWeight: "600" }}
+                    className="font-[nunito]"
+                  >
                     Overview
                   </Text>
                   <Overview
@@ -297,31 +363,36 @@ export default function DashboardPage() {
                   />
                 </View>
 
-                <View className="my-6" />
-
                 <TouchableOpacity
                   onPress={() =>
                     router.push({ pathname: "/(main)/referral", params })
                   }
-                  className="flex w-full flex-row items-start justify-start gap-3 rounded-xl border border-dashed border-[#B3B2B2]/50 bg-[#EBEBEB] p-4"
+                  style={{ marginTop: 37 }}
+                  className="flex w-full flex-row items-center justify-start gap-4 rounded-xl border border-dashed border-[#B3B2B2]/50 bg-[#EBEBEB] p-4"
                 >
                   <Image
                     source={require("../../../assets/main/invite.png")}
                     style={{ width: 50, height: 50 }}
                     alt="Referre"
                   />
-                  <View className="flex flex-col items-start justify-center gap-1">
-                    <Text className="font-[nunito] text-lg font-normal text-black">
+                  <View className="flex flex-1 flex-col items-start justify-center gap-1">
+                    <Text
+                      style={{ fontSize: 15, fontWeight: "400" }}
+                      className="font-[nunito] text-black"
+                    >
                       Invite Friends
                     </Text>
-                    <Text className="text-light font-[nunito] text-sm text-[#989898]">
-                      The more users you refer, the more star you earn
+                    <Text
+                      style={{ fontSize: 13, fontWeight: "400" }}
+                      className="text-light text-wrap font-[nunito] text-[10.5px] text-[#989898]"
+                    >
+                      The more users you refer, the more $FOUND you earn
                     </Text>
                   </View>
                 </TouchableOpacity>
-                <View className="my-6" />
+
                 {/* Task and boosts */}
-                <View className="mt-6 w-full flex-1">
+                <View style={{ marginTop: 36 }} className="w-full flex-1">
                   <TaskBoostCard
                     // eventSheetRef={eventSheetRef}
                     onEventPressed={(eventIndex: number) => {
@@ -411,6 +482,7 @@ export default function DashboardPage() {
           </View>
         </View>
       </BottomSheet>
+      {/* Tasks sheet */}
       <BottomSheet
         ref={taskSheetRef}
         height="90%"
@@ -420,26 +492,27 @@ export default function DashboardPage() {
           task={taskSheetContent!}
           // @ts-expect-error eventsheet open
           onCloseEvent={() => taskSheetRef.current.close()}
-          renderView={({ task }) => {
-            // console.log(taskSheetRef, ":::Ref");
+          renderView={({ task, embedData }) => {
+            console.log(width, task, ":::Ref width");
+
             return (
               <View className="flex h-full w-full flex-col gap-4">
-                <View className="flex w-full flex-1 gap-4 overflow-hidden">
+                <View className="flex w-full flex-1 overflow-hidden bg-green-400">
                   <WebView
                     originWhitelist={["*"]}
-                    className="h-full w-full"
-                    source={{ uri: task?.action?.link }}
+                    scalesPageToFit={false}
+                    source={{ html: embedData?.html ?? "" }}
                   />
                 </View>
                 <View className="flex flex-col gap-2">
-                  <Text className="font-[nunito] text-xl font-bold">
+                  <Text className="font-[nunito] text-lg font-bold">
                     Instructions
                   </Text>
-                  <Text className="font-[nunito] text-lg font-medium">
+                  <Text className="font-[nunito] text-sm font-medium">
                     Press the LIKE & REPOST button to automatically LIKE &
                     REPOST without redirecting you.
                   </Text>
-                  <Text className="font-[nunito] text-lg font-medium">
+                  <Text className="font-[nunito] text-sm font-medium">
                     Press the Proceed button to verify{" "}
                   </Text>
                 </View>

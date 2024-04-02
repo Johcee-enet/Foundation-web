@@ -71,7 +71,7 @@ export default function DashboardHeader({
                   className="my-2 flex w-full flex-row items-center justify-start gap-4"
                   onPress={() => {
                     setModalVisible(false);
-                    // @ts-expect-error something went wrong in route
+
                     router.push({ pathname: "/(main)/history", params });
                   }}
                 >
@@ -83,7 +83,6 @@ export default function DashboardHeader({
                 <Pressable
                   className="my-2 flex w-full flex-row items-center justify-start gap-4"
                   onPress={() => {
-                    // @ts-expect-error something went wrong in route
                     router.push({ pathname: "/(main)/leaderboard", params });
                     setModalVisible(false);
                   }}
@@ -136,9 +135,7 @@ export default function DashboardHeader({
                         style: "destructive",
                         onPress: () => {
                           // TODO: cleanup local data and logout
-                          removeData("@enet-store/user").catch((result) =>
-                            console.log(result),
-                          );
+                          removeData("@enet-store/user");
                           router.replace("/");
                         },
                       },
@@ -222,7 +219,10 @@ interface IUserAvatarProps {
 }
 const UserAvatar: FC<IUserAvatarProps> = ({ alt, nickname }) => (
   <View className="flex flex-row items-center justify-center gap-2">
-    <View className="h-[40px] w-[40px] overflow-hidden rounded-xl bg-[#14BBCC] p-1">
+    <View
+      style={{ width: 40, height: 40 }}
+      className="overflow-hidden rounded-xl bg-[#14BBCC] p-1"
+    >
       <Image
         source={require("../../assets/main/avatar.png")}
         alt={alt}
@@ -230,7 +230,12 @@ const UserAvatar: FC<IUserAvatarProps> = ({ alt, nickname }) => (
       />
     </View>
 
-    <Text className="font-[nunito] font-medium">{nickname}</Text>
+    <Text
+      style={{ fontSize: 15, fontWeight: "500" }}
+      className="font-[nunito] font-medium"
+    >
+      {nickname}
+    </Text>
   </View>
 );
 

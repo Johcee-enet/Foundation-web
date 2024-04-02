@@ -6,7 +6,7 @@ export const storage = new MMKV({
   encryptionKey: Env.LOCAL_STORE_ENC_KEY,
 });
 
-export const storeData = async (key: string, value: any): Promise<void> => {
+export const storeData = (key: string, value: any): void => {
   try {
     storage.set(key, JSON.stringify(value));
   } catch (e: any) {
@@ -15,10 +15,10 @@ export const storeData = async (key: string, value: any): Promise<void> => {
   }
 };
 
-export const getData = async (
+export const getData = (
   key: string,
   shouldParse?: boolean,
-): Promise<Record<string, any> | string | null> => {
+): Record<string, any> | string | null => {
   try {
     const value = storage.getString(key);
     return shouldParse && value ? JSON.parse(value) : value;
@@ -28,7 +28,7 @@ export const getData = async (
   }
 };
 
-export const removeData = async (key: string): Promise<void> => {
+export const removeData = (key: string): void => {
   try {
     storage.delete(key);
   } catch (e: any) {

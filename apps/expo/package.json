@@ -6,7 +6,10 @@
   "scripts": {
     "clean": "git clean -xdf .expo .turbo node_modules",
     "dev": "APP_ENV=local bunx expo run:android",
+    "dev:release": "APP_ENV=local bunx expo run:android --variant release",
     "dev:android": "expo start --android",
+    "build:eas-android": "eas build --platform android --profile preview",
+    "update:eas": "APP_ENV=local eas update",
     "dev:ios": "expo start --ios",
     "android": "expo run:android",
     "ios": "expo run:ios",

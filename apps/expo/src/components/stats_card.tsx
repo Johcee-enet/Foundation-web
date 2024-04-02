@@ -1,6 +1,6 @@
 import type { FC } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
-import { Image, ImageBackground } from "expo-image";
+import { Text, View } from "react-native";
+import { ImageBackground } from "expo-image";
 
 // import ClaimModal from "@/components/claim_modal";
 // import LinearGradient from "react-native-linear-gradient";
@@ -29,10 +29,11 @@ export const StatsCard: FC<IStatsCardProps> = ({
       source={require("../../assets/main/stats-bg.png")}
       style={{
         justifyContent: "center",
-        height: 180,
+        height: 171,
         width: "100%",
         backgroundColor: "#EBEBEB",
         borderRadius: 20,
+        marginTop: 15,
       }}
       contentFit="contain"
       contentPosition="center"
@@ -40,32 +41,35 @@ export const StatsCard: FC<IStatsCardProps> = ({
     >
       {/* States design */}
       <View className="flex h-full w-full flex-col items-start justify-end p-4">
-        <View className="flex flex-row items-end justify-center gap-2">
-          <TouchableOpacity className="flex h-20 w-12 items-end justify-end">
+        <View
+          style={{ marginHorizontal: 40 }}
+          className="flex flex-row items-end justify-center gap-2"
+        >
+          {/* <TouchableOpacity className="flex h-20 w-12 items-end justify-end">
             <Image
               source={require("../../assets/main/miner-fluid-low.png")}
               style={{ width: 40, height: 48, marginBottom: 10 }}
               contentFit="contain"
             />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <View className="flex flex-col items-start justify-center gap-2">
             <Text className="font-[nunito] text-lg font-light text-[#989898]">
-              $EN Mined
+              $FOUND Mined
             </Text>
-            <Text className="font-[nunito] text-2xl font-medium text-black">
-              $EN {minedCount}
+            <Text className="font-[nunito] text-2xl font-bold text-black">
+              {minedCount}
             </Text>
             <Text className="font-[nunito] text-lg font-normal text-[#989898]">
               {redeemableCount}
             </Text>
           </View>
-          <View className="mx-12" />
+          <View style={{ marginHorizontal: 15 }} />
           <View className="flex flex-col items-start justify-center gap-2">
             <Text className="font-[nunito] text-lg font-light text-[#989898]">
               XP Earned
             </Text>
-            <Text className="font-[nunito] text-2xl font-medium text-black">
+            <Text className="font-[nunito] text-2xl font-bold text-black">
               {xpEarned}
             </Text>
             <Text className="font-[nunito] text-lg font-normal text-[#989898] opacity-0">
@@ -77,7 +81,7 @@ export const StatsCard: FC<IStatsCardProps> = ({
         <View className="my-3" />
         <View className="rounded-lg bg-black px-4 py-2">
           <Text className="text-start font-[nunito] font-normal text-white">
-            Mining rate: {miningRate}EN/hr
+            Mining rate: {miningRate} FOUND/hr
           </Text>
         </View>
       </View>
