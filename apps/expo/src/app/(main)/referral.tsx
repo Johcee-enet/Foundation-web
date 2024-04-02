@@ -55,16 +55,22 @@ export default function ReferralPage() {
 
             <View className="flex h-full w-full flex-1 flex-col py-4">
               <View className="flex w-full flex-col px-[20px]">
-                <Text className="font-[nunito] text-3xl font-medium">
+                <Text
+                  style={{ fontSize: 20, fontWeight: "500" }}
+                  className="font-[nunito]"
+                >
                   Refer your friends and share up to 1000XPs on each referrals
                 </Text>
-                <Text className="font-[nunito] text-xl font-normal">
+                <Text
+                  style={{ fontSize: 14, fontWeight: "400" }}
+                  className="font-[nunito]"
+                >
                   Your friends get 500 Xp when they signup with your referral
                   code
                 </Text>
               </View>
 
-              <View className="my-4" />
+              <View style={{ marginVertical: 10 }} />
               <View className="px-[20px]">
                 <TouchableOpacity
                   onPress={async () => {
@@ -75,11 +81,11 @@ export default function ReferralPage() {
                 >
                   <SimpleLineIcons name="share-alt" size={18} color="white" />
                   <Text className="font-[nunito] text-lg text-white">
-                    Share link
+                    Share code
                   </Text>
                 </TouchableOpacity>
               </View>
-              <View className="my-4" />
+              <View style={{ marginVertical: 20 }} />
               <View className="flex w-full flex-1 flex-col gap-4 rounded-t-3xl bg-white px-[20px] py-5 pb-24">
                 <View className="flex flex-row items-center justify-between">
                   <Text className="font-[nunito] text-lg">Referrals</Text>
@@ -90,14 +96,22 @@ export default function ReferralPage() {
 
                 <FlashList
                   data={historyDetails ?? []}
-                  renderItem={({ item, index }) => (
+                  renderItem={({ item }) => (
                     <View className="my-2 flex flex-row items-center justify-between rounded-lg bg-[#EBEBEB] p-4">
                       <View className="flex flex-row items-center justify-center gap-2">
-                        <Text className="font-[nunito]">{index + 1}.</Text>
-                        <Text className="font-[nunito]">{item?.message}</Text>
+                        {/* <Text className="font-[nunito]">{index + 1}.</Text> */}
+                        <Text
+                          style={{ fontSize: 14, fontWeight: "400" }}
+                          className="font-[nunito]"
+                        >
+                          {item?.message}
+                        </Text>
                       </View>
 
-                      <Text className="font-[nunito] font-medium">
+                      <Text
+                        style={{ fontSize: 14, fontWeight: "600" }}
+                        className="font-[nunito]"
+                      >
                         +{item?.extra} XP
                       </Text>
                     </View>
