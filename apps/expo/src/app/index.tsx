@@ -92,16 +92,24 @@ export default function Register() {
   // Handle access_token exchange after twitter auth
   useEffect(() => {
     if (authCode && !!authCode.length) {
-      exchangeCodeForToken().catch((result) =>
-        console.log(result.message ?? result.toString(), ":::Resutl"),
-      );
+      exchangeCodeForToken()
+        .then((result) => console.log(result, ":::Result of code exchange"))
+        .catch((error: any) =>
+          console.log(error.message ?? error.toString(), ":::Resutl"),
+        );
     } else {
       Alert.alert("Authcode was not saved");
     }
 
     async function exchangeCodeForToken() {
+      console.log(
+        authCode,
+        redirectUri,
+        Env.TWITTER_CLIENT_ID,
+        ":::Requirements for exchange",
+      );
       try {
-        const tokenResponse: TokenResponse = await exchangeCodeAsync(
+        const tokenResponse = await exchangeCodeAsync(
           { code: authCode!, redirectUri, clientId: Env.TWITTER_CLIENT_ID },
           discovery,
         );
@@ -119,6 +127,7 @@ export default function Register() {
         // const userInfo = await fetchUserInfoAsync(tokenResponse, discovery);
         // Call the
       } catch (err: any) {
+        console.log(err.message ?? err.toString(), ":::Error");
         throw new Error(err);
       }
     }
