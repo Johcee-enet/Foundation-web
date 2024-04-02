@@ -22,6 +22,7 @@ const client = z.object({
   CONVEX_DEPLOYMENT: z.string(),
   LOCAL_STORE_ENC_KEY: z.string().min(12),
   TWITTER_CLIENT_ID: z.string(),
+  TWITTER_CLIENT_SECRET: z.string(),
 });
 
 const buildTime = z.object({
@@ -42,6 +43,7 @@ const _clientEnv = {
   CONVEX_URL: process.env.CONVEX_URL,
   LOCAL_STORE_ENC_KEY: process.env.LOCAL_STORE_ENC_KEY,
   TWITTER_CLIENT_ID: process.env.TWITTER_CLIENT_ID,
+  TWITTER_CLIENT_SECRET: process.env.TWITTER_CLIENT_SECRET,
 };
 
 /**
