@@ -83,6 +83,9 @@ export default function Register() {
       console.log(code, ":::Auth response code");
     } else {
       console.log(response, ":::Response from auth attempt");
+      Alert.alert(
+        "Something went wrong trying to authenticate your twitter account",
+      );
     }
   }, [response]);
 
@@ -90,28 +93,34 @@ export default function Register() {
   useEffect(() => {
     if (authCode && !!authCode.length) {
       exchangeCodeForToken().catch((result) =>
-        console.log(result, ":::Resutl"),
+        console.log(result.message ?? result.toString(), ":::Resutl"),
       );
+    } else {
+      Alert.alert("Authcode was not saved");
     }
 
     async function exchangeCodeForToken() {
-      const tokenResponse: TokenResponse = await exchangeCodeAsync(
-        { code: authCode!, redirectUri, clientId: Env.TWITTER_CLIENT_ID },
-        discovery,
-      );
+      try {
+        const tokenResponse: TokenResponse = await exchangeCodeAsync(
+          { code: authCode!, redirectUri, clientId: Env.TWITTER_CLIENT_ID },
+          discovery,
+        );
 
-      console.log(tokenResponse, ":::Token response after redirect");
+        console.log(tokenResponse, ":::Token response after redirect");
 
-      // Store the returned data
-      storeData("@enet-store/isOnboarded", true);
-      storeData("@enet0-store/token", {
-        access: tokenResponse.accessToken,
-        refresh: tokenResponse.refreshToken,
-      });
+        // Store the returned data
+        storeData("@enet-store/isOnboarded", true);
+        storeData("@enet0-store/token", {
+          access: tokenResponse.accessToken,
+          refresh: tokenResponse.refreshToken,
+        });
 
-      // Get basic user info before proceeding
-      // const userInfo = await fetchUserInfoAsync(tokenResponse, discovery);
-      // Call the
+        // Get basic user info before proceeding
+        // const userInfo = await fetchUserInfoAsync(tokenResponse, discovery);
+        // Call the
+      } catch (err: any) {
+        throw new Error(err);
+      }
     }
   }, [authCode, redirectUri]);
 
@@ -313,7 +322,10 @@ export default function Register() {
                 </Link>
               </View>
 
-              <Text className="mx-5 mt-8 text-center font-[nunito] text-lg leading-6 text-black">
+              <Text
+                style={{ marginTop: 25 }}
+                className="mx-5 text-center font-[nunito] text-lg leading-6 text-black"
+              >
                 By continuing, you agree to our{" "}
                 <Link
                   // suppressHighlighting
