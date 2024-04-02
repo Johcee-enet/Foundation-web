@@ -14,9 +14,6 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@acme/auth": "*",
-    "@acme/db": "*",
-    "@acme/validators": "*",
     "@trpc/server": "11.0.0-next.320",
     "superjson": "2.2.1",
     "zod": "^3.22.4",
