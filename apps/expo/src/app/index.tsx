@@ -11,21 +11,17 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  // exchangeCodeAsync,
-  makeRedirectUri,
-  refreshAsync,
-  useAuthRequest,
-} from "expo-auth-session";
+import { makeRedirectUri, useAuthRequest } from "expo-auth-session";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { getData, storeData } from "@/storageUtils";
-import { TwitterAuth } from "@/twitterUtils";
+import { Twitter, TwitterAuth } from "@/twitterUtils";
 import { Env } from "@env";
 import { FontAwesome6 } from "@expo/vector-icons";
-import { useAction } from "convex/react";
+import { useAction, useMutation } from "convex/react";
 
+import type { Doc } from "@acme/api/convex/_generated/dataModel";
 import { api } from "@acme/api/convex/_generated/api";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -41,11 +37,14 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [userIsOnboarded, setUserIsOnbaorded] = useState(false);
 
-  // Code after return from twitter auth
-  const [authCode, setAuthCode] = useState<string>();
-
   const initiateUser = useAction(api.onboarding.initializeNewUser);
   const loginUser = useAction(api.onboarding.loginUser);
+
+  // Twitter auth login
+  const loginTwiitter = useAction(api.onboarding.loginTwitterUser);
+
+  const storeNickname = useMutation(api.onboarding.storeNickname);
+  const isNicknameValid = useMutation(api.onboarding.isNicknameValid);
 
   const redirectUri = makeRedirectUri({
     // native: "com.enetminer.enet/",
@@ -53,8 +52,6 @@ export default function Register() {
     path: "/",
     isTripleSlashed: true,
   });
-
-  console.log(redirectUri, ":::Redirect URI");
 
   // Twitter auth test
   const [request, response, promptAsync] = useAuthRequest(
@@ -76,58 +73,69 @@ export default function Register() {
     },
     discovery,
   );
-
+  // Handle useAuthRequest response after twitter callback
   useEffect(() => {
     if (response && response?.type === "success") {
       const { code } = response.params;
-      setAuthCode(code);
+      exchangeCodeForToken(code!)
+        .then((result) => console.log(result, ":::Result of code exchange"))
+        .catch((error: any) =>
+          console.log(
+            error.message ?? error.toString(),
+            ":::Error for code exchange",
+          ),
+        );
+
       console.log(code, ":::Auth response code");
-    } else {
+    } else if (response?.type !== "success") {
       console.log(response, ":::Response from auth attempt");
       Alert.alert(
         "Something went wrong trying to authenticate your twitter account",
       );
     }
-  }, [response]);
 
-  // Handle access_token exchange after twitter auth
-  useEffect(() => {
-    if (authCode && !!authCode.length) {
-      exchangeCodeForToken()
-        .then((result) => console.log(result, ":::Result of code exchange"))
-        .catch((error: any) =>
-          console.log(error.message ?? error.toString(), ":::Resutl"),
-        );
-    } else if (!authCode && !response) {
-      // Only run after authing
-      Alert.alert("Authcode was not saved or returned after authentication");
-    }
-
-    async function exchangeCodeForToken() {
-      console.log(
-        authCode,
-        redirectUri,
-        Env.TWITTER_CLIENT_ID,
-        ":::Requirements for exchange",
-      );
+    async function exchangeCodeForToken(code: string) {
       try {
         // Get TwitterAuth namespace
-        if (authCode && redirectUri && request) {
+        if (code && redirectUri && request) {
           const tokenResponse = await TwitterAuth.exchangeCodeForToken({
-            code: authCode,
+            code,
             clientId: Env.TWITTER_CLIENT_ID,
             redirectUrl: redirectUri,
-            codeVerifier: request.codeChallenge!,
+            codeVerifier: request.codeVerifier!,
           });
           console.log(tokenResponse, ":::Token response");
-          return;
 
           // Store the returned data
           storeData("@enet-store/isOnboarded", true);
-          storeData("@enet0-store/token", {
-            access: tokenResponse.accessToken,
-            refresh: tokenResponse.refreshToken,
+          storeData("@enet-store/token", {
+            access: tokenResponse?.access_token,
+            refresh: tokenResponse?.refresh_token,
           });
+
+          if (tokenResponse) {
+            const userData = await Twitter.userData({
+              token: tokenResponse?.access_token,
+            });
+            console.log(userData, ":::User data");
+
+            // TODO: Create user if not already created and store email and username as nickname
+            const isValid = await isNicknameValid({
+              nickname: userData?.data?.username.trim(),
+            });
+
+            if (isValid) {
+              const userId = await storeNickname({
+                nickname: userData?.data?.username.trim(),
+                referreeCode,
+              });
+
+              router.push({
+                pathname: "/(main)/dashboard",
+                params: { userId, nickname: userData?.data?.username.trim() },
+              });
+            }
+          }
 
           // Get basic user info before proceeding
         }
@@ -136,7 +144,7 @@ export default function Register() {
         throw new Error(err);
       }
     }
-  }, [authCode, redirectUri, response, request]);
+  }, [response, redirectUri, request]);
 
   // Handle user return after onboarding into the applicaiton
   useEffect(() => {
@@ -159,13 +167,24 @@ export default function Register() {
             return;
           } else {
             // If token object is available then refresh the token and fetch new user details
-            const newToken = await refreshAsync(
-              { refreshToken: token?.refresh, clientId: Env.TWITTER_CLIENT_ID },
-              discovery,
-            );
-            console.log(newToken);
 
-            // Pass it to tweep fetch user badic details and redirect to dashboard
+            console.log(token, ":::Stored token");
+
+            // Get user token and fetch user data
+            const userData = await Twitter.userData({ token: token?.access });
+            console.log(userData, ":::User data");
+
+            const user: Doc<"user"> | undefined = await loginTwiitter({
+              nickname: userData?.data?.username,
+            });
+
+            router.push({
+              pathname: "/(main)/dashboard",
+              params: {
+                userId: user?._id,
+                nickname: userData?.data?.username.trim(),
+              },
+            });
           }
         }
       } catch (e: any) {

@@ -49,6 +49,7 @@ export type EventType = Partial<Doc<"events">> & {
 
 export default function DashboardPage() {
   const params = useLocalSearchParams();
+  console.log(params, ":::Params");
   const { top, bottom } = useSafeAreaInsets();
   const { height, width } = useSafeAreaFrame();
   const [modalVisible, setModalVisible] = useState(false);
@@ -57,6 +58,9 @@ export default function DashboardPage() {
   const userDetail = useQuery(api.queries.getUserDetails, {
     userId: params?.userId as Id<"user">,
   });
+
+  console.log(userDetail, ":::Userdetails");
+
   const [claimModalVisible, setClaimModalVisible] = useState(false);
   const [eventSheetContent, setEventSheetContent] = useState<
     EventType | undefined
@@ -336,7 +340,9 @@ export default function DashboardPage() {
                       top={top}
                       modalVisible={modalVisible}
                       setModalVisible={setModalVisible}
-                      nickname={userDetail?.nickname ?? ""}
+                      nickname={
+                        userDetail?.nickname ?? (params.nickname as string)
+                      }
                     />
                   ),
                 }}
