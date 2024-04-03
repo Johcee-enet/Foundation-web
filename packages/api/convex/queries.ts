@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 
-import { Id } from "./_generated/dataModel";
+import type { Id } from "./_generated/dataModel";
 import { internalQuery, query } from "./_generated/server";
 
 // import { DataModel } from "./_generated/dataModel"
@@ -58,6 +58,22 @@ export const getUserWithEmail = internalQuery({
       return await db
         .query("user")
         .filter((q) => q.eq(q.field("email"), email))
+        .first();
+    } catch (e: any) {
+      console.log(e.message ?? e.toString());
+      throw e;
+    }
+  },
+});
+
+// Get user detials with Nickname
+export const getUserWithNickname = internalQuery({
+  args: { nickname: v.string() },
+  handler: async ({ db }, { nickname }) => {
+    try {
+      return await db
+        .query("user")
+        .filter((q) => q.eq(q.field("nickname"), nickname))
         .first();
     } catch (e: any) {
       console.log(e.message ?? e.toString());

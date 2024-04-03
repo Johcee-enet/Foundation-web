@@ -12,7 +12,7 @@ export default defineSchema(
     }),
     // This definition matches the example query and mutation code:
     user: defineTable({
-      email: v.string(),
+      email: v.optional(v.string()),
       minedCount: v.optional(v.float64()),
       miningRate: v.float64(),
       nickname: v.optional(v.string()),

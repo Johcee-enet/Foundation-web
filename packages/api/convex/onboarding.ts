@@ -117,35 +117,110 @@ export const loginUser = action({
   },
 });
 
+export const loginTwitterUser = action({
+  args: { nickname: v.string() },
+  handler: async ({ runQuery }, { nickname }) => {
+    // console.log(email, "::::Loging email");
+    try {
+      const user: any = await runQuery(internal.queries.getUserWithNickname, {
+        nickname,
+      });
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      return user;
+    } catch (e: any) {
+      throw new Error("Issue with getting user");
+    }
+  },
+});
+
 export const storeNickname = mutation({
-  args: { nickname: v.string(), userId: v.id("user") },
-  handler: async (ctx, { nickname, userId }) => {
+  args: {
+    nickname: v.string(),
+    userId: v.optional(v.id("user")),
+    referreeCode: v.optional(v.string()),
+  },
+  handler: async (ctx, { nickname, userId, referreeCode }) => {
     try {
       const referralCode = generateReferralCode();
 
-      await ctx.db.patch(userId, { nickname: nickname, referralCode });
+      if (userId) {
+        const user = await ctx.db.get(userId);
+        await ctx.db.patch(userId, { nickname: nickname, referralCode });
 
-      // Increment users referree count
-      // Get new user data
-      const user = await ctx.db.get(userId);
-      const referree = await ctx.db
-        .query("user")
-        .filter((q) => q.eq(q.field("referreeCode"), user?.referreeCode))
-        .first();
+        // Increment users referree count
+        // Get new user data
+        const referree = await ctx.db
+          .query("user")
+          .filter((q) => q.eq(q.field("referreeCode"), user?.referreeCode))
+          .first();
 
-      if (referree) {
-        // Patch referree count
-        console.log(referree, ":::Update referree xpCount");
-        await ctx.db.patch(referree?._id as Id<"user">, {
-          referralCount: Number(referree?.referralCount) + 1,
-          xpCount: 5000 + referree.xpCount,
+        if (referree) {
+          // Patch referree count
+          console.log(referree, ":::Update referree xpCount");
+          await ctx.db.patch(referree?._id as Id<"user">, {
+            referralCount: Number(referree?.referralCount) + 1,
+            xpCount: 5000 + referree.xpCount,
+          });
+          await ctx.db.insert("activity", {
+            userId: referree?._id,
+            message: `${user?.nickname} Joined using your referral code`,
+            extra: "5000",
+            type: "xp", // Can be xp and rank
+          });
+        }
+
+        return userId;
+      } else {
+        const userId = await ctx.db.insert("user", {
+          // email: args.email,
+          referreeCode: referreeCode,
+          referralCode,
+          minedCount: 0,
+          miningRate: 2.0,
+          mineActive: false,
+          referralCount: 0,
+          mineHours: 6,
+          redeemableCount: 0,
+          xpCount: 1000,
+          speedBoost: {
+            isActive: false,
+            rate: 2,
+            level: 1,
+          },
+          botBoost: {
+            isActive: false,
+            hours: 3,
+            level: 1,
+          },
         });
-        await ctx.db.insert("activity", {
-          userId: referree?._id,
-          message: `${user?.nickname} Joined using your referral code`,
-          extra: "5000",
-          type: "xp", // Can be xp and rank
-        });
+
+        // Increment users referree count
+        // Get new user data
+        const referree = await ctx.db
+          .query("user")
+          .filter((q) => q.eq(q.field("referralCode"), referreeCode))
+          .first();
+
+        if (referree) {
+          // Patch referree count
+          console.log(referree, ":::Update referree xpCount");
+          await ctx.db.patch(referree?._id as Id<"user">, {
+            referralCount: Number(referree?.referralCount) + 1,
+            xpCount: 5000 + referree.xpCount,
+          });
+          await ctx.db.insert("activity", {
+            userId: referree?._id,
+            message: `${nickname} Joined using your referral code`,
+            extra: "5000",
+            type: "xp", // Can be xp and rank
+          });
+        }
+
+        console.log(userId, ":::User id");
+        return userId;
       }
     } catch (e: any) {
       console.log(e.message ?? e.toString());
