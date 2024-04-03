@@ -17,6 +17,7 @@ import type {
 import type * as adminMutations from "../adminMutations.js";
 import type * as adminQueries from "../adminQueries.js";
 import type * as auth from "../auth.js";
+import type * as crons from "../crons.js";
 import type * as files from "../files.js";
 import type * as mutations from "../mutations.js";
 import type * as novu from "../novu.js";
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   adminMutations: typeof adminMutations;
   adminQueries: typeof adminQueries;
   auth: typeof auth;
+  crons: typeof crons;
   files: typeof files;
   mutations: typeof mutations;
   novu: typeof novu;

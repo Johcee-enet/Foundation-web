@@ -36,7 +36,34 @@ export default defineSchema(
         hours: v.number(),
         level: v.union(v.literal(1), v.literal(2), v.literal(3)),
       }),
-      tasks: v.optional(v.array(v.id("tasks"))),
+      completedTasks: v.optional(v.array(v.id("tasks"))),
+      eventsJoined: v.optional(
+        v.array(
+          v.object({
+            eventId: v.id("events"),
+            completed: v.boolean(),
+            actions: v.array(
+              v.object({
+                completed: v.boolean(),
+                name: v.string(),
+                link: v.string(),
+                type: v.union(
+                  v.literal("visit"),
+                  v.literal("follow"),
+                  v.literal("post"),
+                  v.literal("join"),
+                ),
+                channel: v.union(
+                  v.literal("twitter"),
+                  v.literal("telegram"),
+                  v.literal("discord"),
+                  v.literal("website"),
+                ),
+              }),
+            ),
+          }),
+        ),
+      ),
     })
       .index("by_xpCount", ["xpCount"])
       .index("by_mineActive", ["mineActive"]),

@@ -1,12 +1,13 @@
+import { v } from "convex/values";
+import { differenceInHours } from "date-fns";
+
+import { internal } from "./_generated/api";
 import {
   action,
   internalAction,
   internalMutation,
   mutation,
 } from "./_generated/server";
-import { v } from "convex/values";
-import { internal } from "./_generated/api";
-import { differenceInHours } from "date-fns";
 
 export const storeEmail = internalMutation({
   args: { email: v.string(), referreeCode: v.optional(v.string()) },
@@ -71,12 +72,6 @@ export const saveUserPassword = internalMutation({
   },
 });
 
-export const startMinig = internalMutation({
-  handler: async (ctx, args) => {
-    // Update minedCount based on active boosts and bot level
-  },
-});
-
 export const addWeeklyTopRankedActivity = internalMutation({
   args: { userIds: v.array(v.id("user")) },
   handler: async ({ db }, { userIds }) => {
@@ -90,7 +85,7 @@ export const addWeeklyTopRankedActivity = internalMutation({
   },
 });
 
-export const weeklyLeaderBoarCheck = internalAction({
+export const weeklyLeaderBoardCheck = internalAction({
   handler: async ({ runQuery, runMutation, runAction }) => {
     // Check leaderboard and update activites for users who are top 3
     const weeksTopRankUsers = await runQuery(
@@ -107,6 +102,153 @@ export const weeklyLeaderBoarCheck = internalAction({
       await runAction(internal.novu.triggerLeaderboardWorkflow, {
         userId: user._id,
         email: user.email,
+      });
+    }
+  },
+});
+
+// Reward with xp for tasks
+export const rewardTaskXp = mutation({
+  args: { xpCount: v.number(), userId: v.id("user"), taskId: v.id("tasks") },
+  handler: async ({ db }, { xpCount, userId, taskId }) => {
+    // Reward user for task or events completed
+    const user = await db.get(userId);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    await db.patch(userId, {
+      xpCount: user.xpCount + xpCount,
+      completedTasks: user.completedTasks
+        ? [...user.completedTasks, taskId]
+        : [taskId],
+    });
+  },
+});
+
+// Reward after event actions have been completed
+export const rewardEventXp = mutation({
+  args: { xpCount: v.number(), userId: v.id("user"), eventId: v.id("events") },
+  handler: async ({ db }, { xpCount, userId, eventId }) => {
+    const user = await db.get(userId);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const udpatedEvents = user.eventsJoined?.map((event) => {
+      if (event.eventId === eventId) {
+        return {
+          eventId,
+          completed: true,
+          actions: event.actions,
+        };
+      } else {
+        return event;
+      }
+    });
+
+    // Add xp and and reward user
+    await db.patch(userId, {
+      xpCount: user.xpCount + xpCount,
+      eventsJoined: udpatedEvents,
+    });
+  },
+});
+
+// Update actions in events
+export const updateEventsForUser = mutation({
+  args: {
+    eventId: v.id("events"),
+    userId: v.id("user"),
+    actionName: v.string(),
+  },
+  handler: async ({ db }, { eventId, userId, actionName }) => {
+    const event = await db.get(eventId);
+    const user = await db.get(userId);
+
+    // Check if the event is already in user object then update only specific action
+    if (!user) {
+      throw new Error("No user found");
+    }
+    if (!event) {
+      throw new Error("No event found");
+    }
+
+    // If event already in array
+    if (user.eventsJoined?.some((myEvent) => myEvent.eventId === event._id)) {
+      // Update the specific action
+      const updatedEventJoined = user.eventsJoined.map((joinedEvent) => {
+        if (joinedEvent.eventId === event._id) {
+          const updatedAction = joinedEvent.actions.map((action) => {
+            if (action.name === actionName) {
+              return {
+                completed: true,
+                name: action.name,
+                type: action.type,
+                channel: action.channel,
+                link: action.link,
+              };
+            } else {
+              return action;
+            }
+          });
+
+          return {
+            ...joinedEvent,
+            actions: updatedAction,
+          };
+        } else {
+          return joinedEvent;
+        }
+      });
+
+      // Update
+      await db.patch(userId, { eventsJoined: updatedEventJoined });
+    } else {
+      // If no event already in array
+      await db.patch(userId, {
+        eventsJoined: user.eventsJoined
+          ? [
+              ...user.eventsJoined,
+              {
+                eventId: event._id,
+                completed: false,
+                actions: event.actions.map((action) => {
+                  if (action.name === actionName) {
+                    return {
+                      completed: true,
+                      link: action.link,
+                      channel: action.channel,
+                      name: action.name,
+                      type: action.type,
+                    };
+                  } else {
+                    return { ...action, completed: false };
+                  }
+                }),
+              },
+            ]
+          : [
+              {
+                eventId: event._id,
+                completed: false,
+                actions: event.actions.map((action) => {
+                  if (action.name === actionName) {
+                    return {
+                      completed: true,
+                      link: action.link,
+                      channel: action.channel,
+                      name: action.name,
+                      type: action.type,
+                    };
+                  } else {
+                    return { ...action, completed: false };
+                  }
+                }),
+              },
+            ],
       });
     }
   },
@@ -144,17 +286,14 @@ export const mine = internalMutation({
     if (user.mineActive) {
       // Check if time is still within min rage
       if (
-        differenceInHours(Date.now(), new Date(user?.mineStartTime as number), {
+        differenceInHours(Date.now(), new Date(user.mineStartTime!), {
           roundingMethod: "floor",
         }) < user.mineHours
       ) {
         await db.patch(userId, {
           redeemableCount:
             user.miningRate *
-            differenceInHours(
-              Date.now(),
-              new Date(user?.mineStartTime as number),
-            ),
+            differenceInHours(Date.now(), new Date(user.mineStartTime!)),
         });
 
         await scheduler.runAfter(1000 * 60 * 60, internal.mutations.mine, {
@@ -176,11 +315,9 @@ export const mine = internalMutation({
           }),
           redeemableCount:
             user.miningRate *
-            differenceInHours(
-              Date.now(),
-              new Date(user?.mineStartTime as number),
-              { roundingMethod: "floor" },
-            ),
+            differenceInHours(Date.now(), new Date(user.mineStartTime!), {
+              roundingMethod: "floor",
+            }),
         });
 
         return;
@@ -196,7 +333,6 @@ export const mine = internalMutation({
 });
 
 // claim redeemable amount: reset and increment minedCount
-
 export const claimRewards = mutation({
   args: { userId: v.id("user") },
   handler: async ({ db }, { userId }) => {

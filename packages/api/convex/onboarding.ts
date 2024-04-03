@@ -130,19 +130,20 @@ export const storeNickname = mutation({
       const user = await ctx.db.get(userId);
       const referree = await ctx.db
         .query("user")
-        .filter((q) => q.eq(q.field("referralCode"), user?.referreeCode))
+        .filter((q) => q.eq(q.field("referreeCode"), user?.referreeCode))
         .first();
 
       if (referree) {
         // Patch referree count
+        console.log(referree, ":::Update referree xpCount");
         await ctx.db.patch(referree?._id as Id<"user">, {
           referralCount: Number(referree?.referralCount) + 1,
-          xpCount: 23 + referree.xpCount,
+          xpCount: 5000 + referree.xpCount,
         });
         await ctx.db.insert("activity", {
           userId: referree?._id,
           message: `${user?.nickname} Joined using your referral code`,
-          extra: "23",
+          extra: "5000",
           type: "xp", // Can be xp and rank
         });
       }
