@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { v } from "convex/values";
 import { customAlphabet } from "nanoid";
 
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { action, mutation } from "./_generated/server";
 
@@ -176,6 +176,7 @@ export const storeNickname = mutation({
       } else {
         const userId = await ctx.db.insert("user", {
           // email: args.email,
+          nickname,
           referreeCode: referreeCode,
           referralCode,
           minedCount: 0,

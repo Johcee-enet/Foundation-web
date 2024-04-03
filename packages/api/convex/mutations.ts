@@ -101,7 +101,7 @@ export const weeklyLeaderBoardCheck = internalAction({
     for (const user of weeksTopRankUsers) {
       await runAction(internal.novu.triggerLeaderboardWorkflow, {
         userId: user._id,
-        email: user.email,
+        email: user.email!,
       });
     }
   },
