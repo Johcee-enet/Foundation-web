@@ -263,9 +263,8 @@ export default function WelcomePage() {
                                 nickname: nickname.trim(),
                               });
 
-                              await storeData("@enet-store/isOnboarded", true);
+                              storeData("@enet-store/isOnboarded", true);
 
-                              //@ts-expect-error routing
                               router.push({
                                 pathname: "/(main)/dashboard",
                                 params: { ...params, nickname },
