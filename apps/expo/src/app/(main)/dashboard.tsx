@@ -1,6 +1,7 @@
 import type { BottomSheetMethods } from "@devvie/bottom-sheet";
 import { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Button,
   Keyboard,
@@ -21,9 +22,11 @@ import {
 import { WebView } from "react-native-webview";
 import { Image } from "expo-image";
 import { router, Stack, useLocalSearchParams } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 // import { checkCountdown } from "@/appUtils";
 import ClaimModal from "@/components/claim_modal";
 import DashboardHeader from "@/components/dashboard_header";
+import LoadingModal from "@/components/loading_modal";
 import { Overview } from "@/components/overview_card";
 import { StatsCard } from "@/components/stats_card";
 import TaskBoostCard, {
@@ -140,6 +143,10 @@ export default function DashboardPage() {
       }
     }
   }, [userDetail, remaining]);
+
+  // handle tasks cycle
+  const [isLoadingModalVisible, setLoadingModalVisible] = useState(false);
+  const rewardTaskXpCount = useMutation(api.mutations.rewardTaskXp);
 
   return (
     <SafeAreaView
@@ -269,12 +276,13 @@ export default function DashboardPage() {
                           contentFit="cover"
                         />
                         <View className="flex flex-col items-start justify-center gap-1">
-                          <Text className="text-lg font-normal text-black">
-                            {userDetail?.miningRate} $FOUND/hour
+                          <Text className="flex items-center text-lg font-normal text-black">
+                            {userDetail?.miningRate} $FOUND/
+                            {userDetail?.mineHours}hour
                           </Text>
-                          <Text className="font-lighter text-sm text-black">
+                          {/* <Text className="font-lighter text-sm text-black">
                             Mined by Auto Bot
-                          </Text>
+                          </Text> */}
                         </View>
                       </View>
                       <TouchableOpacity
@@ -401,15 +409,93 @@ export default function DashboardPage() {
                       // @ts-expect-error eventsheet open
                       eventSheetRef.current.open();
                     }}
-                    onTaskPressed={(taskIndex: number) => {
+                    onTaskPressed={async (taskIndex: number) => {
                       console.log(taskIndex, ":::task Index");
-                      setTaskSheetContent((fetchTasks ?? [])[taskIndex]);
-                      // @ts-expect-error eventsheet open
-                      taskSheetRef.current.open();
+                      const task = (fetchTasks ?? [])[taskIndex];
+
+                      if (!task) {
+                        return Alert.alert("No task found");
+                      }
+
+                      if (
+                        task?.action.channel !== "twitter" &&
+                        task?.action.type !== "post"
+                      ) {
+                        // Handle all other channel and actions
+
+                        WebBrowser.openBrowserAsync(task?.action.link ?? "")
+                          .then(async (result) => {
+                            console.log(result, ":::Task_come back result");
+
+                            await rewardTaskXpCount({
+                              userId: params.userId as Id<"user">,
+                              taskId: task?._id,
+                              xpCount: task?.reward,
+                            });
+                          })
+                          .catch((err) => {
+                            console.log(err, ":::Error occurred in task");
+                            Alert.alert(
+                              "An error occurred trying to finish task",
+                            );
+                          });
+                      } else if (
+                        task?.action.channel === "twitter" &&
+                        task?.action.type === "follow"
+                      ) {
+                        // Call twitter follow API handler
+                        console.log("Handle follow API");
+                        setLoadingModalVisible(true);
+                        setTimeout(() => {
+                          setLoadingModalVisible(false);
+                        }, 2000);
+                        await rewardTaskXpCount({
+                          userId: params.userId as Id<"user">,
+                          taskId: task?._id,
+                          xpCount: task?.reward,
+                        });
+                      } else {
+                        setTaskSheetContent(task);
+                        // @ts-expect-error eventsheet open
+                        taskSheetRef.current.open();
+                      }
                     }}
                     tasks={fetchTasks}
                     events={fetchEvents}
                   />
+                  <LoadingModal
+                    isLoadingModalVisible={isLoadingModalVisible}
+                    setLoadingModalVisible={setLoadingModalVisible}
+                  >
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: 180,
+                        left: 6,
+                        right: 6,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: "white",
+                        minHeight: 200,
+                        borderRadius: 20,
+                        gap: 10,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          fontWeight: "700",
+                          fontFamily: "nunito",
+                          color: "black",
+                        }}
+                      >
+                        Finishing task...
+                      </Text>
+                      <ActivityIndicator size={"large"} color={"black"} />
+                    </View>
+                  </LoadingModal>
                 </View>
               </TouchableOpacity>
             </ScrollView>
