@@ -11,7 +11,9 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
-import { removeData, storage } from "@/storageUtils";
+import { Env } from "@/env";
+import { getData, removeData, storage } from "@/storageUtils";
+import { TwitterAuth } from "@/twitterUtils";
 import {
   AntDesign,
   FontAwesome6,
@@ -136,6 +138,27 @@ export default function DashboardHeader({
                         onPress: () => {
                           // TODO: cleanup local data and logout
                           removeData("@enet-store/user");
+                          (async () => {
+                            const token = getData(
+                              "@enet-store/token",
+                              true,
+                            ) as Record<string, any>;
+                            await TwitterAuth.revokeToken({
+                              token: token.access,
+                              clientId: Env.TWITTER_CLIENT_ID,
+                            });
+                          })()
+                            .then((result) => {
+                              console.log(result, ":::Access token revoked");
+
+                              removeData("@enet-store/token");
+                            })
+                            .catch((error) =>
+                              console.log(
+                                error,
+                                ":::error in logout and access revoking",
+                              ),
+                            );
                           router.replace("/");
                         },
                       },
