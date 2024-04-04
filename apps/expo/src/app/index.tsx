@@ -78,6 +78,7 @@ export default function Register() {
     },
     discovery,
   );
+
   // Handle useAuthRequest response after twitter callback
   useEffect(() => {
     if (response && response?.type === "success") {
@@ -160,6 +161,7 @@ export default function Register() {
           console.log(isOnboarded, "Is false");
           return;
         } else {
+          setTwitterAuthLoading(true);
           setUserIsOnbaorded(true);
           // Refresh token
           const token = getData("@enet-store/token", true) as Record<
@@ -167,6 +169,7 @@ export default function Register() {
             any
           >;
           if (!token) {
+            setTwitterAuthLoading(false);
             return;
           } else {
             // If token object is available then refresh the token and fetch new user details
@@ -180,6 +183,8 @@ export default function Register() {
             const user: Doc<"user"> | undefined = await loginTwiitter({
               nickname: userData?.data?.username,
             });
+
+            setTwitterAuthLoading(false);
 
             router.push({
               pathname: "/(main)/dashboard",
@@ -399,7 +404,7 @@ export default function Register() {
               >
                 <View className="flex w-full flex-col items-center justify-center p-4">
                   <ActivityIndicator size={"large"} color={"black"} />
-                  <Text>Authorizing your twitter account</Text>
+                  <Text>Authorizing your twitter account...</Text>
                 </View>
               </LoadingModal>
             </View>
