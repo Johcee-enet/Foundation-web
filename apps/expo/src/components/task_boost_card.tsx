@@ -546,7 +546,7 @@ export const TaskRenderer: React.FC<ITaskRenderProps> = ({
     <View className="flex h-full w-full flex-col items-center justify-between rounded-lg p-4 pb-24">
       <View className="flex w-full flex-row items-center justify-between">
         <View />
-        <Text className="text-lg font-medium text-black">{task?.name}</Text>
+        <Text className="text-lg font-bold text-black">{task?.name}</Text>
         <TouchableOpacity
           onPress={() => {
             onCloseEvent();

@@ -73,8 +73,12 @@ export default function DashboardPage() {
   const triggerMiner = useAction(api.mutations.triggerMining);
 
   // Get tasks and events
-  const fetchTasks = useQuery(api.queries.fetchTasks);
-  const fetchEvents = useQuery(api.queries.fetchEvents);
+  const fetchTasks = useQuery(api.queries.fetchTasks, {
+    userId: params?.userId as Id<"user">,
+  });
+  const fetchEvents = useQuery(api.queries.fetchEvents, {
+    userId: params?.userId as Id<"user">,
+  });
 
   useEffect(() => {
     if (
@@ -452,14 +456,13 @@ export default function DashboardPage() {
                         // Call twitter follow API handler
                         console.log("Handle follow API");
                         setLoadingModalVisible(true);
-                        setTimeout(() => {
-                          setLoadingModalVisible(false);
-                        }, 2000);
+
                         await rewardTaskXpCount({
                           userId: params.userId as Id<"user">,
                           taskId: task?._id,
                           xpCount: task?.reward,
                         });
+                        setLoadingModalVisible(false);
                       } else {
                         setTaskSheetContent(task);
                         // @ts-expect-error eventsheet open
@@ -578,7 +581,7 @@ export default function DashboardPage() {
       <BottomSheet
         ref={taskSheetRef}
         height="90%"
-        style={{ backgroundColor: "white", zIndex: 50 }}
+        style={{ backgroundColor: "#DADADA", zIndex: 50 }}
       >
         <TaskRenderer
           task={taskSheetContent!}
@@ -589,57 +592,129 @@ export default function DashboardPage() {
 
             return (
               <View className="flex h-full w-full flex-col gap-4">
-                <View className="flex w-full flex-1 overflow-hidden bg-green-400">
+                <View className="mt-3 flex w-full flex-1 overflow-hidden rounded-2xl">
                   <WebView
                     originWhitelist={["*"]}
                     scalesPageToFit={false}
                     source={{ html: embedData?.html ?? "" }}
                   />
                 </View>
-                <View className="flex flex-col gap-2">
-                  <Text className="font-[nunito] text-lg font-bold">
+                <View className="flex flex-col gap-0">
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: "700",
+                      fontFamily: "nunito",
+                    }}
+                    className="font-[nunito]"
+                  >
                     Instructions
                   </Text>
-                  <Text className="font-[nunito] text-sm font-medium">
-                    Press the LIKE & REPOST button to automatically LIKE &
-                    REPOST without redirecting you.
-                  </Text>
-                  <Text className="font-[nunito] text-sm font-medium">
-                    Press the Proceed button to verify{" "}
-                  </Text>
+                  <View
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "flex-start",
+                      gap: 5,
+                      width: "100%",
+                    }}
+                  >
+                    <Text style={{ fontSize: 24 }}>{"\u2022"}</Text>
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        fontWeight: "400",
+                        fontFamily: "nunito",
+                      }}
+                      className="font-[nunito]"
+                    >
+                      Press the LIKE & REPOST button to automatically LIKE &
+                      REPOST without redirecting you.
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "flex-start",
+                      gap: 5,
+                      width: "100%",
+                    }}
+                  >
+                    <Text style={{ fontSize: 24 }}>{"\u2022"}</Text>
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        fontWeight: "400",
+                        fontFamily: "nunito",
+                      }}
+                      className="font-[nunito]"
+                    >
+                      Press the Proceed button to verify{" "}
+                    </Text>
+                  </View>
                 </View>
-                <View className="flex w-full flex-col gap-3">
-                  <View className="flex w-full flex-row gap-3">
+                <View className="flex w-full flex-col gap-2">
+                  <View className="flex w-full flex-row gap-2">
                     <View className="flex-1">
-                      <Button
+                      <TouchableOpacity
                         onPress={() => {
                           // Mark
                           // Alert.alert("Liking post....");
                         }}
-                        title="Like"
-                        color="#000000"
-                      />
+                        style={{
+                          backgroundColor: "black",
+                          paddingVertical: 10,
+                          borderRadius: 5,
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Text style={{ color: "white" }}>LIKE</Text>
+                      </TouchableOpacity>
                     </View>
 
                     <View className="flex-1">
-                      <Button
+                      <TouchableOpacity
                         onPress={() => {
                           // Mark
                         }}
-                        title="Repost"
-                        color="#000000"
-                      />
+                        style={{
+                          backgroundColor: "black",
+                          paddingVertical: 10,
+                          borderRadius: 5,
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Text style={{ color: "white" }}>REPOST</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
-                  <Button
+                  <TouchableOpacity
                     onPress={() => {
                       // Mark
                       // @ts-expect-error eventsheet close
                       taskSheetRef.current.close();
                     }}
-                    title="Proceed"
-                    color="#000000"
-                  />
+                    style={{
+                      backgroundColor: "black",
+                      paddingVertical: 10,
+                      borderRadius: 5,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text style={{ color: "white" }}>PROCEED</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             );

@@ -1,6 +1,7 @@
 // import type { TokenResponse } from "expo-auth-session";
 import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Keyboard,
   KeyboardAvoidingView,
@@ -15,6 +16,7 @@ import { makeRedirectUri, useAuthRequest } from "expo-auth-session";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
+import LoadingModal from "@/components/loading_modal";
 import { getData, storeData } from "@/storageUtils";
 import { Twitter, TwitterAuth } from "@/twitterUtils";
 import { Env } from "@env";
@@ -45,6 +47,9 @@ export default function Register() {
 
   const storeNickname = useMutation(api.onboarding.storeNickname);
   const isNicknameValid = useMutation(api.onboarding.isNicknameValid);
+
+  const [isTwitterAuthLoading, setTwitterAuthLoading] =
+    useState<boolean>(false);
 
   const redirectUri = makeRedirectUri({
     // native: "com.enetminer.enet/",
@@ -78,26 +83,22 @@ export default function Register() {
     if (response && response?.type === "success") {
       const { code } = response.params;
       exchangeCodeForToken(code!)
-        .then((result) => console.log(result, ":::Result of code exchange"))
+        .then((result) => {
+          console.log(result, ":::Result of code exchange");
+        })
         .catch((error: any) =>
           console.log(
             error.message ?? error.toString(),
             ":::Error for code exchange",
           ),
         );
-
-      console.log(code, ":::Auth response code");
-    } else if (response?.type !== "success") {
-      console.log(response, ":::Response from auth attempt");
-      Alert.alert(
-        "Something went wrong trying to authenticate your twitter account",
-      );
     }
 
     async function exchangeCodeForToken(code: string) {
       try {
         // Get TwitterAuth namespace
         if (code && redirectUri && request) {
+          setTwitterAuthLoading(true);
           const tokenResponse = await TwitterAuth.exchangeCodeForToken({
             code,
             clientId: Env.TWITTER_CLIENT_ID,
@@ -129,6 +130,8 @@ export default function Register() {
                 nickname: userData?.data?.username.trim(),
                 referreeCode,
               });
+
+              setTwitterAuthLoading(false);
 
               router.push({
                 pathname: "/(main)/dashboard",
@@ -390,6 +393,15 @@ export default function Register() {
                 </Link>
                 .
               </Text>
+              <LoadingModal
+                isLoadingModalVisible={isTwitterAuthLoading}
+                setLoadingModalVisible={setTwitterAuthLoading}
+              >
+                <View className="flex w-full flex-col items-center justify-center p-4">
+                  <ActivityIndicator size={"large"} color={"black"} />
+                  <Text>Authorizing your twitter account</Text>
+                </View>
+              </LoadingModal>
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>
