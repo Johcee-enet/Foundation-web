@@ -160,17 +160,30 @@ export const fetchTasks = query({
     if (!user) {
       throw new Error("User not found");
     }
-    return await db.query("tasks").collect();
+    // Filter tasks based on tasks completions by user
+    const tasks = await db.query("tasks").collect();
+
+    const filteredTasks = tasks.filter((task) => {
+      return (user.completedTasks ?? []).some(
+        (completedTaskId) => completedTaskId !== task._id,
+      );
+    });
+
+    return filteredTasks;
   },
 });
 
 export const fetchEvents = query({
   args: { userId: v.id("user") },
-  handler: async ({ db, storage }) => {
+  handler: async ({ db, storage }, { userId }) => {
     // Filter events by users completed eventsS
+    const user = await db.get(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
     const events = await db.query("events").collect();
 
-    return await Promise.all(
+    const loadedEvents = await Promise.all(
       events.map(async (event) => {
         const company = await db.get(event.companyId);
         // if(!company) {
@@ -189,5 +202,15 @@ export const fetchEvents = query({
         };
       }),
     );
+
+    // filter events based on completed from users list
+
+    const filteredEvents = loadedEvents.filter((event) => {
+      return (user.eventsJoined ?? []).some(
+        (joined) => !joined.completed && joined.eventId !== event._id,
+      );
+    });
+
+    return filteredEvents;
   },
 });
