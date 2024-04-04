@@ -59,8 +59,6 @@ export default function DashboardPage() {
     userId: params?.userId as Id<"user">,
   });
 
-  console.log(userDetail, ":::Userdetails");
-
   const [claimModalVisible, setClaimModalVisible] = useState(false);
   const [eventSheetContent, setEventSheetContent] = useState<
     EventType | undefined
@@ -129,18 +127,16 @@ export default function DashboardPage() {
       const remainingTime = differenceInSeconds(endTime, currentTime);
 
       if (remainingTime <= 0) {
-        console.log("Countdown ended. Performing action...");
         // Perform the action here
       } else {
-        const formattedRemainingTime = formatDuration(
-          { seconds: remainingTime },
-          { format: ["hours", "minutes", "seconds"] },
-        );
+        // const formattedRemainingTime = formatDuration(
+        //   { seconds: remainingTime },
+        //   { format: ["hours", "minutes", "seconds"] },
+        // );
         const hours = Math.floor(remainingTime / 3600);
         const minutes = Math.floor((remainingTime % 3600) / 60);
         const seconds = remainingTime % 60;
-        console.log(`${hours} hours, ${minutes} minutes, ${seconds} seconds`);
-        console.log(`Time remaining: ${formattedRemainingTime}`);
+
         // Check again after 1 second
         setTimeout(
           () => checkCountdown({ startTime, countdownDuration }),

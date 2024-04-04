@@ -131,7 +131,10 @@ export default function Register() {
                 nickname: userData?.data?.username.trim(),
                 referreeCode,
               });
-
+              storeData("@enet-store/user", {
+                userId,
+                nickname: userData?.data?.username.trim(),
+              });
               setTwitterAuthLoading(false);
 
               router.push({
@@ -182,6 +185,11 @@ export default function Register() {
 
             const user: Doc<"user"> | undefined = await loginTwiitter({
               nickname: userData?.data?.username,
+            });
+
+            storeData("@enet-store/user", {
+              userId: user?._id,
+              nickname: userData?.data?.username.trim(),
             });
 
             setTwitterAuthLoading(false);
@@ -303,7 +311,11 @@ export default function Register() {
                         const user = await loginUser({ email, password });
                         const userId = user?._id;
                         // Store data to local storage
-                        storeData("@enet-store/user", { email, userId });
+                        storeData("@enet-store/user", {
+                          email,
+                          userId,
+                          nickname: user?.nickname,
+                        });
 
                         return router.push({
                           pathname: "/(main)/dashboard",

@@ -24,11 +24,8 @@ export default function Layout() {
       console.log(result, ":::_layout.tsx file"),
     );
 
-    async function checkUserLoggedIn() {
-      const user = (await getData("@enet-store/user", true)) as Record<
-        string,
-        any
-      >;
+    function checkUserLoggedIn() {
+      const user = getData("@enet-store/user", true) as Record<string, any>;
       if (user) {
         router.replace({ pathname: "/(main)/dashboard", params: { ...user } });
       }
@@ -37,12 +34,15 @@ export default function Layout() {
     async function onFetchUpdateAsync() {
       try {
         const update = await Updates.checkForUpdateAsync();
-        Alert.alert("Updating app", "Wait for latest update to be fetched...");
         if (update.isAvailable) {
+          Alert.alert(
+            "Updating app",
+            "Wait for latest update to be fetched...",
+          );
           await Updates.fetchUpdateAsync();
           await Updates.reloadAsync();
         } else {
-          await checkUserLoggedIn();
+          checkUserLoggedIn();
         }
       } catch (error: any) {
         // You can also add an alert() to see the error message in case of an error when fetching updates.
@@ -50,9 +50,7 @@ export default function Layout() {
           {
             text: "Continue to app",
             onPress() {
-              (async () => {
-                await checkUserLoggedIn();
-              })().catch((error) => console.log(error));
+              checkUserLoggedIn();
             },
           },
         ]);
