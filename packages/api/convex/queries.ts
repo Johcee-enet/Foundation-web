@@ -153,13 +153,21 @@ export const getOnlyXpHistory = query({
 });
 
 export const fetchTasks = query({
-  handler: async ({ db }) => {
+  args: { userId: v.id("user") },
+  handler: async ({ db }, { userId }) => {
+    // Filter shown tasks by users completed task list
+    const user = await db.get(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
     return await db.query("tasks").collect();
   },
 });
 
 export const fetchEvents = query({
+  args: { userId: v.id("user") },
   handler: async ({ db, storage }) => {
+    // Filter events by users completed eventsS
     const events = await db.query("events").collect();
 
     return await Promise.all(
