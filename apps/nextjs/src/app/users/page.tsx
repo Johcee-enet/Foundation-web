@@ -7,8 +7,8 @@ import {
 } from "@convex-dev/convex-lucia-auth/react";
 import { CaretSortIcon, DotsHorizontalIcon } from "@radix-ui/react-icons";
 
-import type { Doc } from "@acme/api/src/convex/_generated/dataModel";
-import { api } from "@acme/api/src/convex/_generated/api";
+import type { Doc } from "@acme/api/convex/_generated/dataModel";
+import { api } from "@acme/api/convex/_generated/api";
 import MainLayout from "@acme/ui/src/components/layout/main";
 import { Button } from "@acme/ui/src/components/ui/button";
 import { Checkbox } from "@acme/ui/src/components/ui/checkbox";

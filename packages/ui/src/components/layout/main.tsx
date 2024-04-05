@@ -9,7 +9,7 @@ import {
   useSignUpSignIn,
 } from "@convex-dev/convex-lucia-auth/react";
 
-import { api } from "@acme/api/src/convex/_generated/api";
+import { api } from "@acme/api/convex/_generated/api";
 
 // import { Paragraph } from "@/components/layout/paragraph";
 import { ResponsiveSidebarButton } from "../../components/layout/responsive-sidebar-button";

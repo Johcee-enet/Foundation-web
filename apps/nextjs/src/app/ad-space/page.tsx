@@ -6,7 +6,7 @@ import { UploadButton, UploadFileResponse } from "@xixixao/uploadstuff/react";
 import { useQuery } from "convex/react";
 import { getTime } from "date-fns";
 
-import { api } from "@acme/api/src/convex/_generated/api";
+import { api } from "@acme/api/convex/_generated/api";
 import MainLayout from "@acme/ui/src/components/layout/main";
 import { DatePickerWithPresets } from "@acme/ui/src/components/ui/date-picker";
 import { Input } from "@acme/ui/src/components/ui/input";

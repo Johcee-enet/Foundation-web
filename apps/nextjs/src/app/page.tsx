@@ -2,8 +2,8 @@
 
 import { useQueryWithAuth } from "@convex-dev/convex-lucia-auth/react";
 
-import type { Doc } from "@acme/api/src/convex/_generated/dataModel";
-import { api } from "@acme/api/src/convex/_generated/api";
+import type { Doc } from "@acme/api/convex/_generated/dataModel";
+import { api } from "@acme/api/convex/_generated/api";
 import MainLayout from "@acme/ui/src/components/layout/main";
 import {
   Avatar,

@@ -13,8 +13,8 @@ import {
 } from "@radix-ui/react-icons";
 import { FaDiscord, FaGlobe, FaTelegram, FaXTwitter } from "react-icons/fa6";
 
-import type { Doc, Id } from "@acme/api/src/convex/_generated/dataModel";
-import { api } from "@acme/api/src/convex/_generated/api";
+import type { Doc, Id } from "@acme/api/convex/_generated/dataModel";
+import { api } from "@acme/api/convex/_generated/api";
 import MainLayout from "@acme/ui/src/components/layout/main";
 import { Button } from "@acme/ui/src/components/ui/button";
 import { Checkbox } from "@acme/ui/src/components/ui/checkbox";
