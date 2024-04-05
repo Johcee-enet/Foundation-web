@@ -205,6 +205,19 @@ export default function Tasks() {
                 Here&apos;s a list of all tasks that will show up in the mobile
                 app
               </p>
+              <ul className="ml-4 list-disc text-sm">
+                <li>
+                  Keep in mind, for a twitter post task a post id is required.
+                </li>
+                <li>
+                  To get the post id copy the shareable link and paste somewhere
+                  else
+                </li>
+                <li>
+                  Extract the sequence of numbers from the link, usually after a{" "}
+                  <code className="font-mono">status/</code> text
+                </li>
+              </ul>
             </div>
           </div>
           <DataTable
@@ -246,12 +259,13 @@ export default function Tasks() {
                         className="max-w-sm"
                       />
                     </div>
-                    <div>
+                    <div className="flex flex-col">
                       <Label htmlFor="socials">Social Network</Label>
+                      {/* <span>{network}</span> */}
                       <ToggleGroup
                         id="socials"
                         type="single"
-                        className="justify-start"
+                        className="min-h-5 w-full justify-center"
                         defaultValue={network}
                         value={network}
                         onValueChange={(value: Network) => {
