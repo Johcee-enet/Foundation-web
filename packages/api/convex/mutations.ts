@@ -1,3 +1,4 @@
+import { mutationWithAuth } from "@convex-dev/convex-lucia-auth";
 import { v } from "convex/values";
 import { differenceInHours } from "date-fns";
 
@@ -346,6 +347,28 @@ export const claimRewards = mutation({
       await db.patch(userId, {
         minedCount: (user?.minedCount ?? 0) + user?.redeemableCount,
         redeemableCount: 0,
+      });
+    }
+  },
+});
+
+// Config
+
+export const updateConfig = mutationWithAuth({
+  args: {
+    miningCount: v.float64(),
+    miningHours: v.number(),
+    xpCount: v.float64(),
+    configId: v.optional(v.id("config")),
+  },
+  handler: async ({ db }, { miningCount, miningHours, xpCount, configId }) => {
+    if (configId) {
+      await db.patch(configId, { miningCount, miningHours, xpCount });
+    } else {
+      await db.insert("config", {
+        miningCount,
+        miningHours,
+        xpCount,
       });
     }
   },

@@ -1,3 +1,4 @@
+import { queryWithAuth } from "@convex-dev/convex-lucia-auth";
 import { v } from "convex/values";
 
 import type { Id } from "./_generated/dataModel";
@@ -212,5 +213,13 @@ export const fetchEvents = query({
     });
 
     return filteredEvents;
+  },
+});
+
+// Config queries
+export const getAppConfig = queryWithAuth({
+  args: {},
+  handler: async ({ db }) => {
+    return await db.query("config").first();
   },
 });
