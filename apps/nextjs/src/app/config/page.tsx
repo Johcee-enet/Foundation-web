@@ -1,7 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  useMutationWithAuth,
+  useQueryWithAuth,
+} from "@convex-dev/convex-lucia-auth/react";
 
+import { api } from "@acme/api/convex/_generated/api";
+import { Doc } from "@acme/api/convex/_generated/dataModel";
 import MainLayout from "@acme/ui/src/components/layout/main";
 import { Button } from "@acme/ui/src/components/ui/button";
 import {
@@ -13,6 +19,7 @@ import {
   CardTitle,
 } from "@acme/ui/src/components/ui/card";
 import { Input } from "@acme/ui/src/components/ui/input";
+import { useToast } from "@acme/ui/src/components/ui/use-toast";
 
 // TODO: handle updates for the default settings of the mobile app
 // TODO: 1 --> Handle default mine rate, mine hours, xp count,
@@ -23,6 +30,23 @@ function ConfigPage() {
   const [miningRate, setMiningRate] = useState<number>(2);
   const [miningHours, setMiningHours] = useState<number>(6);
   const [xpCount, setXpCount] = useState<number>(1000);
+
+  const { toast } = useToast();
+
+  const appConfig: Doc<"config"> | undefined = useQueryWithAuth(
+    api.queries.getAppConfig,
+    {},
+  );
+
+  const updateConfigs = useMutationWithAuth(api.mutations.updateConfig);
+
+  useEffect(() => {
+    if (appConfig) {
+      setMiningRate(appConfig?.miningCount);
+      setMiningHours(appConfig.miningHours);
+      setXpCount(appConfig.xpCount);
+    }
+  }, [appConfig]);
 
   return (
     <MainLayout>
@@ -38,6 +62,23 @@ function ConfigPage() {
                 xp count, referral points, e.t.c)
               </p>
             </div>
+            <Button
+              onClick={async () => {
+                const t = toast({
+                  title: "Updating config data",
+                });
+                await updateConfigs({
+                  miningCount: miningRate,
+                  miningHours,
+                  xpCount,
+                  configId: appConfig?._id,
+                });
+
+                t.update({ title: "Update completed!" });
+              }}
+            >
+              Update all
+            </Button>
           </div>
 
           {/* List of configuration cards */}
@@ -58,9 +99,9 @@ function ConfigPage() {
                 />
               </form>
             </CardContent>
-            <CardFooter className="border-t px-6 py-4">
+            {/* <CardFooter className="border-t px-6 py-4">
               <Button>Save</Button>
-            </CardFooter>
+            </CardFooter> */}
           </Card>
           <Card>
             <CardHeader>
@@ -79,9 +120,9 @@ function ConfigPage() {
                 />
               </form>
             </CardContent>
-            <CardFooter className="border-t px-6 py-4">
+            {/* <CardFooter className="border-t px-6 py-4">
               <Button>Save</Button>
-            </CardFooter>
+            </CardFooter> */}
           </Card>
           <Card>
             <CardHeader>
@@ -100,9 +141,9 @@ function ConfigPage() {
                 />
               </form>
             </CardContent>
-            <CardFooter className="border-t px-6 py-4">
+            {/* <CardFooter className="border-t px-6 py-4">
               <Button>Save</Button>
-            </CardFooter>
+            </CardFooter> */}
           </Card>
         </div>
       </div>

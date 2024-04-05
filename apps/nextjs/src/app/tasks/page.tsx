@@ -333,15 +333,21 @@ export default function Tasks() {
                     </div>
                     <div>
                       <Label htmlFor="link">
-                        {network === "twitter" ? "Twitter entity" : "Link"}
+                        {network === "twitter" && actionType === "follow"
+                          ? "Account username"
+                          : network === "twitter" && actionType === "post"
+                            ? "Post Id"
+                            : "Link"}
                       </Label>
                       <Input
                         name="link"
                         id="link"
                         placeholder={
-                          network === "twitter"
-                            ? "Entity handle or URL"
-                            : `${network} Link`
+                          network === "twitter" && actionType === "follow"
+                            ? "Account username"
+                            : network === "twitter" && actionType === "post"
+                              ? "Post Id"
+                              : `${network} Link`
                         }
                         value={link}
                         onChange={(event) => setLink(event.target.value)}
@@ -513,15 +519,22 @@ function EditableTaskDialog({ task, open, onOpenChange }: IEditableTaskProps) {
           </div>
           <div>
             <Label htmlFor="link">
-              {networkEditable === "twitter" ? "Twitter entity" : "Link"}
+              {networkEditable === "twitter" && actionTypeEditable === "follow"
+                ? "Account username"
+                : networkEditable === "twitter" && actionTypeEditable === "post"
+                  ? "Post Id"
+                  : "Link"}
             </Label>
             <Input
               name="link"
               id="link"
               placeholder={
-                networkEditable === "twitter"
-                  ? "Entity handle or URL"
-                  : `${networkEditable} Link`
+                networkEditable === "twitter" && actionTypeEditable === "follow"
+                  ? "Account username"
+                  : networkEditable === "twitter" &&
+                      actionTypeEditable === "post"
+                    ? "Post Id"
+                    : `${networkEditable} Link`
               }
               value={linkEditable}
               onChange={(event) => setEditableLink(event.target.value)}

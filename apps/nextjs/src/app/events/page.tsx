@@ -573,21 +573,6 @@ function EventDialog({
                       value={action?.channel}
                       onValueChange={(value: Network) => {
                         console.log(value, ":::Network");
-                        // switch (value) {
-                        //   case "twitter":
-                        //     set("type", index, "follow");
-                        //     break;
-                        //   case "discord":
-                        //   case "telegram":
-                        //     set("type", index, "join");
-                        //     break;
-                        //   case "website":
-                        //     set("type", index, "visit");
-                        //     break;
-                        //   default:
-                        //     set("type", index, "follow");
-                        //     break;
-                        // }
                         set("channel", index, value);
                       }}
                     >
@@ -651,17 +636,23 @@ function EventDialog({
                   </div>
                   <div>
                     <Label htmlFor="link">
-                      {action?.channel === "twitter"
-                        ? "Twitter entity"
-                        : "Link"}
+                      {action?.channel === "twitter" && action.type === "follow"
+                        ? "Account username"
+                        : action.channel === "twitter" && action.type === "post"
+                          ? "Post Id"
+                          : "Link"}
                     </Label>
                     <Input
                       name="link"
                       id="link"
                       placeholder={
-                        action?.channel === "twitter"
-                          ? "Entity handle or URL"
-                          : `${action?.channel} Link`
+                        action?.channel === "twitter" &&
+                        action.type === "follow"
+                          ? "Account username"
+                          : action.channel === "twitter" &&
+                              action.type === "post"
+                            ? "Post Id"
+                            : `${action?.channel} Link`
                       }
                       value={action?.link}
                       onChange={(event) =>
