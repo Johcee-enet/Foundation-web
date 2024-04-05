@@ -141,12 +141,20 @@ export default function Register() {
                 pathname: "/(main)/dashboard",
                 params: { userId, nickname: userData?.data?.username.trim() },
               });
+            } else {
+              setTwitterAuthLoading(false);
+              return Alert.alert(
+                "Nickname/Username is already in use, try another one",
+              );
             }
           }
+
+          setTwitterAuthLoading(false);
 
           // Get basic user info before proceeding
         }
       } catch (err: any) {
+        setTwitterAuthLoading(false);
         console.log(err.message ?? err.toString(), ":::Error");
         throw new Error(err);
       }
@@ -183,6 +191,11 @@ export default function Register() {
             const userData = await Twitter.userData({ token: token?.access });
             console.log(userData, ":::User data");
 
+            if (!userData) {
+              setTwitterAuthLoading(false);
+              return Alert.alert("Failed to authenticate and login user");
+            }
+
             const user: Doc<"user"> | undefined = await loginTwiitter({
               nickname: userData?.data?.username,
             });
@@ -202,8 +215,10 @@ export default function Register() {
               },
             });
           }
+          // setTwitterAuthLoading(false);
         }
       } catch (e: any) {
+        setTwitterAuthLoading(false);
         return Alert.alert("Onboarding error", e.message ?? e.toString());
       }
     }

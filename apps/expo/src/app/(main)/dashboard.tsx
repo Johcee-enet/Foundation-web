@@ -33,10 +33,11 @@ import TaskBoostCard, {
   icons,
   TaskRenderer,
 } from "@/components/task_boost_card";
+import { Twitter } from "@/twitterUtils";
 import BottomSheet from "@devvie/bottom-sheet";
 import { MaterialIcons, Octicons } from "@expo/vector-icons";
 import { useAction, useMutation, useQuery } from "convex/react";
-import { addHours, differenceInSeconds, formatDuration } from "date-fns";
+import { addHours, differenceInSeconds } from "date-fns";
 
 import type { Doc, Id } from "@acme/api/convex/_generated/dataModel";
 import { api } from "@acme/api/convex/_generated/api";
@@ -452,6 +453,13 @@ export default function DashboardPage() {
                         // Call twitter follow API handler
                         console.log("Handle follow API");
                         setLoadingModalVisible(true);
+
+                        // Do a lookup of the account name to get an Id
+
+                        // await Twitter.follow({
+                        //   token: ,
+                        //   profileId:
+                        // })
 
                         await rewardTaskXpCount({
                           userId: params.userId as Id<"user">,
