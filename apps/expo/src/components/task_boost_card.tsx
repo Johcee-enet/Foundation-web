@@ -297,8 +297,6 @@ interface ITaskProps {
 const Tasks: React.FC<ITaskProps> = ({ tasks, onTaskPressed }) => {
   // Fetch tasks and events
 
-  console.log(tasks, ":::Tasks and events");
-
   return (
     <View
       style={{

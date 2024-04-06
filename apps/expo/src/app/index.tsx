@@ -161,7 +161,7 @@ export default function Register() {
     }
   }, [response, redirectUri, request]);
 
-  // Handle user return after onboarding into the applicaiton
+  // Handle user auto authentication after user data has been stored
   useEffect(() => {
     getUserLocalData().catch((result) => console.log(result, ":::Resutl"));
     async function getUserLocalData() {
@@ -169,22 +169,24 @@ export default function Register() {
         const isOnboarded = getData("@enet-store/isOnboarded", true);
         if (!isOnboarded) {
           setUserIsOnbaorded(false);
-          console.log(isOnboarded, "Is false");
           return;
         } else {
-          setTwitterAuthLoading(true);
-          setUserIsOnbaorded(true);
-          // Refresh token
+          // Check for user object and twitter auth
+          const user = getData("@enet-store/user", true) as Record<string, any>;
           const token = getData("@enet-store/token", true) as Record<
             string,
             any
           >;
-          if (!token) {
-            setTwitterAuthLoading(false);
-            return;
-          } else {
+          console.log(token, Object.keys(token).length, ":::Token");
+          console.log(user, ":::User to trigger login for");
+          if (user && token) {
+            router.replace({
+              pathname: "/(main)/dashboard",
+              params: { ...user },
+            });
+          } else if (!user && token) {
+            setTwitterAuthLoading(true);
             // If token object is available then refresh the token and fetch new user details
-
             console.log(token, ":::Stored token");
 
             // Get user token and fetch user data
@@ -195,6 +197,8 @@ export default function Register() {
               setTwitterAuthLoading(false);
               return Alert.alert("Failed to authenticate and login user");
             }
+
+            console.log(userData?.data?.username);
 
             const user: Doc<"user"> | undefined = await loginTwiitter({
               nickname: userData?.data?.username,
@@ -214,11 +218,19 @@ export default function Register() {
                 nickname: userData?.data?.username.trim(),
               },
             });
+          } else if (user && !token) {
+            router.replace({
+              pathname: "/(main)/dashboard",
+              params: { ...user },
+            });
+          } else {
+            setUserIsOnbaorded(false);
+            return;
           }
-          // setTwitterAuthLoading(false);
         }
       } catch (e: any) {
         setTwitterAuthLoading(false);
+        console.log(e, "::: Error onboarding");
         return Alert.alert("Onboarding error", e.message ?? e.toString());
       }
     }

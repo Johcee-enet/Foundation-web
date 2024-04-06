@@ -24,13 +24,6 @@ export default function Layout() {
       console.log(result, ":::_layout.tsx file"),
     );
 
-    function checkUserLoggedIn() {
-      const user = getData("@enet-store/user", true) as Record<string, any>;
-      if (user) {
-        router.replace({ pathname: "/(main)/dashboard", params: { ...user } });
-      }
-    }
-
     async function onFetchUpdateAsync() {
       try {
         const update = await Updates.checkForUpdateAsync();
@@ -41,17 +34,13 @@ export default function Layout() {
           );
           await Updates.fetchUpdateAsync();
           await Updates.reloadAsync();
-        } else {
-          checkUserLoggedIn();
         }
       } catch (error: any) {
         // You can also add an alert() to see the error message in case of an error when fetching updates.
         Alert.alert("Update error", `Error fetching latest update: ${error}`, [
           {
+            style: "cancel",
             text: "Continue to app",
-            onPress() {
-              checkUserLoggedIn();
-            },
           },
         ]);
       }

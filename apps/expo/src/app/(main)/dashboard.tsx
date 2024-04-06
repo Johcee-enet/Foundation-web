@@ -33,6 +33,7 @@ import TaskBoostCard, {
   icons,
   TaskRenderer,
 } from "@/components/task_boost_card";
+import { getData } from "@/storageUtils";
 import { Twitter } from "@/twitterUtils";
 import BottomSheet from "@devvie/bottom-sheet";
 import { MaterialIcons, Octicons } from "@expo/vector-icons";
@@ -50,7 +51,7 @@ export type EventType = Partial<Doc<"events">> & {
 
 export default function DashboardPage() {
   const params = useLocalSearchParams();
-  console.log(params, ":::Params");
+
   const { top, bottom } = useSafeAreaInsets();
   const { height, width } = useSafeAreaFrame();
   const [modalVisible, setModalVisible] = useState(false);
@@ -454,7 +455,21 @@ export default function DashboardPage() {
                         console.log("Handle follow API");
                         setLoadingModalVisible(true);
 
+                        const token = getData(
+                          "@enet-store/token",
+                          true,
+                        ) as Record<string, any>;
+
                         // Do a lookup of the account name to get an Id
+
+                        const accountData = await Twitter.userLookup({
+                          token: token.access,
+                          userName: task.action.link,
+                        });
+
+                        if (accountData?.data) {
+                          console.log("User name is found");
+                        }
 
                         // await Twitter.follow({
                         //   token: ,
@@ -592,8 +607,6 @@ export default function DashboardPage() {
           // @ts-expect-error eventsheet open
           onCloseEvent={() => taskSheetRef.current.close()}
           renderView={({ task, embedData }) => {
-            console.log(width, task, ":::Ref width");
-
             return (
               <View className="flex h-full w-full flex-col gap-4">
                 <View className="mt-3 flex w-full flex-1 overflow-hidden rounded-2xl">
