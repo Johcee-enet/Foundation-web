@@ -17,7 +17,7 @@ import { Image } from "expo-image";
 import { Link, router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import LoadingModal from "@/components/loading_modal";
-import { getData, storeData } from "@/storageUtils";
+import { storeData } from "@/storageUtils";
 import { Twitter, TwitterAuth } from "@/twitterUtils";
 import { Env } from "@env";
 import { FontAwesome6 } from "@expo/vector-icons";
@@ -38,12 +38,10 @@ export default function Register() {
   const [referreeCode, setReferreeCode] = useState("");
   const [password, setPassword] = useState("");
   const [userIsOnboarded, setUserIsOnbaorded] = useState(false);
+  const [authState, setAuthState] = useState<"login" | "signup">("signup");
 
   const initiateUser = useAction(api.onboarding.initializeNewUser);
   const loginUser = useAction(api.onboarding.loginUser);
-
-  // Twitter auth login
-  const loginTwiitter = useAction(api.onboarding.loginTwitterUser);
 
   const storeNickname = useMutation(api.onboarding.storeNickname);
   const isNicknameValid = useMutation(api.onboarding.isNicknameValid);
@@ -71,6 +69,7 @@ export default function Register() {
         "like.write",
         "list.read",
         "follows.write",
+        "space.read",
         "follows.read",
         "list.read",
         "offline.access",
@@ -161,81 +160,6 @@ export default function Register() {
     }
   }, [response, redirectUri, request]);
 
-  // Handle user auto authentication after user data has been stored
-  useEffect(() => {
-    getUserLocalData().catch((result) => console.log(result, ":::Resutl"));
-    async function getUserLocalData() {
-      try {
-        const isOnboarded = getData("@enet-store/isOnboarded", true);
-        if (!isOnboarded) {
-          setUserIsOnbaorded(false);
-          return;
-        } else {
-          // Check for user object and twitter auth
-          const user = getData("@enet-store/user", true) as Record<string, any>;
-          const token = getData("@enet-store/token", true) as Record<
-            string,
-            any
-          >;
-          console.log(token, Object.keys(token).length, ":::Token");
-          console.log(user, ":::User to trigger login for");
-          if (user && token) {
-            router.replace({
-              pathname: "/(main)/dashboard",
-              params: { ...user },
-            });
-          } else if (!user && token) {
-            setTwitterAuthLoading(true);
-            // If token object is available then refresh the token and fetch new user details
-            console.log(token, ":::Stored token");
-
-            // Get user token and fetch user data
-            const userData = await Twitter.userData({ token: token?.access });
-            console.log(userData, ":::User data");
-
-            if (!userData) {
-              setTwitterAuthLoading(false);
-              return Alert.alert("Failed to authenticate and login user");
-            }
-
-            console.log(userData?.data?.username);
-
-            const user: Doc<"user"> | undefined = await loginTwiitter({
-              nickname: userData?.data?.username,
-            });
-
-            storeData("@enet-store/user", {
-              userId: user?._id,
-              nickname: userData?.data?.username.trim(),
-            });
-
-            setTwitterAuthLoading(false);
-
-            router.push({
-              pathname: "/(main)/dashboard",
-              params: {
-                userId: user?._id,
-                nickname: userData?.data?.username.trim(),
-              },
-            });
-          } else if (user && !token) {
-            router.replace({
-              pathname: "/(main)/dashboard",
-              params: { ...user },
-            });
-          } else {
-            setUserIsOnbaorded(false);
-            return;
-          }
-        }
-      } catch (e: any) {
-        setTwitterAuthLoading(false);
-        console.log(e, "::: Error onboarding");
-        return Alert.alert("Onboarding error", e.message ?? e.toString());
-      }
-    }
-  }, [userIsOnboarded]);
-
   return (
     <SafeAreaView className="bg-[#EBEBEB]">
       <KeyboardAvoidingView behavior={"position"}>
@@ -266,7 +190,7 @@ export default function Register() {
                 className="mb-[16px] w-full rounded-md bg-[#EBEBEB] px-6 py-4 font-[nunito] text-lg font-medium text-black placeholder:font-light placeholder:text-black"
                 onChangeText={(text) => setEmail(text)}
               />
-              {!userIsOnboarded && (
+              {authState === "signup" && (
                 <TextInput
                   placeholder="Referral"
                   className="w-full rounded-md bg-[#EBEBEB] px-6 py-4 font-[nunito] text-lg font-medium text-black placeholder:font-light placeholder:text-black"
@@ -274,7 +198,7 @@ export default function Register() {
                   onChangeText={(text) => setReferreeCode(text)}
                 />
               )}
-              {userIsOnboarded && (
+              {authState === "login" && (
                 <TextInput
                   placeholder="Password"
                   value={password}
@@ -283,29 +207,29 @@ export default function Register() {
                 />
               )}
               <View className="w-full items-end justify-center">
-                {!userIsOnboarded && (
+                {authState === "signup" && (
                   <Link
                     className="font-[nunito] text-lg font-semibold text-blue-500"
                     href="/"
                     onPress={(e) => {
                       e.preventDefault();
-                      storeData("@enet-store/isOnboarded", true);
+                      // storeData("@enet-store/isOnboarded", true);
 
-                      setUserIsOnbaorded(true);
+                      setAuthState("login");
                     }}
                   >
                     Login
                   </Link>
                 )}
-                {userIsOnboarded && (
+                {authState === "login" && (
                   <Link
                     className="font-[nunito] text-lg font-semibold text-blue-500"
                     href="/"
                     onPress={(e) => {
                       e.preventDefault();
-                      storeData("@enet-store/isOnboarded", false);
+                      // storeData("@enet-store/isOnboarded", false);
 
-                      setUserIsOnbaorded(false);
+                      setAuthState("signup");
                     }}
                   >
                     Signup
@@ -327,7 +251,7 @@ export default function Register() {
                       //
 
                       // TODO: If user is onboarded already, then login
-                      if (userIsOnboarded) {
+                      if (userIsOnboarded && authState === "login") {
                         if (!email.length || !password.length) {
                           return Alert.alert(
                             "Onbaording error",
@@ -380,7 +304,7 @@ export default function Register() {
                     }
                   }}
                 >
-                  {userIsOnboarded ? "Login" : "Signup"}
+                  {authState === "login" ? "Login" : "Signup"}
                   {/* <Text className=""></Text> */}
                 </Link>
                 <Link
