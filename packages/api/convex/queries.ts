@@ -161,16 +161,10 @@ export const fetchTasks = query({
     if (!user) {
       throw new Error("User not found");
     }
+
     // Filter tasks based on tasks completions by user
-    const tasks = await db.query("tasks").collect();
-
-    const filteredTasks = tasks.filter((task) => {
-      return (user.completedTasks ?? []).some(
-        (completedTaskId) => completedTaskId !== task._id,
-      );
-    });
-
-    return filteredTasks;
+    const tasks = await db.query("tasks").order("desc").collect();
+    return tasks;
   },
 });
 
@@ -182,7 +176,7 @@ export const fetchEvents = query({
     if (!user) {
       throw new Error("User not found");
     }
-    const events = await db.query("events").collect();
+    const events = await db.query("events").order("desc").collect();
 
     const loadedEvents = await Promise.all(
       events.map(async (event) => {
@@ -204,15 +198,7 @@ export const fetchEvents = query({
       }),
     );
 
-    // filter events based on completed from users list
-
-    const filteredEvents = loadedEvents.filter((event) => {
-      return (user.eventsJoined ?? []).some(
-        (joined) => !joined.completed && joined.eventId !== event._id,
-      );
-    });
-
-    return filteredEvents;
+    return loadedEvents;
   },
 });
 
