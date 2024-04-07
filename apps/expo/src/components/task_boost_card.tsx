@@ -1,8 +1,8 @@
 import type { EventType } from "@/app/(main)/dashboard";
 import type { EmbedResponse } from "@/twitterUtils";
-import React, { Suspense, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
+  // ActivityIndicator,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -12,7 +12,7 @@ import Carousel from "react-native-reanimated-carousel";
 // import { BottomSheetMethods } from "@devvie/bottom-sheet";
 import { useSafeAreaFrame } from "react-native-safe-area-context";
 import { Image } from "expo-image";
-import { useLocalSearchParams } from "expo-router";
+// import { useLocalSearchParams } from "expo-router";
 import { tweetEmbed } from "@/twitterUtils";
 import {
   AntDesign,
@@ -20,6 +20,7 @@ import {
   FontAwesome6,
   MaterialIcons,
 } from "@expo/vector-icons";
+import { FlashList } from "@shopify/flash-list";
 
 import type { Doc } from "@acme/api/convex/_generated/dataModel";
 
@@ -42,7 +43,7 @@ export default function TaskBoostCard({
   onEventPressed,
   onTaskPressed,
 }: ITaskBoostCardProps) {
-  const { userId, ...params } = useLocalSearchParams();
+  // const { userId, ...params } = useLocalSearchParams();
   const sliderRef = useRef(null);
   const { width, height } = useSafeAreaFrame();
   const [sliderIndex, setSliderIndex] = useState(0);
@@ -194,7 +195,6 @@ export default function TaskBoostCard({
           alignItems: "center",
           justifyContent: "center",
           borderRadius: 20,
-          overflow: "scroll",
         }}
         autoPlay={false}
         width={width * 0.95}
@@ -210,31 +210,105 @@ export default function TaskBoostCard({
         renderItem={({ index }) => {
           if (index === 0) {
             return (
-              <ScrollView
+              <View
                 style={{
-                  paddingBottom: 35,
+                  // paddingBottom: 35,
                   height: "100%",
+                  width: "100%",
+                  alignItems: "center",
+                  justifyContent: "flex-start",
+                  gap: 24,
+                  display: "flex",
+                  flex: 1,
+                  flexDirection: "column",
+                  backgroundColor: "white",
+                  padding: 24,
                 }}
-                contentInsetAdjustmentBehavior="always"
               >
-                <Tasks
+                <Text className="font-[nunito] text-xl text-black">
+                  Simple task for more XP's
+                </Text>
+                {/* <Tasks
                   key={index}
                   tasks={tasks}
                   params={{ userId: userId as string, ...params }}
                   onTaskPressed={onTaskPressed}
-                />
-              </ScrollView>
+                /> */}
+                <ScrollView
+                  nestedScrollEnabled
+                  indicatorStyle="default"
+                  style={{ width: "100%" }}
+                >
+                  <FlashList
+                    data={tasks}
+                    estimatedItemSize={200}
+                    keyExtractor={(item) => item._id.toString()}
+                    scrollEnabled={true}
+                    renderItem={({ item, index }) => (
+                      <Task
+                        task={item}
+                        index={index}
+                        onTaskPressed={onTaskPressed}
+                      />
+                    )}
+                  />
+                </ScrollView>
+              </View>
             );
           }
 
           if (index === 1) {
             return (
-              <Events
+              <View
+                style={{
+                  // paddingBottom: 35,
+                  height: "100%",
+                  width: "100%",
+                  alignItems: "center",
+                  justifyContent: "flex-start",
+                  gap: 24,
+                  display: "flex",
+                  flex: 1,
+                  flexDirection: "column",
+                  backgroundColor: "white",
+                  padding: 24,
+                }}
+              >
+                {/* <Text className="font-[nunito] text-xl text-black">
+                  Simple task for more XP's
+                </Text> */}
+                {/* <Tasks
+                key={index}
+                tasks={tasks}
+                params={{ userId: userId as string, ...params }}
+                onTaskPressed={onTaskPressed}
+              /> */}
+                <ScrollView
+                  nestedScrollEnabled
+                  indicatorStyle="default"
+                  style={{ width: "100%" }}
+                >
+                  {/* <Events
                 key={index}
                 events={events}
                 params={{ userId: userId as string, ...params }}
                 onEventPressed={onEventPressed}
-              />
+              /> */}
+
+                  <FlashList
+                    data={events}
+                    estimatedItemSize={200}
+                    scrollEnabled={true}
+                    renderItem={({ item, index }) => (
+                      <Event
+                        event={item}
+                        index={index}
+                        onEventPressed={onEventPressed}
+                      />
+                    )}
+                  />
+                </ScrollView>
+              </View>
             );
           }
 
@@ -283,74 +357,111 @@ export const icons = {
 //     link: "https://discord.gg/RQqVWPxuwq",
 //   },
 // ];
-interface ITaskProps {
-  params: {
-    userId: string;
-    email?: string;
-    nickname?: string;
-    accessToken?: string;
-    refreshToken?: string;
-  };
-  tasks: Doc<"tasks">[] | undefined;
-  onTaskPressed: (index: number) => void;
-}
-const Tasks: React.FC<ITaskProps> = ({ tasks, onTaskPressed }) => {
-  // Fetch tasks and events
+// interface ITaskProps {
+//   params: {
+//     userId: string;
+//     email?: string;
+//     nickname?: string;
+//     accessToken?: string;
+//     refreshToken?: string;
+//   };
+//   tasks: Doc<"tasks">[] | undefined;
+//   onTaskPressed: (index: number) => void;
+// }
+// const Tasks: React.FC<ITaskProps> = ({ tasks, onTaskPressed }) => {
+//   // Fetch tasks and events
 
+//   return (
+//     <View
+//       style={{
+//         paddingBottom: 35,
+//         height: "100%",
+//         alignItems: "center",
+//         justifyContent: "flex-start",
+//         gap: 24,
+//         display: "flex",
+//         flex: 1,
+//         width: "100%",
+//         flexDirection: "column",
+//         backgroundColor: "white",
+//         padding: 24,
+//       }}
+//     >
+//       <Text className="font-[nunito] text-xl text-black">
+//         Simple task for more XP's
+//       </Text>
+//       {/* <Text className="font-[nunito] -mt-3 text-lg text-black/50">
+//       10,000 XP Challenge
+//     </Text> */}
+//       <Suspense fallback={<ActivityIndicator size="large" color="#000000" />}>
+//         {tasks?.map((task, index) => (
+//           <TouchableOpacity
+//             onPress={() => {
+//               // router.push({ pathname: task.link, params });
+//               onTaskPressed(index);
+//             }}
+//             key={index}
+//             className="flex w-full flex-row items-center justify-center gap-4"
+//           >
+//             <View className="rounded-xl bg-[#EBEBEB] p-5">
+//               {
+//                 // @ts-expect-error something went wrong in Task render
+//                 icons[task?.action.channel]
+//               }
+//             </View>
+//             <View className="flex flex-1 flex-col items-start justify-center gap-2">
+//               <Text className="font-[nunito] text-lg">{task?.name}</Text>
+//               <Text className="text-wrap font-[nunito]">
+//                 +{task?.reward.toLocaleString("en-US")} XP
+//               </Text>
+//             </View>
+//             {/* <View className="flex-1" /> */}
+//             <MaterialIcons
+//               name="keyboard-arrow-right"
+//               size={24}
+//               color="black"
+//             />
+//           </TouchableOpacity>
+//         ))}
+//       </Suspense>
+//     </View>
+//   );
+// };
+
+const Task = ({
+  onTaskPressed,
+  index,
+  task,
+}: {
+  onTaskPressed: (index: number) => void;
+  index: number;
+  task: Doc<"tasks">;
+}) => {
   return (
-    <View
-      style={{
-        paddingBottom: 35,
-        height: "100%",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        gap: 24,
-        display: "flex",
-        flex: 1,
-        width: "100%",
-        flexDirection: "column",
-        backgroundColor: "white",
-        padding: 24,
+    <TouchableOpacity
+      onPress={() => {
+        // router.push({ pathname: task.link, params });
+        onTaskPressed(index);
       }}
+      key={index}
+      style={{ marginVertical: 8 }}
+      className="flex w-full flex-row items-center justify-center gap-4"
     >
-      <Text className="font-[nunito] text-xl text-black">
-        Simple task for more XP's
-      </Text>
-      {/* <Text className="font-[nunito] -mt-3 text-lg text-black/50">
-      10,000 XP Challenge
-    </Text> */}
-      <Suspense fallback={<ActivityIndicator size="large" color="#000000" />}>
-        {tasks?.map((task, index) => (
-          <TouchableOpacity
-            onPress={() => {
-              // router.push({ pathname: task.link, params });
-              onTaskPressed(index);
-            }}
-            key={index}
-            className="flex w-full flex-row items-center justify-center gap-4"
-          >
-            <View className="rounded-xl bg-[#EBEBEB] p-5">
-              {
-                // @ts-expect-error something went wrong in Task render
-                icons[task?.action.channel]
-              }
-            </View>
-            <View className="flex flex-1 flex-col items-start justify-center gap-2">
-              <Text className="font-[nunito] text-lg">{task?.name}</Text>
-              <Text className="text-wrap font-[nunito]">
-                +{task?.reward.toLocaleString("en-US")} XP
-              </Text>
-            </View>
-            {/* <View className="flex-1" /> */}
-            <MaterialIcons
-              name="keyboard-arrow-right"
-              size={24}
-              color="black"
-            />
-          </TouchableOpacity>
-        ))}
-      </Suspense>
-    </View>
+      <View className="rounded-xl bg-[#EBEBEB] p-5">
+        {
+          // @ts-expect-error something went wrong in Task render
+          icons[task?.action.channel]
+        }
+      </View>
+      <View className="flex flex-1 flex-col items-start justify-center gap-2">
+        <Text className="font-[nunito] text-lg">{task?.name}</Text>
+        <Text className="text-wrap font-[nunito]">
+          +{task?.reward.toLocaleString("en-US")} XP
+        </Text>
+      </View>
+      {/* <View className="flex-1" /> */}
+      <MaterialIcons name="keyboard-arrow-right" size={24} color="black" />
+    </TouchableOpacity>
   );
 };
 
@@ -386,66 +497,101 @@ const Tasks: React.FC<ITaskProps> = ({ tasks, onTaskPressed }) => {
 //     link: "https://discord.gg/RQqVWPxuwq",
 //   },
 // ];
-interface IEventProps {
-  params: {
-    userId: string;
-    email?: string;
-    nickname?: string;
-    accessToken?: string;
-    refreshToken?: string;
-  };
-  events: EventType[] | undefined;
+// interface IEventProps {
+//   params: {
+//     userId: string;
+//     email?: string;
+//     nickname?: string;
+//     accessToken?: string;
+//     refreshToken?: string;
+//   };
+//   events: EventType[] | undefined;
+//   onEventPressed: (index: number) => void;
+// }
+// const Events: React.FC<IEventProps> = ({ events, onEventPressed }) => {
+//   return (
+//     <View className="flex w-full flex-1 flex-col items-center justify-start gap-4 bg-white p-6 pb-14">
+//       {/*    <Text className="text-2xl text-black">Ecosystem</Text>
+//     <Text className="-mt-3 text-lg text-black/50">10,000 XP Challenge</Text> */}
+
+//       <Suspense fallback={<ActivityIndicator size="large" color="#000000" />}>
+//         {events &&
+//           !!events?.length &&
+//           events.map((event, index) => (
+//             <TouchableOpacity
+//               onPress={() => {
+//                 // router.push({ pathname: task.link, params })
+//                 onEventPressed(index);
+//               }}
+//               key={index}
+//               className="flex w-full flex-row items-center justify-center gap-4"
+//             >
+//               <View className="rounded-2xl bg-gray-700/30 p-2">
+//                 <Image
+//                   source={{ uri: event?.company?.logoUrl }}
+//                   style={{ width: 50, height: 50 }}
+//                   resizeMode="cover"
+//                 />
+//               </View>
+//               <View className="flex flex-col items-start justify-center gap-2">
+//                 <Text className="font-[nunito] text-lg">{event?.title}</Text>
+//                 <Text className="font-[nunito]">
+//                   +{(event.reward ?? 0).toLocaleString("en-US")} XP
+//                 </Text>
+//               </View>
+//               <View className="flex-1" />
+//               <MaterialIcons
+//                 name="keyboard-arrow-right"
+//                 size={24}
+//                 color="black"
+//               />
+//             </TouchableOpacity>
+//           ))}
+
+//         {events && !events.length && (
+//           <Text className="mt-5 text-center font-[nunito] text-xl font-medium text-black">
+//             There are no events at this time, check back later
+//           </Text>
+//         )}
+//       </Suspense>
+//     </View>
+//   );
+// };
+
+const Event = ({
+  onEventPressed,
+  index,
+  event,
+}: {
   onEventPressed: (index: number) => void;
-}
-const Events: React.FC<IEventProps> = ({ events, onEventPressed }) => {
-  return (
-    <View className="flex w-full flex-1 flex-col items-center justify-start gap-4 bg-white p-6 pb-14">
-      {/*    <Text className="text-2xl text-black">Ecosystem</Text>
-    <Text className="-mt-3 text-lg text-black/50">10,000 XP Challenge</Text> */}
-
-      <Suspense fallback={<ActivityIndicator size="large" color="#000000" />}>
-        {events &&
-          !!events?.length &&
-          events.map((event, index) => (
-            <TouchableOpacity
-              onPress={() => {
-                // router.push({ pathname: task.link, params })
-                onEventPressed(index);
-              }}
-              key={index}
-              className="flex w-full flex-row items-center justify-center gap-4"
-            >
-              <View className="rounded-2xl bg-gray-700/30 p-2">
-                <Image
-                  source={{ uri: event?.company?.logoUrl }}
-                  style={{ width: 50, height: 50 }}
-                  resizeMode="cover"
-                />
-              </View>
-              <View className="flex flex-col items-start justify-center gap-2">
-                <Text className="font-[nunito] text-lg">{event?.title}</Text>
-                <Text className="font-[nunito]">
-                  +{(event.reward ?? 0).toLocaleString("en-US")} XP
-                </Text>
-              </View>
-              <View className="flex-1" />
-              <MaterialIcons
-                name="keyboard-arrow-right"
-                size={24}
-                color="black"
-              />
-            </TouchableOpacity>
-          ))}
-
-        {events && !events.length && (
-          <Text className="mt-5 text-center font-[nunito] text-xl font-medium text-black">
-            There are no events at this time, check back later
-          </Text>
-        )}
-      </Suspense>
+  index: number;
+  event: EventType;
+}) => (
+  <TouchableOpacity
+    onPress={() => {
+      // router.push({ pathname: task.link, params })
+      onEventPressed(index);
+    }}
+    key={index}
+    className="flex w-full flex-row items-center justify-center gap-4"
+  >
+    <View className="rounded-2xl bg-gray-700/30 p-2">
+      <Image
+        source={{ uri: event?.company?.logoUrl }}
+        style={{ width: 50, height: 50 }}
+        resizeMode="cover"
+      />
     </View>
-  );
-};
+    <View className="flex flex-col items-start justify-center gap-2">
+      <Text className="font-[nunito] text-lg">{event?.title}</Text>
+      <Text className="font-[nunito]">
+        +{(event.reward ?? 0).toLocaleString("en-US")} XP
+      </Text>
+    </View>
+    <View className="flex-1" />
+    <MaterialIcons name="keyboard-arrow-right" size={24} color="black" />
+  </TouchableOpacity>
+);
 
 const Boosts = ({ boosterList }: { boosterList: any[] }) => (
   <View className="flex w-full flex-1 flex-col items-center justify-start gap-4 bg-white p-6 pb-14">
