@@ -421,6 +421,8 @@ export default function DashboardPage() {
                       // @ts-expect-error eventsheet open
                       eventSheetRef.current.open();
                     }}
+                    completedTasks={userDetail?.completedTasks}
+                    eventsJoined={userDetail?.eventsJoined}
                     onTaskPressed={async (taskIndex: number) => {
                       console.log(taskIndex, ":::task Index");
                       const task = (fetchTasks ?? [])[taskIndex];
@@ -548,30 +550,43 @@ export default function DashboardPage() {
           </View>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-      <BottomSheet ref={eventSheetRef} height="70%">
-        <View className="flex h-full w-full flex-col items-center justify-between gap-4 rounded-lg p-4">
+      <BottomSheet
+        ref={eventSheetRef}
+        height="90%"
+        style={{ backgroundColor: "#FFFFFF", zIndex: 50 }}
+      >
+        <View
+          style={{ height: "100%", width: "100%" }}
+          className="flex h-full w-full flex-col items-center gap-4 rounded-lg px-4"
+        >
           {/* <Text>{eventSheetContent && eventSheetContent.title}</Text> */}
           <View className="flex w-full flex-row items-center justify-center gap-4">
             <View className="rounded-lg bg-gray-700/30 p-2">
               <Image
                 source={{ uri: eventSheetContent?.company?.logoUrl }}
-                style={{ width: 50, height: 50 }}
+                style={{ width: 40, height: 40 }}
                 resizeMode="cover"
               />
             </View>
             <View className="flex flex-col items-start justify-center gap-2">
-              <Text className="font-[nunito] text-lg font-bold text-black">
+              <Text
+                style={{ fontSize: 16, fontWeight: "500" }}
+                className="font-[nunito] text-lg font-bold text-black"
+              >
                 {eventSheetContent?.title}
               </Text>
-              <Text className=" font-[nunito]">
-                +
+              <Text
+                style={{ color: "#989898", fontSize: 12, fontWeight: "600" }}
+                className="font-[nunito]"
+              >
+                Reward:
                 {// @ts-expect-error eventsheet open
                 eventSheetContent?.reward.toLocaleString("en-US")}{" "}
                 XP
               </Text>
             </View>
           </View>
-          <View className="w-full gap-4">
+          <View className="w-full gap-4" style={{ flex: 1 }}>
             {eventSheetContent &&
               eventSheetContent?.actions?.map((action, index) => (
                 <TouchableOpacity
@@ -581,11 +596,8 @@ export default function DashboardPage() {
                   key={index}
                   className="flex w-full flex-row items-center justify-center gap-4"
                 >
-                  <View className="rounded-xl bg-[#EBEBEB] p-5">
-                    {
-                      // @ts-expect-error eventsheet open
-                      icons[action?.channel]
-                    }
+                  <View className="rounded-xl bg-[#EBEBEB] p-4">
+                    {icons[action?.channel]}
                   </View>
                   <View className="flex flex-col items-start justify-center gap-2">
                     <Text className="font-[nunito] text-lg">
@@ -604,13 +616,24 @@ export default function DashboardPage() {
                 </TouchableOpacity>
               ))}
           </View>
-          <View className="w-full flex-1">
-            <Button
+          <View style={{ marginBottom: 52 }} className="w-full">
+            <TouchableOpacity
               // @ts-expect-error eventsheet close
               onPress={() => eventSheetRef.current.close()}
-              title="Completed"
-              color="#000000"
-            />
+              style={{
+                backgroundColor: "black",
+                width: "100%",
+                height: 57,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 9,
+              }}
+            >
+              <Text style={{ color: "white", fontSize: 15, fontWeight: "500" }}>
+                Claim Reward
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </BottomSheet>

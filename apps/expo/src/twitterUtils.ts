@@ -225,6 +225,7 @@ export namespace Twitter {
     token: string;
     profileId: string;
   }) => {
+    console.log(token, ":::User token");
     try {
       const options = {
         headers: {

@@ -19,8 +19,11 @@ import {
   FontAwesome5,
   FontAwesome6,
   MaterialIcons,
+  SimpleLineIcons,
 } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
+
+// import { Era } from "date-fns";
 
 import type { Doc } from "@acme/api/convex/_generated/dataModel";
 
@@ -30,7 +33,8 @@ import type { Doc } from "@acme/api/convex/_generated/dataModel";
 interface ITaskBoostCardProps {
   renderTasks?: () => React.ReactNode;
   renderBoosts?: () => React.ReactNode;
-  data?: Record<string, any>[];
+  completedTasks: string[] | undefined;
+  eventsJoined: Record<string, any>[] | undefined;
   // eventSheetRef: React.MutableRefObject<BottomSheetMethods>;
   events: EventType[] | undefined;
   tasks: Doc<"tasks">[] | undefined;
@@ -40,6 +44,8 @@ interface ITaskBoostCardProps {
 export default function TaskBoostCard({
   tasks,
   events,
+  completedTasks,
+  eventsJoined,
   onEventPressed,
   onTaskPressed,
 }: ITaskBoostCardProps) {
@@ -246,6 +252,7 @@ export default function TaskBoostCard({
                     scrollEnabled={true}
                     renderItem={({ item, index }) => (
                       <Task
+                        completedTasks={completedTasks}
                         task={item}
                         index={index}
                         onTaskPressed={onTaskPressed}
@@ -274,15 +281,6 @@ export default function TaskBoostCard({
                   padding: 24,
                 }}
               >
-                {/* <Text className="font-[nunito] text-xl text-black">
-                  Simple task for more XP's
-                </Text> */}
-                {/* <Tasks
-                key={index}
-                tasks={tasks}
-                params={{ userId: userId as string, ...params }}
-                onTaskPressed={onTaskPressed}
-              /> */}
                 <ScrollView
                   nestedScrollEnabled
                   indicatorStyle="default"
@@ -301,6 +299,7 @@ export default function TaskBoostCard({
                     scrollEnabled={true}
                     renderItem={({ item, index }) => (
                       <Event
+                        eventsJoined={eventsJoined}
                         event={item}
                         index={index}
                         onEventPressed={onEventPressed}
@@ -324,118 +323,19 @@ export const icons = {
   discord: <MaterialIcons name="discord" size={24} color="black" />,
   telegram: <FontAwesome5 name="telegram-plane" size={24} color="black" />,
   invite: <FontAwesome5 name="user-friends" size={24} color="black" />,
+  website: <SimpleLineIcons name="globe" size={24} color="black" />,
 };
-// const ccosystemTaskList = [
-//   {
-//     name: "Invite 10 Friends",
-//     reward: 10000,
-//     icon: <FontAwesome5 name="user-friends" size={24} color="black" />,
-//     link: "/(main)/referral",
-//   },
-//   {
-//     name: "Follow On X(Twitter)",
-//     reward: 2000,
-//     icon: <FontAwesome6 name="x-twitter" size={24} color="black" />,
-//     link: "https://twitter.com/Enetecosystem",
-//   },
-//   {
-//     name: "Join Telegram Channel",
-//     reward: 2000,
-//     icon: <FontAwesome5 name="telegram-plane" size={24} color="black" />,
-//     link: "https://t.me/enetecosystem",
-//   },
-//   {
-//     name: "Join Telegram",
-//     reward: 2000,
-//     icon: <FontAwesome5 name="telegram-plane" size={24} color="black" />,
-//     link: "https://t.me/enetworkchannel",
-//   },
-//   {
-//     name: "Join Discord",
-//     reward: 2000,
-//     icon: <MaterialIcons name="discord" size={24} color="black" />,
-//     link: "https://discord.gg/RQqVWPxuwq",
-//   },
-// ];
-// interface ITaskProps {
-//   params: {
-//     userId: string;
-//     email?: string;
-//     nickname?: string;
-//     accessToken?: string;
-//     refreshToken?: string;
-//   };
-//   tasks: Doc<"tasks">[] | undefined;
-//   onTaskPressed: (index: number) => void;
-// }
-// const Tasks: React.FC<ITaskProps> = ({ tasks, onTaskPressed }) => {
-//   // Fetch tasks and events
-
-//   return (
-//     <View
-//       style={{
-//         paddingBottom: 35,
-//         height: "100%",
-//         alignItems: "center",
-//         justifyContent: "flex-start",
-//         gap: 24,
-//         display: "flex",
-//         flex: 1,
-//         width: "100%",
-//         flexDirection: "column",
-//         backgroundColor: "white",
-//         padding: 24,
-//       }}
-//     >
-//       <Text className="font-[nunito] text-xl text-black">
-//         Simple task for more XP's
-//       </Text>
-//       {/* <Text className="font-[nunito] -mt-3 text-lg text-black/50">
-//       10,000 XP Challenge
-//     </Text> */}
-//       <Suspense fallback={<ActivityIndicator size="large" color="#000000" />}>
-//         {tasks?.map((task, index) => (
-//           <TouchableOpacity
-//             onPress={() => {
-//               // router.push({ pathname: task.link, params });
-//               onTaskPressed(index);
-//             }}
-//             key={index}
-//             className="flex w-full flex-row items-center justify-center gap-4"
-//           >
-//             <View className="rounded-xl bg-[#EBEBEB] p-5">
-//               {
-//                 // @ts-expect-error something went wrong in Task render
-//                 icons[task?.action.channel]
-//               }
-//             </View>
-//             <View className="flex flex-1 flex-col items-start justify-center gap-2">
-//               <Text className="font-[nunito] text-lg">{task?.name}</Text>
-//               <Text className="text-wrap font-[nunito]">
-//                 +{task?.reward.toLocaleString("en-US")} XP
-//               </Text>
-//             </View>
-//             {/* <View className="flex-1" /> */}
-//             <MaterialIcons
-//               name="keyboard-arrow-right"
-//               size={24}
-//               color="black"
-//             />
-//           </TouchableOpacity>
-//         ))}
-//       </Suspense>
-//     </View>
-//   );
-// };
 
 const Task = ({
   onTaskPressed,
   index,
   task,
+  completedTasks,
 }: {
   onTaskPressed: (index: number) => void;
   index: number;
   task: Doc<"tasks">;
+  completedTasks: string[] | undefined;
 }) => {
   return (
     <TouchableOpacity
@@ -454,10 +354,25 @@ const Task = ({
         }
       </View>
       <View className="flex flex-1 flex-col items-start justify-center gap-2">
-        <Text className="font-[nunito] text-lg">{task?.name}</Text>
-        <Text className="text-wrap font-[nunito]">
-          +{task?.reward.toLocaleString("en-US")} XP
+        <Text
+          style={{
+            color: "black",
+            opacity: completedTasks?.some((id) => id === task._id) ? 0.3 : 1,
+          }}
+          className="font-[nunito] text-lg"
+        >
+          {task?.name}
         </Text>
+        {!completedTasks?.some((id) => id === task._id) && (
+          <Text className="text-wrap font-[nunito]">
+            +{task?.reward.toLocaleString("en-US")} XP
+          </Text>
+        )}
+        {completedTasks?.some((id) => id === task._id) && (
+          <Text className="text-wrap font-[nunito] text-black/30">
+            Completed
+          </Text>
+        )}
       </View>
       {/* <View className="flex-1" /> */}
       <MaterialIcons name="keyboard-arrow-right" size={24} color="black" />
@@ -465,38 +380,6 @@ const Task = ({
   );
 };
 
-// const eventsList = [
-//   {
-//     name: "Invite 10 Friends",
-//     reward: 10000,
-//     icon: <FontAwesome5 name="user-friends" size={24} color="black" />,
-//     link: "/(main)/referral",
-//   },
-//   {
-//     name: "Follow On X(Twitter)",
-//     reward: 2000,
-//     icon: <FontAwesome6 name="x-twitter" size={24} color="black" />,
-//     link: "https://twitter.com/Enetecosystem",
-//   },
-//   {
-//     name: "Join Telegram Channel",
-//     reward: 2000,
-//     icon: <FontAwesome5 name="telegram-plane" size={24} color="black" />,
-//     link: "https://t.me/enetecosystem",
-//   },
-//   {
-//     name: "Join Telegram",
-//     reward: 2000,
-//     icon: <FontAwesome5 name="telegram-plane" size={24} color="black" />,
-//     link: "https://t.me/enetworkchannel",
-//   },
-//   {
-//     name: "Join Discord",
-//     reward: 2000,
-//     icon: <MaterialIcons name="discord" size={24} color="black" />,
-//     link: "https://discord.gg/RQqVWPxuwq",
-//   },
-// ];
 // interface IEventProps {
 //   params: {
 //     userId: string;
@@ -562,10 +445,12 @@ const Event = ({
   onEventPressed,
   index,
   event,
+  eventsJoined,
 }: {
   onEventPressed: (index: number) => void;
   index: number;
   event: EventType;
+  eventsJoined: Record<string, any>[] | undefined;
 }) => (
   <TouchableOpacity
     onPress={() => {
@@ -573,9 +458,10 @@ const Event = ({
       onEventPressed(index);
     }}
     key={index}
+    style={{ marginVertical: 8 }}
     className="flex w-full flex-row items-center justify-center gap-4"
   >
-    <View className="rounded-2xl bg-gray-700/30 p-2">
+    <View className="rounded-xl bg-gray-500/20 p-2">
       <Image
         source={{ uri: event?.company?.logoUrl }}
         style={{ width: 50, height: 50 }}
