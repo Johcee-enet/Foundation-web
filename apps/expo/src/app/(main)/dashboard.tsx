@@ -283,7 +283,10 @@ export default function DashboardPage() {
                         />
                         <View className="flex flex-col items-start justify-center gap-1">
                           <Text className="flex items-center text-lg font-normal text-black">
-                            {userDetail?.miningRate} $FOUND/
+                            +
+                            {(userDetail?.miningRate ?? 0) *
+                              (userDetail?.mineHours ?? 0)}{" "}
+                            $FOUND/
                             {userDetail?.mineHours}hour
                           </Text>
                           {/* <Text className="font-lighter text-sm text-black">
@@ -333,6 +336,7 @@ export default function DashboardPage() {
               className="z-40 min-h-full w-full bg-[#F5F5F5]"
               contentInsetAdjustmentBehavior="always"
               style={{ height: height - top }}
+              showsVerticalScrollIndicator={false}
             >
               <Stack.Screen
                 options={{
@@ -421,8 +425,11 @@ export default function DashboardPage() {
                       console.log(taskIndex, ":::task Index");
                       const task = (fetchTasks ?? [])[taskIndex];
 
+                      console.log(task, ":::Task tapped on");
+
                       if (!task) {
-                        return Alert.alert("No task found");
+                        Alert.alert("No task found");
+                        return;
                       }
 
                       if (
@@ -451,37 +458,48 @@ export default function DashboardPage() {
                         task?.action.channel === "twitter" &&
                         task?.action.type === "follow"
                       ) {
-                        // Call twitter follow API handler
-                        console.log("Handle follow API");
-                        setLoadingModalVisible(true);
+                        try {
+                          // Call twitter follow API handler
+                          console.log("Handle follow API");
+                          setLoadingModalVisible(true); // Set loader
 
-                        const token = getData(
-                          "@enet-store/token",
-                          true,
-                        ) as Record<string, any>;
+                          const token = getData(
+                            "@enet-store/token",
+                            true,
+                          ) as Record<string, any>; // Get token
 
-                        // Do a lookup of the account name to get an Id
+                          console.log(token, ":::token");
 
-                        const accountData = await Twitter.userLookup({
-                          token: token.access,
-                          userName: task.action.link,
-                        });
+                          // Do a lookup of the account name to get an Id
+                          const accountData = await Twitter.userLookup({
+                            token: token.access,
+                            userName: task.action.link,
+                          });
 
-                        if (accountData?.data) {
-                          console.log("User name is found");
+                          if (accountData?.data) {
+                            console.log(accountData, "User name is found");
+                          }
+
+                          const followData = await Twitter.follow({
+                            token: token?.access,
+                            profileId: accountData?.data?.id,
+                          });
+
+                          console.log(followData, ":::data from follow");
+
+                          await rewardTaskXpCount({
+                            userId: params.userId as Id<"user">,
+                            taskId: task?._id,
+                            xpCount: task?.reward,
+                          });
+                          setLoadingModalVisible(false);
+                        } catch (err: any) {
+                          console.log(err, ":::Error following account");
+                          Alert.alert(
+                            "Task error",
+                            "An error occurred trying to follow account",
+                          );
                         }
-
-                        // await Twitter.follow({
-                        //   token: ,
-                        //   profileId:
-                        // })
-
-                        await rewardTaskXpCount({
-                          userId: params.userId as Id<"user">,
-                          taskId: task?._id,
-                          xpCount: task?.reward,
-                        });
-                        setLoadingModalVisible(false);
                       } else {
                         setTaskSheetContent(task);
                         // @ts-expect-error eventsheet open
