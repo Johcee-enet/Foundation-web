@@ -348,10 +348,7 @@ const Task = ({
       className="flex w-full flex-row items-center justify-center gap-4"
     >
       <View className="rounded-xl bg-[#EBEBEB] p-5">
-        {
-          // @ts-expect-error something went wrong in Task render
-          icons[task?.action.channel]
-        }
+        {icons[task?.action.channel]}
       </View>
       <View className="flex flex-1 flex-col items-start justify-center gap-2">
         <Text
@@ -369,7 +366,13 @@ const Task = ({
           </Text>
         )}
         {completedTasks?.some((id) => id === task._id) && (
-          <Text className="text-wrap font-[nunito] text-black/30">
+          <Text
+            className="text-wrap font-[nunito]"
+            style={{
+              color: "black",
+              opacity: 0.3,
+            }}
+          >
             Completed
           </Text>
         )}
@@ -461,15 +464,26 @@ const Event = ({
     style={{ marginVertical: 8 }}
     className="flex w-full flex-row items-center justify-center gap-4"
   >
-    <View className="rounded-xl bg-gray-500/20 p-2">
+    <View>
       <Image
         source={{ uri: event?.company?.logoUrl }}
-        style={{ width: 50, height: 50 }}
+        style={{
+          width: 50,
+          height: 50,
+          borderRadius: 8,
+          backgroundColor: "#EBEBEB",
+          padding: 4,
+        }}
         resizeMode="cover"
       />
     </View>
     <View className="flex flex-col items-start justify-center gap-2">
-      <Text className="font-[nunito] text-lg">{event?.title}</Text>
+      <Text
+        className="font-[nunito] text-lg"
+        style={{ fontSize: 16, fontWeight: "600" }}
+      >
+        {event?.title}
+      </Text>
       <Text className="font-[nunito]">
         +{(event.reward ?? 0).toLocaleString("en-US")} XP
       </Text>
