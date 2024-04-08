@@ -154,7 +154,9 @@ export const storeNickname = mutation({
         // Get new user data
         const referree = await ctx.db
           .query("user")
-          .filter((q) => q.eq(q.field("referreeCode"), user?.referreeCode))
+          .filter((q) =>
+            q.eq(q.field("referralCode"), user?.referreeCode?.toUpperCase()),
+          )
           .first();
 
         if (referree) {

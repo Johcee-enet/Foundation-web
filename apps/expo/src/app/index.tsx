@@ -251,7 +251,7 @@ export default function Register() {
                       //
 
                       // TODO: If user is onboarded already, then login
-                      if (userIsOnboarded && authState === "login") {
+                      if (authState === "login") {
                         if (!email.length || !password.length) {
                           return Alert.alert(
                             "Onbaording error",
