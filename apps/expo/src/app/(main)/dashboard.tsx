@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Button,
   Keyboard,
   KeyboardAvoidingView,
   ScrollView,
@@ -26,6 +25,7 @@ import * as WebBrowser from "expo-web-browser";
 // import { checkCountdown } from "@/appUtils";
 import ClaimModal from "@/components/claim_modal";
 import DashboardHeader from "@/components/dashboard_header";
+import Input from "@/components/input";
 import LoadingModal from "@/components/loading_modal";
 import { Overview } from "@/components/overview_card";
 import { StatsCard } from "@/components/stats_card";
@@ -69,6 +69,10 @@ export default function DashboardPage() {
     Doc<"tasks"> | undefined
   >();
 
+  // Referral prompt controls
+  const [isReferralPromptModalVisible, setReferralPromptModalVisible] =
+    useState<boolean>(false);
+
   const claimReward = useMutation(api.mutations.claimRewards);
   const triggerMiner = useAction(api.mutations.triggerMining);
 
@@ -80,15 +84,6 @@ export default function DashboardPage() {
     userId: params?.userId as Id<"user">,
   });
 
-  useEffect(() => {
-    if (
-      !(userDetail?.mineActive ?? false) &&
-      (userDetail?.redeemableCount ?? 0) > 0
-    ) {
-      setClaimModalVisible(true);
-    }
-  }, [userDetail?.mineActive, userDetail?.redeemableCount, userDetail]);
-
   // EVent bottom sheet
   const eventSheetRef = useRef<BottomSheetMethods>(null);
   const taskSheetRef = useRef<BottomSheetMethods>(null);
@@ -98,6 +93,16 @@ export default function DashboardPage() {
   // Embeding
   // const [tweetEmbedHeight, setTweetEmbedHeight] = useState<number>();
   const [remaining, setRemaining] = useState<string>();
+
+  useEffect(() => {
+    if (
+      !(userDetail?.mineActive ?? false) &&
+      (userDetail?.redeemableCount ?? 0) > 0
+    ) {
+      setClaimModalVisible(true);
+    }
+  }, [userDetail?.mineActive, userDetail?.redeemableCount, userDetail]);
+
   // countdown
   useEffect(() => {
     // Function to check if the countdown has ended
@@ -149,6 +154,17 @@ export default function DashboardPage() {
       }
     }
   }, [userDetail, remaining]);
+
+  // Check if user just onboarded and prompt to enter a referral code
+  useEffect(() => {
+    const promptHasBeenShown = getData("@enet-store/referralPromptShown", true);
+    console.log(promptHasBeenShown, ":::Referral prompt system");
+
+    if (!promptHasBeenShown || typeof promptHasBeenShown === "undefined") {
+      console.log(promptHasBeenShown, ":::Inside condition");
+      setReferralPromptModalVisible(true);
+    }
+  }, []);
 
   // handle tasks cycle
   const [isLoadingModalVisible, setLoadingModalVisible] = useState(false);
@@ -358,6 +374,96 @@ export default function DashboardPage() {
                 activeOpacity={1}
                 className="flex h-full w-full flex-col px-[20px] pb-32"
               >
+                {/* Modal for referral popup */}
+                <LoadingModal
+                  isLoadingModalVisible={isReferralPromptModalVisible}
+                  setLoadingModalVisible={setReferralPromptModalVisible}
+                >
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 180,
+                      left: 6,
+                      right: 6,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-start",
+                      justifyContent: "center",
+                      backgroundColor: "white",
+                      minHeight: 200,
+                      borderRadius: 20,
+                      gap: 10,
+                      padding: 24,
+                    }}
+                  >
+                    <View>
+                      <Text
+                        style={{
+                          fontSize: 18,
+                          fontWeight: "700",
+                          fontFamily: "nunito",
+                          color: "black",
+                          textAlign: "left",
+                        }}
+                      >
+                        Enter referral code
+                      </Text>
+
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: "500",
+                          fontFamily: "nunito",
+                          color: "black",
+                          textAlign: "left",
+                        }}
+                      >
+                        If you where referred by someone, enter their referral
+                        code to get 1000XP points
+                      </Text>
+                    </View>
+
+                    <Input
+                      placeholder="Referral code"
+                      style={{
+                        width: "100%",
+                        height: 42,
+                        backgroundColor: "#EBEBEB",
+                        borderRadius: 8,
+                        paddingHorizontal: 12,
+                      }}
+                      onChangeText={(text: string) => {
+                        console.log(text, ":::Referral input");
+                      }}
+                    />
+
+                    <TouchableOpacity
+                      style={{
+                        width: "100%",
+                        backgroundColor: "black",
+                        borderRadius: 8,
+                        padding: 12,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                      onPress={() => {
+                        setReferralPromptModalVisible(false);
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "white",
+                          fontSize: 14,
+                          fontWeight: "700",
+                        }}
+                      >
+                        Submit
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </LoadingModal>
+
                 <StatsCard
                   minedCount={userDetail?.minedCount ?? 0}
                   miningRate={userDetail?.miningRate ?? 0}

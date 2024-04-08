@@ -35,7 +35,7 @@ const discovery = {
 
 export default function Register() {
   const [email, setEmail] = useState("");
-  const [referreeCode, setReferreeCode] = useState("");
+  const [referreeCode, setReferreeCode] = useState<string>();
   const [password, setPassword] = useState("");
   const [userIsOnboarded, setUserIsOnbaorded] = useState(false);
   const [authState, setAuthState] = useState<"login" | "signup">("signup");
@@ -283,9 +283,7 @@ export default function Register() {
 
                       // TODO: call server convex function to store users email and referral then send OTP to email address
                       const userId = await initiateUser({
-                        referreeCode: !referreeCode.length
-                          ? referreeCode.trim()
-                          : undefined,
+                        referreeCode: referreeCode,
                         email: email.trim(),
                       });
 
