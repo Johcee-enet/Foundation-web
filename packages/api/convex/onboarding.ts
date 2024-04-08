@@ -168,7 +168,7 @@ export const storeNickname = mutation({
           });
           await ctx.db.insert("activity", {
             userId: referree?._id,
-            message: `${user?.nickname} Joined using your referral code`,
+            message: `${nickname} Joined using your referral code`,
             extra: "5000",
             type: "xp", // Can be xp and rank
           });
@@ -204,7 +204,9 @@ export const storeNickname = mutation({
         // Get new user data
         const referree = await ctx.db
           .query("user")
-          .filter((q) => q.eq(q.field("referralCode"), referreeCode))
+          .filter((q) =>
+            q.eq(q.field("referralCode"), referreeCode?.toUpperCase().trim()),
+          )
           .first();
 
         if (referree) {
