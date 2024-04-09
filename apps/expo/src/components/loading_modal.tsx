@@ -10,11 +10,13 @@ interface LoadingModalProps {
   children: ReactNode;
   isLoadingModalVisible: boolean;
   setLoadingModalVisible: (visible: boolean) => void;
+  tapToClose?: boolean | undefined;
 }
 export default function LoadingModal({
   children,
   setLoadingModalVisible,
   isLoadingModalVisible,
+  tapToClose,
 }: LoadingModalProps) {
   return (
     <Modal
@@ -27,7 +29,7 @@ export default function LoadingModal({
     >
       <TouchableWithoutFeedback
         className="h-full w-full"
-        // onPress={() => setLoadingModalVisible(false)}
+        onPress={tapToClose ? () => setLoadingModalVisible(false) : undefined}
       >
         <View style={styles.centeredView}>{children}</View>
       </TouchableWithoutFeedback>

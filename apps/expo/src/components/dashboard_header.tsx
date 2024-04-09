@@ -137,7 +137,7 @@ export default function DashboardHeader({
                         style: "destructive",
                         onPress: () => {
                           // TODO: cleanup local data and logout
-                          removeData("@enet-store/user");
+
                           (async () => {
                             const token = getData(
                               "@enet-store/token",
@@ -152,6 +152,7 @@ export default function DashboardHeader({
                               console.log(result, ":::Access token revoked");
 
                               removeData("@enet-store/token");
+                              removeData("@enet-store/user");
                             })
                             .catch((error) =>
                               console.log(
