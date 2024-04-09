@@ -209,3 +209,9 @@ export const getAppConfig = queryWithAuth({
     return await db.query("config").first();
   },
 });
+
+export const getAppConfigForApp = query({
+  handler: async ({ db }) => {
+    return await db.query("config").first();
+  },
+});
