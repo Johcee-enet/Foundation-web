@@ -48,8 +48,8 @@ export default function LeaderboardPage() {
             className="relative h-screen min-h-screen w-full"
           >
             <View
-              style={{ height: 100, bottom: 100 - Math.max(bottom, 17) }}
-              className="absolute left-0 right-0 z-50 mx-3 flex flex-row items-center justify-between gap-2 rounded-md bg-[#ABABAB] px-6"
+              style={{ height: 90, bottom: 90 - Math.max(bottom, 17) }}
+              className="absolute left-0 right-0 z-50 mx-3 flex flex-row items-center justify-between gap-2 rounded-lg bg-[#ABABAB] px-6"
             >
               <View className="h-12 w-12 items-center justify-center rounded-full bg-black">
                 <Image

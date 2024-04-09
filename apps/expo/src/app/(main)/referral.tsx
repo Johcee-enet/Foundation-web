@@ -17,7 +17,11 @@ import {
 import * as Clipboard from "expo-clipboard";
 import { Stack, useLocalSearchParams } from "expo-router";
 import Header from "@/components/header";
-import { SimpleLineIcons } from "@expo/vector-icons";
+import {
+  FontAwesome6,
+  MaterialCommunityIcons,
+  SimpleLineIcons,
+} from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
 import { useQuery } from "convex/react";
 
@@ -42,7 +46,7 @@ export default function ReferralPage() {
   };
 
   return (
-    <SafeAreaView className="bg-background">
+    <SafeAreaView className="h-screen bg-background">
       <KeyboardAvoidingView behavior={"position"}>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView className="min-h-screen w-full bg-[#F5F5F5]">
@@ -53,7 +57,7 @@ export default function ReferralPage() {
               }}
             />
 
-            <View className="flex h-full w-full flex-1 flex-col py-4">
+            <View className="flex h-screen w-full flex-1 flex-col py-4">
               <View
                 style={{ gap: 10 }}
                 className="flex w-full flex-col px-[20px]"
@@ -62,14 +66,14 @@ export default function ReferralPage() {
                   style={{ fontSize: 20, fontWeight: "500" }}
                   className="font-[nunito]"
                 >
-                  Refer your friends and share up to 1000XPs on each referrals
+                  Refer your friends and Get up to 5000XPs
                 </Text>
                 <Text
                   style={{ fontSize: 14, fontWeight: "400" }}
                   className="font-[nunito]"
                 >
-                  Your friends get 500 Xp when they signup with your referral
-                  code
+                  Your friends get 1000 Xp when they signup, task completion and
+                  must be active for 5 days.
                 </Text>
               </View>
 
@@ -80,9 +84,13 @@ export default function ReferralPage() {
                     await copyToClipboard();
                     Alert.alert("Link copied to clipboard");
                   }}
-                  className="flex w-36 flex-row items-center justify-center gap-2 rounded-lg bg-black px-3 py-2"
+                  className="flex w-36 flex-row items-center justify-center gap-2 rounded-lg bg-black py-3"
                 >
-                  <SimpleLineIcons name="share-alt" size={18} color="white" />
+                  <MaterialCommunityIcons
+                    name="redo-variant"
+                    size={18}
+                    color="white"
+                  />
                   <Text
                     style={{ fontSize: 13 }}
                     className="font-[nunito] text-white"
@@ -92,10 +100,13 @@ export default function ReferralPage() {
                 </TouchableOpacity>
               </View>
               <View style={{ marginVertical: 20 }} />
-              <View className="flex w-full flex-1 flex-col gap-4 rounded-t-3xl bg-white px-[20px] py-5 pb-24">
+              <View className="flex min-h-full w-full flex-1 flex-col gap-4 rounded-t-3xl bg-white px-[20px] py-5 pb-24">
                 <View className="flex flex-row items-center justify-between">
                   <Text className="font-[nunito] text-lg">Referrals</Text>
-                  <Text className="font-[nunito] text-lg font-normal">
+                  <Text
+                    style={{ fontSize: 15, fontWeight: "600" }}
+                    className="font-[nunito] text-lg font-normal"
+                  >
                     {(userDetail?.referralCount ?? 0).toLocaleString("en-US")}
                   </Text>
                 </View>
@@ -115,7 +126,7 @@ export default function ReferralPage() {
                       </View>
 
                       <Text
-                        style={{ fontSize: 14, fontWeight: "600" }}
+                        style={{ fontSize: 14, fontWeight: "700" }}
                         className="font-[nunito]"
                       >
                         +{item?.extra} XP
