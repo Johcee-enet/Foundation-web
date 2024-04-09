@@ -4,9 +4,15 @@
     "outDir": "dist",
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
     "paths": {
-      "@convex/generated/*": ["./convex/_generated/*"]
+      "@convex/generated/*": [
+        "./convex/_generated/*"
+      ]
     }
   },
-  "include": ["src"],
-  "exclude": ["node_modules"]
+  "include": [
+    "convex"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
