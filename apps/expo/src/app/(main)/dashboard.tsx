@@ -565,7 +565,7 @@ export default function DashboardPage() {
                         await WebBrowser.openBrowserAsync(
                           task?.action.link ?? "",
                         )
-                          .then(async (result) => {
+                          .then((result) => {
                             console.log(result, ":::Task_come back result");
                           })
                           .catch((err) => {
