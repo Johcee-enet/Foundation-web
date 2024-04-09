@@ -54,10 +54,13 @@ export default function Layout() {
           {
             style: "cancel",
             text: "Continue to app",
+            onPress: () => {
+              getUserLocalData().catch((result) =>
+                console.log(result, ":::Resutl"),
+              );
+            },
           },
         ]);
-
-        getUserLocalData().catch((result) => console.log(result, ":::Resutl"));
       }
     }
 
@@ -75,7 +78,7 @@ export default function Layout() {
             string,
             any
           >;
-          console.log(token, Object.keys(token).length, ":::Token");
+          console.log(token, token, ":::Token");
           console.log(user, ":::User to trigger login for");
           if (user && token) {
             router.replace({
@@ -124,6 +127,7 @@ export default function Layout() {
             });
           } else {
             // setUserIsOnbaorded(false);
+            console.log("final stand on the ambush street....");
           }
         }
       } catch (e: any) {

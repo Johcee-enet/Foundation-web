@@ -17,13 +17,12 @@ import { Image } from "expo-image";
 import { Link, router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import LoadingModal from "@/components/loading_modal";
-import { storeData } from "@/storageUtils";
+import { getData, storeData } from "@/storageUtils";
 import { Twitter, TwitterAuth } from "@/twitterUtils";
 import { Env } from "@env";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { useAction, useMutation } from "convex/react";
 
-import type { Doc } from "@acme/api/convex/_generated/dataModel";
 import { api } from "@acme/api/convex/_generated/api";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -37,7 +36,7 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [referreeCode, setReferreeCode] = useState<string>();
   const [password, setPassword] = useState("");
-  const [userIsOnboarded, setUserIsOnbaorded] = useState(false);
+  // const [userIsOnboarded, setUserIsOnbaorded] = useState(false);
   const [authState, setAuthState] = useState<"login" | "signup">("signup");
 
   const initiateUser = useAction(api.onboarding.initializeNewUser);
@@ -45,6 +44,7 @@ export default function Register() {
 
   const storeNickname = useMutation(api.onboarding.storeNickname);
   const isNicknameValid = useMutation(api.onboarding.isNicknameValid);
+  const loginTwitterUser = useAction(api.onboarding.loginTwitterUser);
 
   const [isTwitterAuthLoading, setTwitterAuthLoading] =
     useState<boolean>(false);
@@ -107,44 +107,80 @@ export default function Register() {
           });
           console.log(tokenResponse, ":::Token response");
 
-          // Store the returned data
-          storeData("@enet-store/isOnboarded", true);
-          storeData("@enet-store/token", {
-            access: tokenResponse?.access_token,
-            refresh: tokenResponse?.refresh_token,
-          });
+          const isOnboarded = getData("@enet-store/isOnboarded", true);
 
-          if (tokenResponse) {
-            const userData = await Twitter.userData({
-              token: tokenResponse?.access_token,
-            });
-            console.log(userData, ":::User data");
+          if (isOnboarded) {
+            // if user has already onbaorded
+            setTwitterAuthLoading(true);
 
-            // TODO: Create user if not already created and store email and username as nickname
-            const isValid = await isNicknameValid({
-              nickname: userData?.data?.username.trim(),
-            });
-
-            if (isValid) {
-              const userId = await storeNickname({
-                nickname: userData?.data?.username.trim(),
-                referreeCode,
+            if (tokenResponse) {
+              storeData("@enet-store/token", {
+                access: tokenResponse?.access_token,
+                refresh: tokenResponse?.refresh_token,
               });
+              const userData = await Twitter.userData({
+                token: tokenResponse?.access_token,
+              });
+              console.log(userData, ":::User data");
+
+              // Get user by nickname
+              const user = await loginTwitterUser({
+                nickname: userData?.data.username,
+              });
+
+              const userId = user._id;
+
               storeData("@enet-store/user", {
                 userId,
                 nickname: userData?.data?.username.trim(),
               });
               setTwitterAuthLoading(false);
 
-              router.push({
+              return router.push({
                 pathname: "/(main)/dashboard",
                 params: { userId, nickname: userData?.data?.username.trim() },
               });
-            } else {
-              setTwitterAuthLoading(false);
-              return Alert.alert(
-                "Nickname/Username is already in use, try another one",
-              );
+            }
+          } else {
+            // Store the returned data
+            storeData("@enet-store/isOnboarded", true);
+            storeData("@enet-store/token", {
+              access: tokenResponse?.access_token,
+              refresh: tokenResponse?.refresh_token,
+            });
+
+            if (tokenResponse) {
+              const userData = await Twitter.userData({
+                token: tokenResponse?.access_token,
+              });
+              console.log(userData, ":::User data");
+
+              // TODO: Create user if not already created and store email and username as nickname
+              const isValid = await isNicknameValid({
+                nickname: userData?.data?.username.trim(),
+              });
+
+              if (isValid) {
+                const userId = await storeNickname({
+                  nickname: userData?.data?.username.trim(),
+                  referreeCode,
+                });
+                storeData("@enet-store/user", {
+                  userId,
+                  nickname: userData?.data?.username.trim(),
+                });
+                setTwitterAuthLoading(false);
+
+                router.push({
+                  pathname: "/(main)/dashboard",
+                  params: { userId, nickname: userData?.data?.username.trim() },
+                });
+              } else {
+                setTwitterAuthLoading(false);
+                return Alert.alert(
+                  "Nickname/Username is already in use, try another one",
+                );
+              }
             }
           }
 

@@ -33,7 +33,7 @@ import TaskBoostCard, {
   icons,
   TaskRenderer,
 } from "@/components/task_boost_card";
-import { getData } from "@/storageUtils";
+import { getData, storeData } from "@/storageUtils";
 import { Twitter } from "@/twitterUtils";
 import BottomSheet from "@devvie/bottom-sheet";
 import { MaterialIcons, Octicons } from "@expo/vector-icons";
@@ -72,6 +72,7 @@ export default function DashboardPage() {
   // Referral prompt controls
   const [isReferralPromptModalVisible, setReferralPromptModalVisible] =
     useState<boolean>(false);
+  const [referreeCode, setReferreeCode] = useState<string>();
 
   const claimReward = useMutation(api.mutations.claimRewards);
   const triggerMiner = useAction(api.mutations.triggerMining);
@@ -83,6 +84,9 @@ export default function DashboardPage() {
   const fetchEvents = useQuery(api.queries.fetchEvents, {
     userId: params?.userId as Id<"user">,
   });
+
+  // Redeem referral
+  const redeemReferral = useMutation(api.mutations.redeemReferralCode);
 
   // EVent bottom sheet
   const eventSheetRef = useRef<BottomSheetMethods>(null);
@@ -378,6 +382,7 @@ export default function DashboardPage() {
                 <LoadingModal
                   isLoadingModalVisible={isReferralPromptModalVisible}
                   setLoadingModalVisible={setReferralPromptModalVisible}
+                  tapToClose
                 >
                   <View
                     style={{
@@ -433,7 +438,7 @@ export default function DashboardPage() {
                         paddingHorizontal: 12,
                       }}
                       onChangeText={(text: string) => {
-                        console.log(text, ":::Referral input");
+                        setReferreeCode(text);
                       }}
                     />
 
@@ -447,7 +452,15 @@ export default function DashboardPage() {
                         alignItems: "center",
                         justifyContent: "center",
                       }}
-                      onPress={() => {
+                      onPress={async () => {
+                        await redeemReferral({
+                          referreeCode: referreeCode,
+                          nickname:
+                            userDetail?.nickname ??
+                            (params?.nickname as string),
+                        });
+
+                        storeData("@enet-store/referralPromptShown", true);
                         setReferralPromptModalVisible(false);
                       }}
                     >
