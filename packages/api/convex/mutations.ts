@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { differenceInHours } from "date-fns";
 
 import { internal } from "./_generated/api";
+import { Id } from "./_generated/dataModel";
 import {
   action,
   internalAction,
@@ -69,6 +70,39 @@ export const saveUserPassword = internalMutation({
       console.log(e.message ?? e.toString());
 
       throw e;
+    }
+  },
+});
+
+export const redeemReferralCode = mutation({
+  args: {
+    referreeCode: v.string(),
+    nickname: v.string(),
+    userId: v.id("user"),
+  },
+  handler: async ({ db }, { referreeCode, nickname, userId }) => {
+    // Increment users referree count
+    // Get new user data
+    const referree = await db
+      .query("user")
+      .filter((q) => q.eq(q.field("referralCode"), referreeCode?.toUpperCase()))
+      .first();
+
+    if (referree) {
+      // Patch referree count
+      console.log(referree, ":::Update referree xpCount");
+      await db.patch(referree?._id as Id<"user">, {
+        referralCount: Number(referree?.referralCount) + 1,
+        xpCount: 5000 + referree.xpCount,
+      });
+      await db.insert("activity", {
+        userId: referree?._id,
+        message: `${nickname} Joined using your referral code`,
+        extra: "5000",
+        type: "xp", // Can be xp and rank
+      });
+
+      await db.patch(userId, { referreeCode });
     }
   },
 });

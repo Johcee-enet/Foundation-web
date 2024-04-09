@@ -119,12 +119,15 @@ export const loginUser = action({
 
 export const loginTwitterUser = action({
   args: { nickname: v.string() },
-  handler: async ({ runQuery }, { nickname }) => {
+  handler: async ({ runQuery }, { nickname }): Promise<Doc<"user">> => {
     // console.log(email, "::::Loging email");
     try {
-      const user: any = await runQuery(internal.queries.getUserWithNickname, {
-        nickname,
-      });
+      const user: Doc<"user"> | null = await runQuery(
+        internal.queries.getUserWithNickname,
+        {
+          nickname,
+        },
+      );
       if (!user) {
         throw new Error("User not found");
       }
