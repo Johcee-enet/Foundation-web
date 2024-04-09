@@ -1,6 +1,9 @@
 import type { FC } from "react";
 import { Text, View } from "react-native";
 import { ImageBackground } from "expo-image";
+import { useQuery } from "convex/react";
+
+import { api } from "@acme/api/convex/_generated/api";
 
 // import ClaimModal from "@/components/claim_modal";
 // import LinearGradient from "react-native-linear-gradient";
@@ -23,6 +26,8 @@ export const StatsCard: FC<IStatsCardProps> = ({
   redeemableCount,
 }) => {
   // const params = useLocalSearchParams();
+
+  const appConfig = useQuery(api.queries.getAppConfigForApp);
 
   return (
     <ImageBackground
@@ -58,7 +63,7 @@ export const StatsCard: FC<IStatsCardProps> = ({
               $FOUND Mined
             </Text>
             <Text className="font-[nunito] text-2xl font-bold text-black">
-              {minedCount}
+              {minedCount.toLocaleString("en-US")}
             </Text>
             <Text className="font-[nunito] text-lg font-normal text-[#989898]">
               {redeemableCount}
@@ -70,7 +75,7 @@ export const StatsCard: FC<IStatsCardProps> = ({
               XP Earned
             </Text>
             <Text className="font-[nunito] text-2xl font-bold text-black">
-              {xpEarned}
+              {xpEarned.toLocaleString("en-US")}
             </Text>
             <Text className="font-[nunito] text-lg font-normal text-[#989898] opacity-0">
               0
@@ -81,7 +86,8 @@ export const StatsCard: FC<IStatsCardProps> = ({
         <View className="my-3" />
         <View className="rounded-lg bg-black px-4 py-2">
           <Text className="text-start font-[nunito] font-normal text-white">
-            Mining rate: {miningRate} FOUND/hr
+            Mining rate: {appConfig ? appConfig.miningCount : miningRate}{" "}
+            FOUND/hr
           </Text>
         </View>
       </View>

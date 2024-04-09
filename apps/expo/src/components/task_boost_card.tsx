@@ -480,13 +480,34 @@ const Event = ({
     <View className="flex flex-col items-start justify-center gap-2">
       <Text
         className="font-[nunito] text-lg"
-        style={{ fontSize: 16, fontWeight: "600" }}
+        style={{
+          fontSize: 16,
+          fontWeight: "600",
+          color: "black",
+          opacity: eventsJoined?.find((ev) => ev?.eventId === event._id)
+            ?.completed
+            ? 0.3
+            : 1,
+        }}
       >
         {event?.title}
       </Text>
-      <Text className="font-[nunito]">
-        +{(event.reward ?? 0).toLocaleString("en-US")} XP
-      </Text>
+      {!eventsJoined?.find((ev) => ev?.eventId === event._id)?.completed && (
+        <Text className="text-wrap font-[nunito]">
+          +{(event.reward ?? 0).toLocaleString("en-US")} XP
+        </Text>
+      )}
+      {eventsJoined?.find((ev) => ev?.eventId === event._id)?.completed && (
+        <Text
+          className="text-wrap font-[nunito]"
+          style={{
+            color: "black",
+            opacity: 0.3,
+          }}
+        >
+          Completed
+        </Text>
+      )}
     </View>
     <View className="flex-1" />
     <MaterialIcons name="keyboard-arrow-right" size={24} color="black" />
