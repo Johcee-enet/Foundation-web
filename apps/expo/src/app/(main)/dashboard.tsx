@@ -34,9 +34,8 @@ import TaskBoostCard, {
   TaskRenderer,
 } from "@/components/task_boost_card";
 import { getData, storeData } from "@/storageUtils";
-import { Twitter } from "@/twitterUtils";
 import BottomSheet from "@devvie/bottom-sheet";
-import { MaterialIcons, Octicons } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons, Octicons } from "@expo/vector-icons";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { addHours, differenceInSeconds } from "date-fns";
 
@@ -53,7 +52,7 @@ export default function DashboardPage() {
   const params = useLocalSearchParams();
 
   const { top, bottom } = useSafeAreaInsets();
-  const { height, width } = useSafeAreaFrame();
+  const { height } = useSafeAreaFrame();
   const [modalVisible, setModalVisible] = useState(false);
 
   // Fetch users data
@@ -173,6 +172,8 @@ export default function DashboardPage() {
   // handle tasks cycle
   const [isLoadingModalVisible, setLoadingModalVisible] = useState(false);
   const rewardTaskXpCount = useMutation(api.mutations.rewardTaskXp);
+  const rewardEventXpCount = useMutation(api.mutations.rewardEventXp);
+  const updateEventAction = useMutation(api.mutations.updateEventsForUser);
 
   return (
     <SafeAreaView
@@ -454,10 +455,12 @@ export default function DashboardPage() {
                       }}
                       onPress={async () => {
                         await redeemReferral({
-                          referreeCode: referreeCode,
+                          referreeCode: referreeCode!,
                           nickname:
                             userDetail?.nickname ??
                             (params?.nickname as string),
+                          userId:
+                            (params?.userId as Id<"user">) ?? userDetail?._id,
                         });
 
                         storeData("@enet-store/referralPromptShown", true);
@@ -559,15 +562,11 @@ export default function DashboardPage() {
                       ) {
                         // Handle all other channel and actions
 
-                        WebBrowser.openBrowserAsync(task?.action.link ?? "")
+                        await WebBrowser.openBrowserAsync(
+                          task?.action.link ?? "",
+                        )
                           .then(async (result) => {
                             console.log(result, ":::Task_come back result");
-
-                            await rewardTaskXpCount({
-                              userId: params.userId as Id<"user">,
-                              taskId: task?._id,
-                              xpCount: task?.reward,
-                            });
                           })
                           .catch((err) => {
                             console.log(err, ":::Error occurred in task");
@@ -575,45 +574,72 @@ export default function DashboardPage() {
                               "An error occurred trying to finish task",
                             );
                           });
+
+                        await rewardTaskXpCount({
+                          userId: params.userId as Id<"user">,
+                          taskId: task?._id,
+                          xpCount: task?.reward,
+                        });
                       } else if (
                         task?.action.channel === "twitter" &&
                         task?.action.type === "follow"
                       ) {
                         try {
                           // Call twitter follow API handler
-                          console.log("Handle follow API");
-                          setLoadingModalVisible(true); // Set loader
+                          // console.log("Handle follow API");
+                          // setLoadingModalVisible(true); // Set loader
 
-                          const token = getData(
-                            "@enet-store/token",
-                            true,
-                          ) as Record<string, any>; // Get token
+                          // const token = getData(
+                          //   "@enet-store/token",
+                          //   true,
+                          // ) as Record<string, any>; // Get token
 
-                          console.log(token, ":::token");
+                          // console.log(token, ":::token");
 
-                          // Do a lookup of the account name to get an Id
-                          const accountData = await Twitter.userLookup({
-                            token: token.access,
-                            userName: task.action.link,
-                          });
+                          // // Do a lookup of the account name to get an Id
+                          // const accountData = await Twitter.userLookup({
+                          //   token: token.access,
+                          //   userName: task.action.link,
+                          // });
 
-                          if (accountData?.data) {
-                            console.log(accountData, "User name is found");
-                          }
+                          // if (accountData?.data) {
+                          //   console.log(accountData, "User name is found");
+                          // }
 
-                          const followData = await Twitter.follow({
-                            token: token?.access,
-                            profileId: accountData?.data?.id,
-                          });
+                          // const followData = await Twitter.follow({
+                          //   token: token?.access,
+                          //   profileId: accountData?.data?.id,
+                          // });
 
-                          console.log(followData, ":::data from follow");
+                          await WebBrowser.openBrowserAsync(
+                            task?.action.link ?? "",
+                          )
+                            .then((result) => {
+                              console.log(result, ":::Task_come back result");
+
+                              return result;
+                            })
+                            .catch((err) => {
+                              console.log(err, ":::Error occurred in task");
+                              Alert.alert(
+                                "An error occurred trying to finish task",
+                              );
+                            });
 
                           await rewardTaskXpCount({
                             userId: params.userId as Id<"user">,
                             taskId: task?._id,
                             xpCount: task?.reward,
                           });
-                          setLoadingModalVisible(false);
+
+                          // console.log(followData, ":::data from follow");
+
+                          // await rewardTaskXpCount({
+                          //   userId: params.userId as Id<"user">,
+                          //   taskId: task?._id,
+                          //   xpCount: task?.reward,
+                          // });
+                          // setLoadingModalVisible(false);
                         } catch (err: any) {
                           console.log(err, ":::Error following account");
                           Alert.alert(
@@ -624,7 +650,26 @@ export default function DashboardPage() {
                       } else {
                         setTaskSheetContent(task);
                         // @ts-expect-error eventsheet open
-                        taskSheetRef.current.open();
+                        // taskSheetRef.current.open();
+
+                        await WebBrowser.openBrowserAsync(
+                          task?.action.link ?? "",
+                        )
+                          .then((result) => {
+                            console.log(result, ":::Task_come back result");
+                          })
+                          .catch((err) => {
+                            console.log(err, ":::Error occurred in task");
+                            Alert.alert(
+                              "An error occurred trying to finish task",
+                            );
+                          });
+
+                        await rewardTaskXpCount({
+                          userId: params.userId as Id<"user">,
+                          taskId: task?._id,
+                          xpCount: task?.reward,
+                        });
                       }
                     }}
                     tasks={fetchTasks}
@@ -680,14 +725,20 @@ export default function DashboardPage() {
         >
           {/* <Text>{eventSheetContent && eventSheetContent.title}</Text> */}
           <View className="flex w-full flex-row items-center justify-center gap-4">
-            <View className="rounded-lg bg-gray-700/30 p-2">
-              <Image
-                source={{ uri: eventSheetContent?.company?.logoUrl }}
-                style={{ width: 40, height: 40 }}
-                resizeMode="cover"
-              />
-            </View>
-            <View className="flex flex-col items-start justify-center gap-2">
+            {/* <View className="rounded-lg bg-gray-700/30 p-2"> */}
+            <Image
+              source={{ uri: eventSheetContent?.company?.logoUrl }}
+              style={{
+                width: 45,
+                height: 45,
+                borderRadius: 8,
+                padding: 6,
+                backgroundColor: "#EBEBEB",
+              }}
+              contentFit="cover"
+            />
+            {/* </View> */}
+            <View className="flex flex-col items-start justify-center gap-2 ">
               <Text
                 style={{ fontSize: 16, fontWeight: "500" }}
                 className="font-[nunito] text-lg font-bold text-black"
@@ -709,8 +760,24 @@ export default function DashboardPage() {
             {eventSheetContent &&
               eventSheetContent?.actions?.map((action, index) => (
                 <TouchableOpacity
-                  onPress={() => {
-                    // router.push({ pathname: task.link, params });
+                  onPress={async () => {
+                    try {
+                      // router.push({ pathname: task.link, params });
+                      // OPen with Webbrowser and update event action after
+                      await WebBrowser.openBrowserAsync(action.link);
+                      await updateEventAction({
+                        userId:
+                          (params?.userId as Id<"user">) ?? userDetail?._id,
+                        eventId: eventSheetContent?._id as Id<"events">,
+                        actionName: action?.name,
+                      });
+                    } catch (err: any) {
+                      console.log(err, ":::Error updating action");
+                      Alert.alert(
+                        "Action error",
+                        "There was an error performing that action",
+                      );
+                    }
                   }}
                   key={index}
                   className="flex w-full flex-row items-center justify-center gap-4"
@@ -727,27 +794,92 @@ export default function DashboardPage() {
                 </Text> */}
                   </View>
                   <View className="flex-1" />
-                  <MaterialIcons
-                    name="keyboard-arrow-right"
-                    size={24}
-                    color="black"
-                  />
+                  {userDetail?.eventsJoined
+                    ?.find((joined) => joined.eventId === eventSheetContent._id)
+                    ?.actions.some(
+                      (act) => act.completed && act.name === action.name,
+                    ) ? (
+                    <FontAwesome name="check-circle" size={24} color="black" />
+                  ) : (
+                    <MaterialIcons
+                      name="keyboard-arrow-right"
+                      size={24}
+                      color="black"
+                    />
+                  )}
                 </TouchableOpacity>
               ))}
           </View>
           <View style={{ marginBottom: 52 }} className="w-full">
             <TouchableOpacity
-              // @ts-expect-error eventsheet close
-              onPress={() => eventSheetRef.current.close()}
-              style={{
-                backgroundColor: "black",
-                width: "100%",
-                height: 57,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 9,
+              onPress={async () => {
+                try {
+                  if (
+                    userDetail?.eventsJoined?.find(
+                      (joined) => joined.eventId === eventSheetContent?._id,
+                    )?.completed
+                  ) {
+                    Alert.alert("Already claimed", "", [
+                      {
+                        onPress: () => {
+                          /**/
+                        },
+                        style: "cancel",
+                      },
+                    ]);
+                    // @ts-expect-error eventsheet close
+                    eventSheetRef.current.close();
+                  } else {
+                    if (
+                      userDetail?.eventsJoined
+                        ?.find(
+                          (joined) => joined.eventId === eventSheetContent?._id,
+                        )
+                        ?.actions.some((act) => !act.completed)
+                    ) {
+                      Alert.alert(
+                        "Actions not completed!",
+                        "You must complete all actions before claiming reward",
+                      );
+                      return;
+                    }
+
+                    await rewardEventXpCount({
+                      userId: (params?.userId as Id<"user">) ?? userDetail?._id,
+                      eventId: eventSheetContent?._id as Id<"events">,
+                      xpCount: eventSheetContent?.reward ?? 0,
+                    });
+
+                    // @ts-expect-error eventsheet close
+                    eventSheetRef.current.close();
+                  }
+                } catch (err: any) {
+                  console.log(err, "::::error claiming event reward");
+                  Alert.alert(
+                    "Claim reward error",
+                    "An error occurred while claiming reward",
+                  );
+                }
               }}
+              disabled={
+                userDetail?.eventsJoined?.find(
+                  (joined) => joined.eventId === eventSheetContent?._id,
+                )?.completed ?? true
+              }
+              style={[
+                {
+                  backgroundColor: "black",
+                  width: "100%",
+                  height: 57,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 9,
+                },
+                userDetail?.eventsJoined?.find(
+                  (joined) => joined.eventId === eventSheetContent?._id,
+                )?.completed && { opacity: 0.5 },
+              ]}
             >
               <Text style={{ color: "white", fontSize: 15, fontWeight: "500" }}>
                 Claim Reward
