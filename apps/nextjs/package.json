@@ -4,12 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm with-env next build",
+    "build": "bun with-env next build",
     "clean": "git clean -xdf .next .turbo node_modules",
     "dev": "bun with-env next dev",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "dotenv -v SKIP_ENV_VALIDATION=1 next lint",
-    "start": "pnpm with-env next start",
+    "start": "bun with-env next start",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"
   },
