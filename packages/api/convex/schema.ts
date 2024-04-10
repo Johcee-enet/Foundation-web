@@ -129,6 +129,7 @@ export default defineSchema(
       miningCount: v.float64(),
       miningHours: v.number(),
       xpCount: v.float64(),
+      referralXpCount: v.float64(),
     }),
   },
   // If you ever get an error about schema mismatch

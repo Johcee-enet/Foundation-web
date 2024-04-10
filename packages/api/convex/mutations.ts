@@ -16,6 +16,7 @@ export const storeEmail = internalMutation({
   handler: async (ctx, args) => {
     // Check if email already exists
     const existingUsers = await ctx.db.query("user").collect();
+    const config = await ctx.db.query("config").first();
 
     if (existingUsers?.some((user) => user.email === args.email)) {
       throw new Error("Email already exist");
@@ -31,7 +32,7 @@ export const storeEmail = internalMutation({
       referralCount: 0,
       mineHours: 6,
       redeemableCount: 0,
-      xpCount: 1000,
+      xpCount: config?.xpCount ?? 1000,
       speedBoost: {
         isActive: false,
         rate: 2,
@@ -81,6 +82,7 @@ export const redeemReferralCode = mutation({
     userId: v.id("user"),
   },
   handler: async ({ db }, { referreeCode, nickname, userId }) => {
+    const config = await db.query("config").first();
     // Increment users referree count
     // Get new user data
     const referree = await db
@@ -93,12 +95,12 @@ export const redeemReferralCode = mutation({
       console.log(referree, ":::Update referree xpCount");
       await db.patch(referree?._id as Id<"user">, {
         referralCount: Number(referree?.referralCount) + 1,
-        xpCount: 5000 + referree.xpCount,
+        xpCount: (config?.referralXpCount ?? 5000) + referree.xpCount,
       });
       await db.insert("activity", {
         userId: referree?._id,
         message: `${nickname} Joined using your referral code`,
-        extra: "5000",
+        extra: (config?.referralXpCount ?? 5000).toLocaleString("en-US"),
         type: "xp", // Can be xp and rank
       });
 
@@ -305,9 +307,23 @@ export const deleteAccount = mutation({
 export const triggerMining = action({
   args: { userId: v.id("user") },
   handler: async ({ runMutation }, { userId }) => {
+    await runMutation(internal.mutations.beforeMine, { userId });
     await runMutation(internal.mutations.mine, { userId });
   },
 });
+
+
+export const beforeMine = internalMutation({
+  args: { userId: v.id("user") },
+  handler: async ({db}, {userId}) => {
+
+    // Update users mining configs
+    const config = await db.query("config").first();
+
+    await db.patch(userId, {mineHours: config?.miningHours, miningRate: config?.miningCount});
+    
+  }
+})
 
 export const mine = internalMutation({
   args: { userId: v.id("user") },
@@ -393,16 +409,18 @@ export const updateConfig = mutationWithAuth({
     miningCount: v.float64(),
     miningHours: v.number(),
     xpCount: v.float64(),
+    referralXpCount: v.float64(),
     configId: v.optional(v.id("config")),
   },
-  handler: async ({ db }, { miningCount, miningHours, xpCount, configId }) => {
+  handler: async ({ db }, { miningCount, miningHours, xpCount, configId, referralXpCount }) => {
     if (configId) {
-      await db.patch(configId, { miningCount, miningHours, xpCount });
+      await db.patch(configId, { miningCount, miningHours, xpCount, referralXpCount });
     } else {
       await db.insert("config", {
         miningCount,
         miningHours,
         xpCount,
+        referralXpCount,
       });
     }
   },

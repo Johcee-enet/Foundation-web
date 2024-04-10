@@ -148,6 +148,7 @@ export const storeNickname = mutation({
   handler: async (ctx, { nickname, userId, referreeCode }) => {
     try {
       const referralCode = generateReferralCode();
+      const config = await ctx.db.query("config").first();
 
       if (userId) {
         const user = await ctx.db.get(userId);
@@ -167,12 +168,12 @@ export const storeNickname = mutation({
           console.log(referree, ":::Update referree xpCount");
           await ctx.db.patch(referree?._id as Id<"user">, {
             referralCount: Number(referree?.referralCount) + 1,
-            xpCount: 5000 + referree.xpCount,
+            xpCount: config?.referralXpCount ?? 5000 + referree.xpCount,
           });
           await ctx.db.insert("activity", {
             userId: referree?._id,
             message: `${nickname} Joined using your referral code`,
-            extra: "5000",
+            extra: (config?.referralXpCount ?? 5000).toLocaleString("en-US"),
             type: "xp", // Can be xp and rank
           });
         }
@@ -190,7 +191,7 @@ export const storeNickname = mutation({
           referralCount: 0,
           mineHours: 6,
           redeemableCount: 0,
-          xpCount: 1000,
+          xpCount: config?.xpCount ?? 1000,
           speedBoost: {
             isActive: false,
             rate: 2,
@@ -217,12 +218,12 @@ export const storeNickname = mutation({
           console.log(referree, ":::Update referree xpCount");
           await ctx.db.patch(referree?._id as Id<"user">, {
             referralCount: Number(referree?.referralCount) + 1,
-            xpCount: 5000 + referree.xpCount,
+            xpCount: config?.referralXpCount ?? 5000 + referree.xpCount,
           });
           await ctx.db.insert("activity", {
             userId: referree?._id,
             message: `${nickname} Joined using your referral code`,
-            extra: "5000",
+            extra: (config?.referralXpCount ?? 5000).toLocaleString("en-US"),
             type: "xp", // Can be xp and rank
           });
         }
