@@ -30,6 +30,7 @@ function ConfigPage() {
   const [miningRate, setMiningRate] = useState<number>(2);
   const [miningHours, setMiningHours] = useState<number>(6);
   const [xpCount, setXpCount] = useState<number>(1000);
+  const [referralXpCount, setReferralXpCount] = useState<number>(5000);
 
   const { toast } = useToast();
 
@@ -71,6 +72,7 @@ function ConfigPage() {
                   miningCount: miningRate,
                   miningHours,
                   xpCount,
+                  referralXpCount,
                   configId: appConfig?._id,
                 });
 
@@ -138,6 +140,27 @@ function ConfigPage() {
                   type="number"
                   value={xpCount}
                   onChange={(e) => setXpCount(e.target.valueAsNumber)}
+                />
+              </form>
+            </CardContent>
+            {/* <CardFooter className="border-t px-6 py-4">
+              <Button>Save</Button>
+            </CardFooter> */}
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Referral XP Count</CardTitle>
+              <CardDescription>
+                Change referral XP Count when users referre each other
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form>
+                <Input
+                  placeholder="XP Count"
+                  type="number"
+                  value={referralXpCount}
+                  onChange={(e) => setReferralXpCount(e.target.valueAsNumber)}
                 />
               </form>
             </CardContent>
