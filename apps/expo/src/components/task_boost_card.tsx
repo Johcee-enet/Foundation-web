@@ -12,20 +12,25 @@ import Carousel from "react-native-reanimated-carousel";
 // import { BottomSheetMethods } from "@devvie/bottom-sheet";
 import { useSafeAreaFrame } from "react-native-safe-area-context";
 import { Image } from "expo-image";
+import { useGlobalSearchParams } from "expo-router";
 // import { useLocalSearchParams } from "expo-router";
 import { tweetEmbed } from "@/twitterUtils";
 import {
   AntDesign,
+  Feather,
   FontAwesome5,
   FontAwesome6,
   MaterialIcons,
+  Octicons,
   SimpleLineIcons,
 } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
+import { useMutation, useQuery } from "convex/react";
 
 // import { Era } from "date-fns";
 
-import type { Doc } from "@acme/api/convex/_generated/dataModel";
+import type { Doc, Id } from "@acme/api/convex/_generated/dataModel";
+import { api } from "@acme/api/convex/_generated/api";
 
 // import { useMutation, useQuery } from "convex/react";
 // import { api } from "@acme/api/src/convex/_generated/api";
@@ -37,44 +42,33 @@ interface ITaskBoostCardProps {
   eventsJoined: Record<string, any>[] | undefined;
   // eventSheetRef: React.MutableRefObject<BottomSheetMethods>;
   events: EventType[] | undefined;
-  tasks: Doc<"tasks">[] | undefined;
+  tasks?: Doc<"tasks">[] | undefined;
   onEventPressed: (eventIndex: number) => void;
-  onTaskPressed: (eventIndex: number) => void;
+  onTaskPressed: (task: Doc<"tasks">) => void;
+  onBoostPressed: (boost: Doc<"config">["boosts"]) => void;
 }
 export default function TaskBoostCard({
-  tasks,
+  // tasks,
   events,
-  completedTasks,
+  // completedTasks,
   eventsJoined,
   onEventPressed,
   onTaskPressed,
+  onBoostPressed,
 }: ITaskBoostCardProps) {
-  // const { userId, ...params } = useLocalSearchParams();
+  const params = useGlobalSearchParams();
   const sliderRef = useRef(null);
   const { width, height } = useSafeAreaFrame();
   const [sliderIndex, setSliderIndex] = useState(0);
 
-  // const speedBoost = useMutation(api.mutations.speedBoost);
-  // const botBoost = useMutation(api.mutations.botBoost);
+  const tasks = useQuery(api.queries.fetchTasks, {
+    userId: params?.userId as Id<"user">,
+  });
 
-  // const boosterList = [
-  //   {
-  //     name: "Mining Speed",
-  //     cost: 50,
-  //     icon: <Feather name="zap" size={24} color="black" />,
-  //     action: async () => {
-  //       await speedBoost({ userId: userId as Id<"user"> });
-  //     },
-  //   },
-  //   {
-  //     name: "Auto Mining Bot",
-  //     cost: 500,
-  //     icon: <Octicons name="database" size={24} color="black" />,
-  //     action: async () => {
-  //       await botBoost({ userId: userId as Id<"user"> });
-  //     },
-  //   },
-  // ];
+  const config = useQuery(api.queries.getAppConfigForApp);
+
+  const speedBoost = useMutation(api.mutations.speedBoost);
+  const botBoost = useMutation(api.mutations.botBoost);
 
   return (
     <View className="mb-32 flex w-full flex-col gap-2">
@@ -247,12 +241,12 @@ export default function TaskBoostCard({
                 >
                   <FlashList
                     data={tasks}
-                    estimatedItemSize={200}
+                    estimatedItemSize={(tasks ?? []).length + 200}
                     keyExtractor={(item) => item._id.toString()}
                     scrollEnabled={true}
                     renderItem={({ item, index }) => (
                       <Task
-                        completedTasks={completedTasks}
+                        // completedTasks={userDetail.completedTasks}
                         task={item}
                         index={index}
                         onTaskPressed={onTaskPressed}
@@ -311,7 +305,49 @@ export default function TaskBoostCard({
             );
           }
 
-          return <Boosts key={index} boosterList={[]} />;
+          return (
+            <View
+              style={{
+                // paddingBottom: 35,
+                height: "100%",
+                width: "100%",
+                alignItems: "center",
+                justifyContent: "flex-start",
+                gap: 24,
+                display: "flex",
+                flex: 1,
+                flexDirection: "column",
+                backgroundColor: "white",
+                padding: 24,
+              }}
+            >
+              <ScrollView
+                nestedScrollEnabled
+                indicatorStyle="default"
+                style={{ width: "100%" }}
+              >
+                {/* <Events
+              key={index}
+              events={events}
+              params={{ userId: userId as string, ...params }}
+              onEventPressed={onEventPressed}
+            /> */}
+
+                <FlashList
+                  data={config?.boosts ?? []}
+                  estimatedItemSize={200}
+                  scrollEnabled={true}
+                  renderItem={({ item, index }) => (
+                    <Boost
+                      boost={item}
+                      index={index}
+                      onBoostPressed={onBoostPressed}
+                    />
+                  )}
+                />
+              </ScrollView>
+            </View>
+          );
         }}
       />
     </View>
@@ -330,18 +366,23 @@ const Task = ({
   onTaskPressed,
   index,
   task,
-  completedTasks,
+  // completedTasks,
 }: {
-  onTaskPressed: (index: number) => void;
+  onTaskPressed: (task: Doc<"tasks">) => void;
   index: number;
   task: Doc<"tasks">;
-  completedTasks: string[] | undefined;
+  completedTasks?: string[] | undefined;
 }) => {
+  const params = useGlobalSearchParams();
+  const user = useQuery(api.queries.getUserDetails, {
+    userId: params?.userId as Id<"user">,
+  });
+
   return (
     <TouchableOpacity
       onPress={() => {
         // router.push({ pathname: task.link, params });
-        onTaskPressed(index);
+        onTaskPressed(task);
       }}
       key={index}
       style={{ marginVertical: 8 }}
@@ -354,18 +395,20 @@ const Task = ({
         <Text
           style={{
             color: "black",
-            opacity: completedTasks?.some((id) => id === task._id) ? 0.3 : 1,
+            opacity: user?.completedTasks?.some((id) => id === task._id)
+              ? 0.3
+              : 1,
           }}
           className="font-[nunito] text-lg"
         >
           {task?.name}
         </Text>
-        {!completedTasks?.some((id) => id === task._id) && (
+        {!user?.completedTasks?.some((id) => id === task._id) && (
           <Text className="text-wrap font-[nunito]">
             +{task?.reward.toLocaleString("en-US")} XP
           </Text>
         )}
-        {completedTasks?.some((id) => id === task._id) && (
+        {user?.completedTasks?.some((id) => id === task._id) && (
           <Text
             className="text-wrap font-[nunito]"
             style={{
@@ -514,64 +557,73 @@ const Event = ({
   </TouchableOpacity>
 );
 
-const Boosts = ({ boosterList }: { boosterList: any[] }) => (
-  <View className="flex w-full flex-1 flex-col items-center justify-start gap-4 bg-white p-6 pb-14">
-    <View className="flex w-full flex-row items-center justify-between">
-      <Text className="px-6 font-[nunito] text-xl font-normal text-black">
-        Mining Boosters
-      </Text>
-      <View className="flex flex-col rounded-lg bg-[#EBEBEB] px-4 py-2">
-        <Text className="font-[nunito] text-lg text-black">Mining Speed</Text>
-        <Text className="font-[nunito]text-black/50 text-sm">
-          0/6 Available
-        </Text>
-      </View>
-    </View>
+const Boost = ({ boost, index, onBoostPressed }: any) => {
+  const params = useGlobalSearchParams();
+  const user = useQuery(api.queries.getUserDetails, {
+    userId: params?.userId as Id<"user">,
+  });
 
-    {!!boosterList.length &&
-      boosterList.map((boost, index) => (
-        <TouchableOpacity
-          onPress={boost.action}
-          key={index}
-          className="flex w-full flex-row items-center justify-center gap-4"
+  return (
+    <TouchableOpacity
+      onPress={() => onBoostPressed(boost)}
+      key={index}
+      style={{ marginVertical: 8 }}
+      className="flex w-full flex-row items-center justify-center gap-4"
+    >
+      <View className="rounded-xl bg-[#EBEBEB] p-5">
+        <Image
+          source={
+            boost?.type === "speed"
+              ? require("../../assets/main/icons/boosts_flash_black.png")
+              : require("../../assets/main/icons/tasks_coin_black.png")
+          }
+          style={{ width: 24, height: 24 }}
+          contentFit="contain"
+        />
+      </View>
+      <View className="flex flex-col items-start justify-center gap-1">
+        <Text
+          className="font-[nunito] text-lg"
+          style={{ fontSize: 14, fontWeight: "500" }}
         >
-          <View className="rounded-xl bg-[#EBEBEB] p-5">{boost.icon}</View>
-          <View className="flex flex-col items-start justify-center gap-1">
-            <Text className="font-[nunito] text-lg">{boost?.name}</Text>
-            <View className="flex flex-row items-center justify-start gap-2">
-              <Image
-                source={require("../../assets/enet-logo.png")}
-                style={{ width: 20, height: 20 }}
-                contentFit="cover"
-              />
-              <Text className="font-[nunito] text-lg font-medium">
-                {boost.cost.toLocaleString("en-US")} ENET
-              </Text>
-            </View>
-            {index === 1 && (
-              <Text className="font-[nunito] text-sm text-black/40">
-                Mine when you&aposre asleep
-              </Text>
-            )}
-          </View>
-          <View className="flex-1" />
-          <View className="flex flex-row items-center justify-end gap-1">
-            <Text className="font-[nunito]">1 lvl</Text>
-            <MaterialIcons
-              name="keyboard-arrow-right"
-              size={24}
-              color="black"
-            />
-          </View>
-        </TouchableOpacity>
-      ))}
-    {!boosterList.length && (
-      <Text className="text-center font-[nunito] text-lg font-medium text-black">
-        Boosts are coming soon!
-      </Text>
-    )}
-  </View>
-);
+          {boost?.title}
+        </Text>
+        <View className="flex flex-row items-center justify-start gap-2">
+          {/* <Image
+          source={require("../../assets/enet-logo.png")}
+          style={{ width: 20, height: 20 }}
+          contentFit="cover"
+        /> */}
+          <Text
+            className="font-[nunito] text-lg font-medium"
+            style={{ fontSize: 13, fontWeight: "700" }}
+          >
+            {boost?.xpCost?.toLocaleString("en-US")} XP
+          </Text>
+        </View>
+        {boost?.type === "bot" && (
+          <Text className="font-[nunito] text-sm text-black/40">
+            Mine when you're asleep
+          </Text>
+        )}
+      </View>
+      <View className="flex-1" />
+      <View className="flex flex-row items-center justify-end gap-1">
+        <Text
+          className="font-[nunito]"
+          style={{ fontSize: 11, fontWeight: "700", color: "black" }}
+        >
+          {(
+            user?.boostStatus?.find((status) => status?.boostId === boost?.uuid)
+              ?.currentLevel ?? 0
+          ).toString()}
+          /{boost?.totalLevel?.toString()}
+        </Text>
+        <MaterialIcons name="keyboard-arrow-right" size={24} color="black" />
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 interface ITaskRenderProps {
   task: Doc<"tasks">;

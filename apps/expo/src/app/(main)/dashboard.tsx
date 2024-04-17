@@ -22,6 +22,7 @@ import { WebView } from "react-native-webview";
 import { Image } from "expo-image";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
+import { delay } from "@/appUtils";
 // import { checkCountdown } from "@/appUtils";
 import ClaimModal from "@/components/claim_modal";
 import DashboardHeader from "@/components/dashboard_header";
@@ -77,9 +78,7 @@ export default function DashboardPage() {
   const triggerMiner = useAction(api.mutations.triggerMining);
 
   // Get tasks and events
-  const fetchTasks = useQuery(api.queries.fetchTasks, {
-    userId: params?.userId as Id<"user">,
-  });
+
   const fetchEvents = useQuery(api.queries.fetchEvents, {
     userId: params?.userId as Id<"user">,
   });
@@ -545,9 +544,9 @@ export default function DashboardPage() {
                     }}
                     completedTasks={userDetail?.completedTasks}
                     eventsJoined={userDetail?.eventsJoined}
-                    onTaskPressed={async (taskIndex: number) => {
-                      console.log(taskIndex, ":::task Index");
-                      const task = (fetchTasks ?? [])[taskIndex];
+                    onTaskPressed={async (task: Doc<"tasks">) => {
+                      // console.log(taskIndex, ":::task Index");
+                      // const task = (fetchTasks ?? [])[taskIndex];
 
                       console.log(task, ":::Task tapped on");
 
@@ -575,11 +574,14 @@ export default function DashboardPage() {
                             );
                           });
 
+                        await delay(3.5); // induce a 4 secs delay
+
                         await rewardTaskXpCount({
                           userId: params.userId as Id<"user">,
                           taskId: task?._id,
                           xpCount: task?.reward,
                         });
+                        setTaskSheetContent(undefined);
                       } else if (
                         task?.action.channel === "twitter" &&
                         task?.action.type === "follow"
@@ -626,11 +628,15 @@ export default function DashboardPage() {
                               );
                             });
 
+                          await delay(3.5); // induce a 4 secs delay
+
                           await rewardTaskXpCount({
                             userId: params.userId as Id<"user">,
                             taskId: task?._id,
                             xpCount: task?.reward,
                           });
+
+                          setTaskSheetContent(undefined);
 
                           // console.log(followData, ":::data from follow");
 
@@ -648,7 +654,7 @@ export default function DashboardPage() {
                           );
                         }
                       } else {
-                        setTaskSheetContent(task);
+                        // setTaskSheetContent(task);
                         // @ts-expect-error eventsheet open
                         // taskSheetRef.current.open();
 
@@ -665,14 +671,18 @@ export default function DashboardPage() {
                             );
                           });
 
+                        await delay(3.5); // induce a 4 secs delay
+
                         await rewardTaskXpCount({
                           userId: params.userId as Id<"user">,
                           taskId: task?._id,
                           xpCount: task?.reward,
                         });
+
+                        setTaskSheetContent(undefined);
                       }
                     }}
-                    tasks={fetchTasks}
+                    // tasks={fetchTasks}
                     events={fetchEvents}
                   />
                   <LoadingModal
@@ -765,6 +775,7 @@ export default function DashboardPage() {
                       // router.push({ pathname: task.link, params });
                       // OPen with Webbrowser and update event action after
                       await WebBrowser.openBrowserAsync(action.link);
+                      await delay(3.5); // induce a 4 secs delay
                       await updateEventAction({
                         userId:
                           (params?.userId as Id<"user">) ?? userDetail?._id,
@@ -852,6 +863,12 @@ export default function DashboardPage() {
 
                     // @ts-expect-error eventsheet close
                     eventSheetRef.current.close();
+
+                    // Push to congrats screen
+                    router.push({
+                      pathname: "/congrats",
+                      params: { ...params, xpCount: eventSheetContent?.reward },
+                    });
                   }
                 } catch (err: any) {
                   console.log(err, "::::error claiming event reward");
