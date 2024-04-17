@@ -152,6 +152,34 @@ export const storeNickname = mutation({
 
       if (userId) {
         const user = await ctx.db.get(userId);
+
+        // If user already has a referralCode and a referreeCode and deleted is true then re-initialize account
+
+        if (user?.referralCode?.length ?? user?.referreeCode?.length) {
+          await ctx.db.patch(user._id, {
+            minedCount: 0,
+            miningRate: 2.0,
+            mineActive: false,
+            referralCount: 0,
+            mineHours: 6,
+            redeemableCount: 0,
+            xpCount: config?.xpCount ?? 1000,
+            speedBoost: {
+              isActive: false,
+              rate: 2,
+              level: 1,
+            },
+            botBoost: {
+              isActive: false,
+              hours: 3,
+              level: 1,
+            },
+            deleted: false,
+          });
+
+          return user?._id;
+        }
+
         await ctx.db.patch(userId, { nickname: nickname, referralCode });
 
         // Increment users referree count
@@ -180,6 +208,41 @@ export const storeNickname = mutation({
 
         return userId;
       } else {
+        const previouslyDeleted = await ctx.db
+          .query("user")
+          .filter((q) =>
+            q.and(
+              q.eq(q.field("nickname"), nickname),
+              q.eq(q.field("deleted"), true),
+            ),
+          )
+          .first();
+
+        // If user was previously deleted update fields
+        if (previouslyDeleted) {
+          await ctx.db.patch(previouslyDeleted._id, {
+            minedCount: 0,
+            miningRate: 2.0,
+            mineActive: false,
+            referralCount: 0,
+            mineHours: 6,
+            redeemableCount: 0,
+            xpCount: config?.xpCount ?? 1000,
+            speedBoost: {
+              isActive: false,
+              rate: 2,
+              level: 1,
+            },
+            botBoost: {
+              isActive: false,
+              hours: 3,
+              level: 1,
+            },
+            deleted: false,
+          });
+          return previouslyDeleted._id;
+        }
+
         const userId = await ctx.db.insert("user", {
           // email: args.email,
           nickname,

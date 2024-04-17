@@ -26,16 +26,17 @@ export default defineSchema(
       referralCode: v.optional(v.string()),
       referralCount: v.number(),
       xpCount: v.number(),
-      speedBoost: v.object({
-        isActive: v.boolean(),
-        rate: v.number(),
-        level: v.union(v.literal(1), v.literal(2), v.literal(3)),
-      }),
-      botBoost: v.object({
-        isActive: v.boolean(),
-        hours: v.number(),
-        level: v.union(v.literal(1), v.literal(2), v.literal(3)),
-      }),
+      boostStatus: v.optional(
+        v.array(
+          v.object({
+            boostId: v.string(),
+            isActive: v.boolean(),
+            currentLevel: v.optional(v.number()),
+          }),
+        ),
+      ),
+      botBoost: v.optional(v.any()),
+      speedBoost: v.optional(v.any()),
       completedTasks: v.optional(v.array(v.id("tasks"))),
       eventsJoined: v.optional(
         v.array(
@@ -64,6 +65,7 @@ export default defineSchema(
           }),
         ),
       ),
+      deleted: v.optional(v.boolean()),
     })
       .index("by_xpCount", ["xpCount"])
       .index("by_mineActive", ["mineActive"]),
@@ -130,6 +132,18 @@ export default defineSchema(
       miningHours: v.number(),
       xpCount: v.float64(),
       referralXpCount: v.float64(),
+      boosts: v.optional(
+        v.array(
+          v.object({
+            uuid: v.string(),
+            rate: v.number(),
+            xpCost: v.number(),
+            title: v.string(),
+            type: v.union(v.literal("bot"), v.literal("speed")),
+            totalLevel: v.optional(v.number()),
+          }),
+        ),
+      ),
     }),
   },
   // If you ever get an error about schema mismatch

@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import { differenceInHours } from "date-fns";
 
 import { internal } from "./_generated/api";
-import { Id } from "./_generated/dataModel";
+// import { Id } from "./_generated/dataModel";
 import {
   action,
   internalAction,
@@ -16,10 +16,44 @@ export const storeEmail = internalMutation({
   handler: async (ctx, args) => {
     // Check if email already exists
     const existingUsers = await ctx.db.query("user").collect();
+    const previouslyDeleted = await ctx.db
+      .query("user")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("email"), args.email),
+          q.eq(q.field("deleted"), true),
+        ),
+      )
+      .first();
     const config = await ctx.db.query("config").first();
 
+    // If user was previously deleted update fields
+    if (previouslyDeleted) {
+      await ctx.db.patch(previouslyDeleted._id, {
+        minedCount: 0,
+        miningRate: 2.0,
+        mineActive: false,
+        referralCount: 0,
+        mineHours: 6,
+        redeemableCount: 0,
+        xpCount: config?.xpCount ?? 1000,
+        speedBoost: {
+          isActive: false,
+          rate: 2,
+          level: 1,
+        },
+        botBoost: {
+          isActive: false,
+          hours: 3,
+          level: 1,
+        },
+      });
+      return previouslyDeleted._id;
+    }
+
     if (existingUsers?.some((user) => user.email === args.email)) {
-      throw new Error("Email already exist");
+      // Checking
+      throw new Error("Email already exist!");
     }
 
     // Store email and referral
@@ -82,6 +116,13 @@ export const redeemReferralCode = mutation({
     userId: v.id("user"),
   },
   handler: async ({ db }, { referreeCode, nickname, userId }) => {
+    const user = await db.get(userId);
+
+    if (!user || user?.referreeCode?.length) {
+      throw new Error(
+        "Error redeeming referral, user has previously been onboarded!",
+      );
+    }
     const config = await db.query("config").first();
     // Increment users referree count
     // Get new user data
@@ -296,7 +337,17 @@ export const deleteAccount = mutation({
   args: { userId: v.id("user") },
   handler: async (ctx, args) => {
     try {
-      await ctx.db.delete(args.userId);
+      await ctx.db.patch(args.userId, {
+        deleted: true,
+        xpCount: 0,
+        minedCount: 0,
+        redeemableCount: 0,
+        completedTasks: undefined,
+        eventsJoined: undefined,
+        mineActive: false,
+        password: undefined,
+        referralCount: 0,
+      });
     } catch (e: any) {
       throw new Error("Error trying to delete account");
     }
@@ -312,18 +363,18 @@ export const triggerMining = action({
   },
 });
 
-
 export const beforeMine = internalMutation({
   args: { userId: v.id("user") },
-  handler: async ({db}, {userId}) => {
-
+  handler: async ({ db }, { userId }) => {
     // Update users mining configs
     const config = await db.query("config").first();
 
-    await db.patch(userId, {mineHours: config?.miningHours, miningRate: config?.miningCount});
-    
-  }
-})
+    await db.patch(userId, {
+      mineHours: config?.miningHours,
+      miningRate: config?.miningCount,
+    });
+  },
+});
 
 export const mine = internalMutation({
   args: { userId: v.id("user") },
@@ -412,9 +463,17 @@ export const updateConfig = mutationWithAuth({
     referralXpCount: v.float64(),
     configId: v.optional(v.id("config")),
   },
-  handler: async ({ db }, { miningCount, miningHours, xpCount, configId, referralXpCount }) => {
+  handler: async (
+    { db },
+    { miningCount, miningHours, xpCount, configId, referralXpCount },
+  ) => {
     if (configId) {
-      await db.patch(configId, { miningCount, miningHours, xpCount, referralXpCount });
+      await db.patch(configId, {
+        miningCount,
+        miningHours,
+        xpCount,
+        referralXpCount,
+      });
     } else {
       await db.insert("config", {
         miningCount,
