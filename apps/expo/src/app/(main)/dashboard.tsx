@@ -89,6 +89,8 @@ export default function DashboardPage() {
   // EVent bottom sheet
   const eventSheetRef = useRef<BottomSheetMethods>(null);
   const taskSheetRef = useRef<BottomSheetMethods>(null);
+  const speedBoost = useMutation(api.mutations.speedBoost);
+  const botBoost = useMutation(api.mutations.botBoost);
 
   // console.log(bottom, top, ":::Bottom Top, size", height, height - top);
 
@@ -682,7 +684,9 @@ export default function DashboardPage() {
                         setTaskSheetContent(undefined);
                       }
                     }}
-                    // tasks={fetchTasks}
+                    onBoostPressed={(boost) => {
+                      console.log(boost, ":::selected boosts!");
+                    }}
                     events={fetchEvents}
                   />
                   <LoadingModal

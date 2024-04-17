@@ -486,7 +486,6 @@ export const updateConfig = mutationWithAuth({
 });
 
 // Boost
-
 export const speedBoost = mutation({
   args: { userId: v.id("user") },
   handler: async ({ db }, { userId }) => {

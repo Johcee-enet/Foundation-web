@@ -17,15 +17,13 @@ import { useGlobalSearchParams } from "expo-router";
 import { tweetEmbed } from "@/twitterUtils";
 import {
   AntDesign,
-  Feather,
   FontAwesome5,
   FontAwesome6,
   MaterialIcons,
-  Octicons,
   SimpleLineIcons,
 } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 
 // import { Era } from "date-fns";
 
@@ -66,9 +64,6 @@ export default function TaskBoostCard({
   });
 
   const config = useQuery(api.queries.getAppConfigForApp);
-
-  const speedBoost = useMutation(api.mutations.speedBoost);
-  const botBoost = useMutation(api.mutations.botBoost);
 
   return (
     <View className="mb-32 flex w-full flex-col gap-2">
@@ -609,16 +604,19 @@ const Boost = ({ boost, index, onBoostPressed }: any) => {
       </View>
       <View className="flex-1" />
       <View className="flex flex-row items-center justify-end gap-1">
-        <Text
-          className="font-[nunito]"
-          style={{ fontSize: 11, fontWeight: "700", color: "black" }}
-        >
-          {(
-            user?.boostStatus?.find((status) => status?.boostId === boost?.uuid)
-              ?.currentLevel ?? 0
-          ).toString()}
-          /{boost?.totalLevel?.toString()}
-        </Text>
+        {boost?.type === "speed" && (
+          <Text
+            className="font-[nunito]"
+            style={{ fontSize: 11, fontWeight: "700", color: "black" }}
+          >
+            {(
+              user?.boostStatus?.find(
+                (status) => status?.boostId === boost?.uuid,
+              )?.currentLevel ?? 0
+            ).toString()}
+            /{boost?.totalLevel?.toString()}
+          </Text>
+        )}
         <MaterialIcons name="keyboard-arrow-right" size={24} color="black" />
       </View>
     </TouchableOpacity>
