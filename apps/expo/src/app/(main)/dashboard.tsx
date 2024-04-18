@@ -496,7 +496,7 @@ export default function DashboardPage() {
                   adConfig && (
                     <TouchableOpacity
                       onPress={async () => {
-                        await WebBrowser.openBrowserAsync(adConfig.link!);
+                        await WebBrowser.openBrowserAsync(adConfig.link);
                       }}
                       style={{
                         position: "relative",
@@ -597,11 +597,6 @@ export default function DashboardPage() {
                     completedTasks={userDetail?.completedTasks}
                     eventsJoined={userDetail?.eventsJoined}
                     onTaskPressed={async (task: Doc<"tasks">) => {
-                      // console.log(taskIndex, ":::task Index");
-                      // const task = (fetchTasks ?? [])[taskIndex];
-
-                      console.log(task, ":::Task tapped on");
-
                       if (!task) {
                         Alert.alert("No task found");
                         return;
@@ -616,8 +611,11 @@ export default function DashboardPage() {
                         await WebBrowser.openBrowserAsync(
                           task?.action.link ?? "",
                         )
-                          .then((result) => {
-                            console.log(result, ":::Task_come back result");
+                          .then((result: any) => {
+                            console.log(
+                              result,
+                              ":::Task_come back result - follow",
+                            );
                           })
                           .catch((err) => {
                             console.log(err, ":::Error occurred in task");
@@ -669,7 +667,10 @@ export default function DashboardPage() {
                             task?.action.link ?? "",
                           )
                             .then((result) => {
-                              console.log(result, ":::Task_come back result");
+                              console.log(
+                                result,
+                                ":::Task_come back result - post",
+                              );
 
                               return result;
                             })
@@ -714,7 +715,10 @@ export default function DashboardPage() {
                           task?.action.link ?? "",
                         )
                           .then((result) => {
-                            console.log(result, ":::Task_come back result");
+                            console.log(
+                              result,
+                              ":::Task_come back result - normal",
+                            );
                           })
                           .catch((err) => {
                             console.log(err, ":::Error occurred in task");
@@ -750,7 +754,18 @@ export default function DashboardPage() {
                           ":::Convex Error",
                           error instanceof ConvexError,
                         );
-                        return Alert.alert(error?.message);
+
+                        const errorMessage =
+                          // Check whether the error is an application error
+                          error instanceof ConvexError
+                            ? // Access data and cast it to the type we expect
+                              (error.data as { message: string }).message
+                            : // Must be some developer error,
+                              // and prod deployments will not
+                              // reveal any more information about it
+                              // to the client
+                              "Unexpected error occurred";
+                        return Alert.alert(errorMessage);
                       }
                     }}
                     events={fetchEvents}
@@ -841,12 +856,26 @@ export default function DashboardPage() {
             indicatorStyle="default"
             style={{ width: "100%" }}
           >
-            <View className="w-full gap-10" style={{ flex: 1 }}>
+            <View style={{ flex: 1, width: "100%", paddingHorizontal: 4 }}>
               {eventSheetContent &&
                 eventSheetContent?.actions?.map((action, index) => (
                   <TouchableOpacity
                     onPress={async () => {
                       try {
+                        // Check if completed
+                        if (
+                          userDetail?.eventsJoined
+                            ?.find(
+                              (joined) =>
+                                joined.eventId === eventSheetContent._id,
+                            )
+                            ?.actions.some(
+                              (act) =>
+                                act.completed && act.name === action.name,
+                            )
+                        ) {
+                          return Alert.alert("Event action has been completed");
+                        }
                         // router.push({ pathname: task.link, params });
                         // OPen with Webbrowser and update event action after
                         await WebBrowser.openBrowserAsync(action.link);
@@ -866,7 +895,15 @@ export default function DashboardPage() {
                       }
                     }}
                     key={index}
-                    className="flex w-full flex-row items-center justify-center gap-4"
+                    style={{
+                      marginBottom: 43,
+                      width: "100%",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 16,
+                      display: "flex",
+                    }}
                   >
                     <View className="rounded-xl bg-[#EBEBEB] p-4">
                       {icons[action?.channel]}

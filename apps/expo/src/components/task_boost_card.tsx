@@ -2,6 +2,7 @@ import type { EventType } from "@/app/(main)/dashboard";
 import type { EmbedResponse } from "@/twitterUtils";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  Alert,
   // ActivityIndicator,
   ScrollView,
   Text,
@@ -377,6 +378,10 @@ const Task = ({
     <TouchableOpacity
       onPress={() => {
         // router.push({ pathname: task.link, params });
+        if (user?.completedTasks?.includes(task?._id)) {
+          console.log(":::Completed task");
+          return Alert.alert("The task has been completed");
+        }
         onTaskPressed(task);
       }}
       key={index}
