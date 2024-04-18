@@ -348,6 +348,15 @@ export const deleteAccount = mutation({
         password: undefined,
         referralCount: 0,
       });
+
+      // Delete the activity of the user as well
+      const usersActivity = await ctx.db
+        .query("activity")
+        .filter((q) => q.eq(q.field("userId"), args.userId))
+        .collect();
+      for (const activity of usersActivity) {
+        await ctx.db.delete(activity._id);
+      }
     } catch (e: any) {
       throw new Error("Error trying to delete account");
     }
@@ -490,6 +499,9 @@ export const activateBoost = mutation({
     }),
   },
   handler: async ({ db }, { userId, boost }) => {
+    // for speed boosts multiply the initial xpCost and and increase the users currentLevel
+    // Check if the totalLevel has not been passed
+    // Validate that the current xpCost is available in the users xpBalance
     const user = await db.get(userId);
 
     if (!user) {
@@ -511,6 +523,13 @@ export const activateBoost = mutation({
     // Update users mining configs
     const config = await db.query("config").first();
 
+    if (!config) {
+      throw new ConvexError({
+        message: "Default configs have not been set",
+        status: "failed",
+      });
+    }
+
     // Check for xpBalance
 
     if (boost?.xpCost > user?.xpCount) {
@@ -526,9 +545,12 @@ export const activateBoost = mutation({
     if (boost?.type === "bot") {
       await db.patch(userId, {
         xpCount: user?.xpCount - boost?.xpCost,
-        mineHours: config?.miningHours! * boost.rate,
+        mineHours: config.miningHours * boost.rate,
         boostStatus: user?.boostStatus
-          ? [...user?.boostStatus, { boostId: boost?.uuid, isActive: true }]
+          ? [
+              ...(user?.boostStatus ?? []),
+              { boostId: boost?.uuid, isActive: true },
+            ]
           : [{ boostId: boost?.uuid, isActive: true }],
       });
     } else {
@@ -537,7 +559,10 @@ export const activateBoost = mutation({
         mineHours: config?.miningHours,
         miningRate: config?.miningCount,
         boostStatus: user?.boostStatus
-          ? [...user?.boostStatus, { boostId: boost?.uuid, isActive: true }]
+          ? [
+              ...(user?.boostStatus ?? []),
+              { boostId: boost?.uuid, isActive: true },
+            ]
           : [{ boostId: boost?.uuid, isActive: true }],
       });
 
