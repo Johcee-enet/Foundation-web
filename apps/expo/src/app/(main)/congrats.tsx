@@ -48,7 +48,7 @@ export default function Congrats() {
       >
         <View
           style={{
-            marginTop: 40,
+            marginTop: 50,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 8,
-    marginBottom: 20,
+    marginBottom: 50,
   },
   buttonText: {
     fontSize: 14,
