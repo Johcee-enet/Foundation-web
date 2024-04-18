@@ -1,5 +1,7 @@
-import { ConvexError, v } from "convex/values";
 import { mutationWithAuth } from "@convex-dev/convex-lucia-auth";
+import { Id } from "convex/dist/cjs-types/values/value";
+import { ConvexError, v } from "convex/values";
+
 import { query } from "./_generated/server";
 
 export const generateUploadUrl = mutationWithAuth({
@@ -19,19 +21,17 @@ export const generateUploadUrl = mutationWithAuth({
   },
 });
 
-
 export const generateUploadUrlForCompanyLogo = mutationWithAuth({
   args: {},
   handler: async (ctx) => {
-    if(!ctx.session || !ctx.session.user) {
+    if (!ctx.session || !ctx.session.user) {
       throw new ConvexError({
         message: "Must be logged in to upload",
-      })
+      });
     }
 
-
     return await ctx.storage.generateUploadUrl();
-  }
+  },
 });
 
 export const saveStorageId = mutationWithAuth({
@@ -76,11 +76,12 @@ export const getBannerData = query({
     const ad = await ctx.db.query("ads").first();
 
     if (!ad) {
-      throw new ConvexError({
-        message: "No ad has been set",
-      });
+      return ad;
     }
 
-    return { ...ad, url: await ctx.storage.getUrl(ad?.storageId) };
+    return {
+      ...ad,
+      url: ad ? await ctx.storage.getUrl(ad?.storageId as Id<"_storage">) : "",
+    };
   },
 });

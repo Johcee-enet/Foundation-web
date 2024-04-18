@@ -457,31 +457,26 @@ export const claimRewards = mutation({
 
 export const updateConfig = mutationWithAuth({
   args: {
-    miningCount: v.float64(),
-    miningHours: v.number(),
-    xpCount: v.float64(),
-    referralXpCount: v.float64(),
+    data: v.any(),
     configId: v.optional(v.id("config")),
   },
-  handler: async (
-    { db },
-    { miningCount, miningHours, xpCount, configId, referralXpCount },
-  ) => {
+  handler: async ({ db }, { data, configId }) => {
     if (configId) {
       await db.patch(configId, {
-        miningCount,
-        miningHours,
-        xpCount,
-        referralXpCount,
+        ...data,
       });
     } else {
       await db.insert("config", {
-        miningCount,
-        miningHours,
-        xpCount,
-        referralXpCount,
+        ...data,
       });
     }
+  },
+});
+
+export const deleteAdConfig = mutationWithAuth({
+  args: { adConfigId: v.id("ads") },
+  handler: async ({ db }, { adConfigId }) => {
+    await db.delete(adConfigId);
   },
 });
 

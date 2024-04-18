@@ -78,6 +78,7 @@ export default defineSchema(
     ads: defineTable({
       link: v.string(),
       storageId: v.id("_storage"),
+      color: v.optional(v.string()),
       expiresAt: v.optional(v.number()),
     }),
     tasks: defineTable({

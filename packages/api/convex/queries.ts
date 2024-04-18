@@ -221,6 +221,10 @@ export const getAdsConfig = query({
   handler: async ({ db, storage }) => {
     const adConfig = await db.query("ads").first();
 
+    if (!adConfig) {
+      return adConfig;
+    }
+
     const adUrl = await storage.getUrl(adConfig?.storageId as Id<"_storage">);
 
     return {

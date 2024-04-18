@@ -7,21 +7,26 @@ import { useQuery } from "convex/react";
 import { getTime } from "date-fns";
 
 import { api } from "@acme/api/convex/_generated/api";
+import { Id } from "@acme/api/convex/_generated/dataModel";
 import MainLayout from "@acme/ui/src/components/layout/main";
+import { Button } from "@acme/ui/src/components/ui/button";
 import { DatePickerWithPresets } from "@acme/ui/src/components/ui/date-picker";
 import { Input } from "@acme/ui/src/components/ui/input";
+import { useToast } from "@acme/ui/src/components/ui/use-toast";
 // import "@xixixao/uploadstuff/react/styles.css";
 import { cn, se } from "@acme/ui/src/lib/utils";
 
 export default function AdSpace() {
-  const [link, setLink] = useState("");
+  const [link, setLink] = useState<string>();
+  const [color, setColor] = useState<string>();
   const [expiresAt, setExpiresAtDate] = useState<Date>();
+  const { toast } = useToast();
 
   const generateUploadUrl = useMutationWithAuth(api.files.generateUploadUrl);
   const saveStorageId = useMutationWithAuth(api.files.saveStorageId);
 
   const saveAfterUpload = async (uploaded: UploadFileResponse[]) => {
-    if (!link.length) {
+    if (!link) {
       return alert("Link is not set");
     }
 
@@ -37,10 +42,18 @@ export default function AdSpace() {
 
   const bannerData = useQuery(api.files.getBannerData);
 
+  // Remove ad config
+  const removeAd = useMutationWithAuth(api.mutations.deleteAdConfig);
+
   useEffect(() => {
     if (bannerData) {
       setLink(bannerData?.link);
-      setExpiresAtDate(new Date(Number(bannerData?.expiresAt)));
+      setColor(bannerData?.color);
+      setExpiresAtDate(
+        bannerData.expiresAt
+          ? new Date(Number(bannerData.expiresAt))
+          : new Date(Date.now()),
+      );
     }
   }, [bannerData]);
 
@@ -54,7 +67,14 @@ export default function AdSpace() {
               Ad space that displays on the mobile app. Recomended size 16:9
             </SubTitle>
           </div>
-          {/* <Button>Update</Button> */}
+          <Button
+            onClick={async () => {
+              // clear the ad table
+              await removeAd({ adConfigId: bannerData?._id as Id<"ads"> });
+            }}
+          >
+            Remove Ad
+          </Button>
         </div>
         <div className="flex w-full grid-cols-[240px_minmax(0,1fr)] items-center justify-start gap-4 sm:grid">
           <div className="grid items-center justify-center gap-4">
@@ -64,6 +84,13 @@ export default function AdSpace() {
               placeholder="Enter banner link"
               value={link}
               onChange={(e) => setLink(e.currentTarget.value)}
+            />
+            <Input
+              name="color"
+              type="text"
+              placeholder="Enter banner color (HEX)"
+              value={color}
+              onChange={(e) => setColor(e.currentTarget.value)}
             />
             <DatePickerWithPresets
               date={expiresAt}

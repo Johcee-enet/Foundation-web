@@ -69,10 +69,12 @@ function ConfigPage() {
                   title: "Updating config data",
                 });
                 await updateConfigs({
-                  miningCount: miningRate,
-                  miningHours,
-                  xpCount,
-                  referralXpCount,
+                  data: {
+                    miningCount: miningRate,
+                    miningHours,
+                    xpCount,
+                    referralXpCount,
+                  },
                   configId: appConfig?._id,
                 });
 
@@ -168,6 +170,88 @@ function ConfigPage() {
               <Button>Save</Button>
             </CardFooter> */}
           </Card>
+        </div>
+
+        {/* Boost */}
+        <div className="h-full w-full flex-1 flex-col space-y-8 p-8 md:flex">
+          <div className="flex items-center justify-between space-y-2">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">
+                Boost Configuration
+              </h2>
+              <p className="text-muted-foreground">
+                Configure the Enet miner mobile applications boost features
+              </p>
+            </div>
+          </div>
+
+          {appConfig?.boosts?.map((boost) => (
+            <Card key={boost?.uuid}>
+              <CardHeader>
+                <CardTitle>{boost?.title}</CardTitle>
+                {/* <CardDescription>
+                  Change the default mining rate of users (i.e $EN/hour)
+                </CardDescription> */}
+              </CardHeader>
+              <CardContent>
+                <form>
+                  <Input
+                    placeholder="Input rate"
+                    type="number"
+                    value={boost.rate}
+                    onChange={(e) => setMiningRate(e.target.valueAsNumber)}
+                  />
+                </form>
+              </CardContent>
+              <CardFooter className="border-t px-6 py-4">
+                <Button
+                  onClick={async () => {
+                    const t = toast({
+                      title: "Updating config data",
+                    });
+                    await updateConfigs({
+                      data: {
+                        miningCount: miningRate,
+                        miningHours,
+                        xpCount,
+                        referralXpCount,
+                        boosts: [
+                          {
+                            rate: 0,
+                            title: "Auto Mining Bot",
+                            type: "bot",
+                            uuid: "125CC0F9-799A-4EE7-A51E-27DC4FEFFE81",
+                            xpCost: 1000000,
+                          },
+                          {
+                            rate: 0,
+                            title: "Mining Rate",
+                            totalLevel: 10,
+                            type: "speed",
+                            uuid: "5FCA08D2-66CD-49DB-B59C-939994E36527",
+                            xpCost: 10000,
+                          },
+                          {
+                            rate: 0,
+                            title: "Mining Duration",
+                            totalLevel: 6,
+                            type: "speed",
+                            uuid: "A508F15F-86ED-4E18-9FF1-38D714202395",
+                            xpCost: 15000,
+                          },
+                        ],
+                      },
+                      configId: appConfig?._id,
+                    });
+
+                    t.update({ title: "Update completed!" });
+                  }}
+                >
+                  Update
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
         </div>
       </div>
     </MainLayout>

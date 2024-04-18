@@ -20,7 +20,7 @@ import {
 } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 import { Image } from "expo-image";
-import { Link, router, Stack, useLocalSearchParams } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { delay } from "@/appUtils";
 // import { checkCountdown } from "@/appUtils";
@@ -498,14 +498,16 @@ export default function DashboardPage() {
                       }}
                       style={{
                         position: "relative",
-                        marginVertical: 10,
+                        marginVertical: 14,
+                        backgroundColor: adConfig?.color,
+                        borderRadius: 8,
                       }}
                     >
                       <Text
                         style={{
                           position: "absolute",
-                          top: 40,
-                          left: 10,
+                          top: 20,
+                          left: 20,
                           color: "black",
                           backgroundColor: "white",
                           paddingHorizontal: 6,
@@ -816,61 +818,73 @@ export default function DashboardPage() {
               </Text>
             </View>
           </View>
-          <View className="w-full gap-4" style={{ flex: 1 }}>
-            {eventSheetContent &&
-              eventSheetContent?.actions?.map((action, index) => (
-                <TouchableOpacity
-                  onPress={async () => {
-                    try {
-                      // router.push({ pathname: task.link, params });
-                      // OPen with Webbrowser and update event action after
-                      await WebBrowser.openBrowserAsync(action.link);
-                      await delay(3.5); // induce a 4 secs delay
-                      await updateEventAction({
-                        userId:
-                          (params?.userId as Id<"user">) ?? userDetail?._id,
-                        eventId: eventSheetContent?._id as Id<"events">,
-                        actionName: action?.name,
-                      });
-                    } catch (err: any) {
-                      console.log(err, ":::Error updating action");
-                      Alert.alert(
-                        "Action error",
-                        "There was an error performing that action",
-                      );
-                    }
-                  }}
-                  key={index}
-                  className="flex w-full flex-row items-center justify-center gap-4"
-                >
-                  <View className="rounded-xl bg-[#EBEBEB] p-4">
-                    {icons[action?.channel]}
-                  </View>
-                  <View className="flex flex-col items-start justify-center gap-2">
-                    <Text className="font-[nunito] text-lg">
-                      {action?.name}
-                    </Text>
-                    {/* <Text className=" font-[nunito]">
+          <ScrollView
+            nestedScrollEnabled
+            indicatorStyle="default"
+            style={{ width: "100%" }}
+          >
+            <View className="w-full gap-10" style={{ flex: 1 }}>
+              {eventSheetContent &&
+                eventSheetContent?.actions?.map((action, index) => (
+                  <TouchableOpacity
+                    onPress={async () => {
+                      try {
+                        // router.push({ pathname: task.link, params });
+                        // OPen with Webbrowser and update event action after
+                        await WebBrowser.openBrowserAsync(action.link);
+                        await delay(3.5); // induce a 4 secs delay
+                        await updateEventAction({
+                          userId:
+                            (params?.userId as Id<"user">) ?? userDetail?._id,
+                          eventId: eventSheetContent?._id as Id<"events">,
+                          actionName: action?.name,
+                        });
+                      } catch (err: any) {
+                        console.log(err, ":::Error updating action");
+                        Alert.alert(
+                          "Action error",
+                          "There was an error performing that action",
+                        );
+                      }
+                    }}
+                    key={index}
+                    className="flex w-full flex-row items-center justify-center gap-4"
+                  >
+                    <View className="rounded-xl bg-[#EBEBEB] p-4">
+                      {icons[action?.channel]}
+                    </View>
+                    <View className="flex flex-col items-start justify-center gap-2">
+                      <Text className="font-[nunito] text-lg">
+                        {action?.name}
+                      </Text>
+                      {/* <Text className=" font-[nunito]">
                   +{action?.reward.toLocaleString("en-US")} XP
                 </Text> */}
-                  </View>
-                  <View className="flex-1" />
-                  {userDetail?.eventsJoined
-                    ?.find((joined) => joined.eventId === eventSheetContent._id)
-                    ?.actions.some(
-                      (act) => act.completed && act.name === action.name,
-                    ) ? (
-                    <FontAwesome name="check-circle" size={24} color="black" />
-                  ) : (
-                    <MaterialIcons
-                      name="keyboard-arrow-right"
-                      size={24}
-                      color="black"
-                    />
-                  )}
-                </TouchableOpacity>
-              ))}
-          </View>
+                    </View>
+                    <View className="flex-1" />
+                    {userDetail?.eventsJoined
+                      ?.find(
+                        (joined) => joined.eventId === eventSheetContent._id,
+                      )
+                      ?.actions.some(
+                        (act) => act.completed && act.name === action.name,
+                      ) ? (
+                      <FontAwesome
+                        name="check-circle"
+                        size={24}
+                        color="black"
+                      />
+                    ) : (
+                      <MaterialIcons
+                        name="keyboard-arrow-right"
+                        size={24}
+                        color="black"
+                      />
+                    )}
+                  </TouchableOpacity>
+                ))}
+            </View>
+          </ScrollView>
           <View style={{ marginBottom: 52 }} className="w-full">
             <TouchableOpacity
               onPress={async () => {
