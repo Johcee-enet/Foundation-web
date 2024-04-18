@@ -31,6 +31,7 @@ export default defineSchema(
           v.object({
             boostId: v.string(),
             isActive: v.boolean(),
+            currentXpCost: v.optional(v.number()),
             currentLevel: v.optional(v.number()),
           }),
         ),

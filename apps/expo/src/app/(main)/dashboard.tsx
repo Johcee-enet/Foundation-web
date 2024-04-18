@@ -447,40 +447,87 @@ export default function DashboardPage() {
                       }}
                     />
 
-                    <TouchableOpacity
+                    <View
                       style={{
+                        flexDirection: "row",
                         width: "100%",
-                        backgroundColor: "black",
-                        borderRadius: 8,
-                        padding: 12,
+                        gap: 4,
                         display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                      onPress={async () => {
-                        await redeemReferral({
-                          referreeCode: referreeCode!,
-                          nickname:
-                            userDetail?.nickname ??
-                            (params?.nickname as string),
-                          userId:
-                            (params?.userId as Id<"user">) ?? userDetail?._id,
-                        });
-
-                        storeData("@enet-store/referralPromptShown", true);
-                        setReferralPromptModalVisible(false);
                       }}
                     >
-                      <Text
+                      <TouchableOpacity
                         style={{
-                          color: "white",
-                          fontSize: 14,
-                          fontWeight: "700",
+                          width: "100%",
+                          backgroundColor: "transparent",
+                          borderWidth: 1,
+                          borderColor: "black",
+                          borderRadius: 8,
+                          padding: 12,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                        onPress={async () => {
+                          storeData("@enet-store/referralPromptShown", true);
+                          setReferralPromptModalVisible(false);
                         }}
                       >
-                        Submit
-                      </Text>
-                    </TouchableOpacity>
+                        <Text
+                          style={{
+                            color: "white",
+                            fontSize: 14,
+                            fontWeight: "700",
+                          }}
+                        >
+                          Cancel
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={{
+                          width: "100%",
+                          backgroundColor: "black",
+                          borderRadius: 8,
+                          padding: 12,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                        onPress={async () => {
+                          try {
+                            await redeemReferral({
+                              referreeCode: referreeCode!,
+                              nickname:
+                                userDetail?.nickname ??
+                                (params?.nickname as string),
+                              userId:
+                                (params?.userId as Id<"user">) ??
+                                userDetail?._id,
+                            });
+
+                            storeData("@enet-store/referralPromptShown", true);
+                            setReferralPromptModalVisible(false);
+                          } catch (error: any) {
+                            const errorMessage =
+                              error instanceof ConvexError
+                                ? (error.data as { message: string }).message
+                                : "Unexpected error occurred";
+                            storeData("@enet-store/referralPromptShown", true);
+                            setReferralPromptModalVisible(false);
+                            return Alert.alert(errorMessage);
+                          }
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: "white",
+                            fontSize: 14,
+                            fontWeight: "700",
+                          }}
+                        >
+                          Submit
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </LoadingModal>
 

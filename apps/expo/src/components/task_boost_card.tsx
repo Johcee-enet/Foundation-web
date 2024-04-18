@@ -612,7 +612,14 @@ const Boost = ({ boost, index, onBoostPressed }: any) => {
             className="font-[nunito] text-lg font-medium"
             style={{ fontSize: 13, fontWeight: "700" }}
           >
-            {boost?.xpCost?.toLocaleString("en-US")} XP
+            {user?.boostStatus?.find(
+              (status) => status?.boostId === boost?.uuid,
+            )?.isActive
+              ? user?.boostStatus
+                  ?.find((status) => status?.boostId === boost?.uuid)
+                  ?.currentXpCost?.toLocaleString("en-US")
+              : boost?.xpCost?.toLocaleString("en-US")}{" "}
+            XP
           </Text>
         </View>
         {boost?.type === "bot" && (

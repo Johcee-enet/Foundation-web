@@ -119,9 +119,12 @@ export const redeemReferralCode = mutation({
     const user = await db.get(userId);
 
     if (!user || user?.referreeCode?.length) {
-      throw new Error(
-        "Error redeeming referral, user has previously been onboarded!",
-      );
+      throw new ConvexError({
+        message:
+          "Error redeeming referral, user has previously been onboarded!",
+        code: 501,
+        status: "failed",
+      });
     }
     const config = await db.query("config").first();
     // Increment users referree count
@@ -499,9 +502,6 @@ export const activateBoost = mutation({
     }),
   },
   handler: async ({ db }, { userId, boost }) => {
-    // for speed boosts multiply the initial xpCost and and increase the users currentLevel
-    // Check if the totalLevel has not been passed
-    // Validate that the current xpCost is available in the users xpBalance
     const user = await db.get(userId);
 
     if (!user) {
@@ -531,7 +531,6 @@ export const activateBoost = mutation({
     }
 
     // Check for xpBalance
-
     if (boost?.xpCost > user?.xpCount) {
       throw new ConvexError({
         message: "Insufficient XP Points",
@@ -541,7 +540,6 @@ export const activateBoost = mutation({
     }
 
     // Check if boost type is bot, activate and add to user boostStatus
-
     if (boost?.type === "bot") {
       await db.patch(userId, {
         xpCount: user?.xpCount - boost?.xpCost,
@@ -554,16 +552,50 @@ export const activateBoost = mutation({
           : [{ boostId: boost?.uuid, isActive: true }],
       });
     } else {
+      // If type is speed
+      // for speed boosts multiply the initial xpCost by 2 and and increase the users currentLevel
+      // Check if the totalLevel has not been passed
+      // Validate that the current xpCost is available in the users xpBalance
+      if (user?.boostStatus && user?.boostStatus.length) {
+        console.log(":::Should increement");
+        const updatedBoostStats = user?.boostStatus.map((stat) => {
+          if (boost?.uuid === stat.boostId) {
+            return {
+              ...stat,
+              currentXpCost: stat.currentXpCost! * 2,
+              currentLevel: stat.currentLevel! + 1,
+            };
+          }
+
+          return stat;
+        });
+
+        // Update the user db with new stats
+        await db.patch(userId, {
+          xpCount:
+            user?.xpCount -
+            updatedBoostStats.find((stat) => stat.boostId === boost.uuid)
+              ?.currentXpCost!,
+          mineHours: config?.miningHours,
+          miningRate: config?.miningCount,
+          boostStatus: updatedBoostStats,
+        });
+
+        return;
+      }
+
       await db.patch(userId, {
         xpCount: user?.xpCount - boost?.xpCost,
         mineHours: config?.miningHours,
         miningRate: config?.miningCount,
-        boostStatus: user?.boostStatus
-          ? [
-              ...(user?.boostStatus ?? []),
-              { boostId: boost?.uuid, isActive: true },
-            ]
-          : [{ boostId: boost?.uuid, isActive: true }],
+        boostStatus: [
+          {
+            boostId: boost?.uuid,
+            isActive: true,
+            currentLevel: 1,
+            currentXpCost: boost?.xpCost * 2,
+          },
+        ],
       });
 
       await db.patch(userId, {});
