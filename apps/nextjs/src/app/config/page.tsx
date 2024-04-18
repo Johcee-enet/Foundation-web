@@ -19,6 +19,7 @@ import {
   CardTitle,
 } from "@acme/ui/src/components/ui/card";
 import { Input } from "@acme/ui/src/components/ui/input";
+import { Label } from "@acme/ui/src/components/ui/label";
 import { useToast } from "@acme/ui/src/components/ui/use-toast";
 
 // TODO: handle updates for the default settings of the mobile app
@@ -39,6 +40,31 @@ function ConfigPage() {
     {},
   );
 
+  const [boosts, setBoosts] = useState<
+    {
+      rate: number;
+      title: string;
+      type: string;
+      uuid: string;
+      xpCost: number;
+    }[]
+  >([]);
+
+  function setBoost(key: string, at: number, value: any) {
+    const newBoosts = boosts?.map((boosts, i) => {
+      if (i === at) {
+        return {
+          ...boosts,
+          [key]: value,
+        };
+      } else {
+        return boosts;
+      }
+    });
+
+    setBoosts(newBoosts);
+  }
+
   const updateConfigs = useMutationWithAuth(api.mutations.updateConfig);
 
   useEffect(() => {
@@ -46,6 +72,7 @@ function ConfigPage() {
       setMiningRate(appConfig?.miningCount);
       setMiningHours(appConfig.miningHours);
       setXpCount(appConfig.xpCount);
+      setBoosts(appConfig?.boosts);
     }
   }, [appConfig]);
 
@@ -185,7 +212,7 @@ function ConfigPage() {
             </div>
           </div>
 
-          {appConfig?.boosts?.map((boost) => (
+          {boosts?.map((boost, index) => (
             <Card key={boost?.uuid}>
               <CardHeader>
                 <CardTitle>{boost?.title}</CardTitle>
@@ -195,12 +222,28 @@ function ConfigPage() {
               </CardHeader>
               <CardContent>
                 <form>
-                  <Input
-                    placeholder="Input rate"
-                    type="number"
-                    value={boost.rate}
-                    onChange={(e) => setMiningRate(e.target.valueAsNumber)}
-                  />
+                  <Label>
+                    Rate
+                    <Input
+                      placeholder="Input rate"
+                      type="number"
+                      value={boost.rate}
+                      onChange={(e) =>
+                        setBoost("rate", index, e.target.valueAsNumber)
+                      }
+                    />
+                  </Label>
+                  <Label>
+                    XP Cost
+                    <Input
+                      placeholder="XP Cost"
+                      type="number"
+                      value={boost.xpCost}
+                      onChange={(e) =>
+                        setBoost("xpCost", index, e.target.valueAsNumber)
+                      }
+                    />
+                  </Label>
                 </form>
               </CardContent>
               <CardFooter className="border-t px-6 py-4">
@@ -211,35 +254,7 @@ function ConfigPage() {
                     });
                     await updateConfigs({
                       data: {
-                        miningCount: miningRate,
-                        miningHours,
-                        xpCount,
-                        referralXpCount,
-                        boosts: [
-                          {
-                            rate: 0,
-                            title: "Auto Mining Bot",
-                            type: "bot",
-                            uuid: "125CC0F9-799A-4EE7-A51E-27DC4FEFFE81",
-                            xpCost: 1000000,
-                          },
-                          {
-                            rate: 0,
-                            title: "Mining Rate",
-                            totalLevel: 10,
-                            type: "speed",
-                            uuid: "5FCA08D2-66CD-49DB-B59C-939994E36527",
-                            xpCost: 10000,
-                          },
-                          {
-                            rate: 0,
-                            title: "Mining Duration",
-                            totalLevel: 6,
-                            type: "speed",
-                            uuid: "A508F15F-86ED-4E18-9FF1-38D714202395",
-                            xpCost: 15000,
-                          },
-                        ],
+                        boosts,
                       },
                       configId: appConfig?._id,
                     });
