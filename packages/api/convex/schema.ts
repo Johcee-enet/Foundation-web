@@ -35,8 +35,6 @@ export default defineSchema(
           }),
         ),
       ),
-      botBoost: v.optional(v.any()),
-      speedBoost: v.optional(v.any()),
       completedTasks: v.optional(v.array(v.id("tasks"))),
       eventsJoined: v.optional(
         v.array(

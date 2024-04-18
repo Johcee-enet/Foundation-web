@@ -43,7 +43,7 @@ interface ITaskBoostCardProps {
   tasks?: Doc<"tasks">[] | undefined;
   onEventPressed: (eventIndex: number) => void;
   onTaskPressed: (task: Doc<"tasks">) => void;
-  onBoostPressed: (boost: Doc<"config">["boosts"]) => void;
+  onBoostPressed: (boost: Record<string, any>) => void;
 }
 export default function TaskBoostCard({
   // tasks,
@@ -565,7 +565,21 @@ const Boost = ({ boost, index, onBoostPressed }: any) => {
       style={{ marginVertical: 8 }}
       className="flex w-full flex-row items-center justify-center gap-4"
     >
-      <View className="rounded-xl bg-[#EBEBEB] p-5">
+      <View className="relative rounded-xl bg-[#EBEBEB] p-5">
+        {user?.boostStatus?.find((status) => status?.boostId === boost?.uuid)
+          ?.isActive && (
+          <View
+            style={{
+              width: 8.28,
+              height: 8.28,
+              backgroundColor: "#15BDCF",
+              position: "absolute",
+              top: -1.14,
+              right: -1.14,
+              borderRadius: 9999,
+            }}
+          />
+        )}
         <Image
           source={
             boost?.type === "speed"

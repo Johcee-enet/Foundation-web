@@ -38,6 +38,7 @@ import { getData, storeData } from "@/storageUtils";
 import BottomSheet from "@devvie/bottom-sheet";
 import { FontAwesome, MaterialIcons, Octicons } from "@expo/vector-icons";
 import { useAction, useMutation, useQuery } from "convex/react";
+import { ConvexError } from "convex/values";
 import { addHours, differenceInSeconds } from "date-fns";
 
 import type { Doc, Id } from "@acme/api/convex/_generated/dataModel";
@@ -176,6 +177,7 @@ export default function DashboardPage() {
   const rewardTaskXpCount = useMutation(api.mutations.rewardTaskXp);
   const rewardEventXpCount = useMutation(api.mutations.rewardEventXp);
   const updateEventAction = useMutation(api.mutations.updateEventsForUser);
+  const activateBoost = useMutation(api.mutations.activateBoost);
 
   return (
     <SafeAreaView
@@ -732,8 +734,24 @@ export default function DashboardPage() {
                         setTaskSheetContent(undefined);
                       }
                     }}
-                    onBoostPressed={(boost) => {
+                    onBoostPressed={async (boost: any) => {
                       console.log(boost, ":::selected boosts!");
+                      // TODO: activate boost
+                      try {
+                        await activateBoost({
+                          userId: params?.userId as Id<"user">,
+                          boost: {
+                            ...boost,
+                          },
+                        });
+                      } catch (error: any) {
+                        console.log(
+                          error,
+                          ":::Convex Error",
+                          error instanceof ConvexError,
+                        );
+                        return Alert.alert(error?.message);
+                      }
                     }}
                     events={fetchEvents}
                   />

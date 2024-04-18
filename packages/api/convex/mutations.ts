@@ -1,9 +1,9 @@
 import { mutationWithAuth } from "@convex-dev/convex-lucia-auth";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { differenceInHours } from "date-fns";
 
 import { internal } from "./_generated/api";
-// import { Id } from "./_generated/dataModel";
+import { Doc } from "./_generated/dataModel";
 import {
   action,
   internalAction,
@@ -379,6 +379,7 @@ export const beforeMine = internalMutation({
 export const mine = internalMutation({
   args: { userId: v.id("user") },
   handler: async ({ db, scheduler }, { userId }) => {
+    const config = await db.query("config").first();
     const user = await db.get(userId);
 
     if (!user) {
@@ -407,14 +408,9 @@ export const mine = internalMutation({
 
         await db.patch(userId, {
           mineActive: false,
-          ...(user?.botBoost.isActive && {
-            botBoost: { ...user.botBoost, isActive: false },
-            mineHours: 6,
-          }),
-          ...(user?.speedBoost.isActive && {
-            speedBoost: { ...user.speedBoost, isActive: false },
-            miningRate: 2.0,
-          }),
+          boostStatus: undefined,
+          mineHours: config?.miningHours,
+          miningRate: config?.miningCount,
           redeemableCount:
             user.miningRate *
             differenceInHours(Date.now(), new Date(user.mineStartTime!), {
@@ -481,34 +477,71 @@ export const deleteAdConfig = mutationWithAuth({
 });
 
 // Boost
-export const speedBoost = mutation({
-  args: { userId: v.id("user") },
-  handler: async ({ db }, { userId }) => {
-    const user = await db.get(userId);
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    await db.patch(userId, {
-      speedBoost: { ...user.speedBoost, isActive: true },
-      miningRate: user.miningRate + user.speedBoost.rate,
-    });
+export const activateBoost = mutation({
+  args: {
+    userId: v.id("user"),
+    boost: v.object({
+      uuid: v.string(),
+      rate: v.number(),
+      xpCost: v.number(),
+      title: v.string(),
+      type: v.union(v.literal("bot"), v.literal("speed")),
+      totalLevel: v.optional(v.number()),
+    }),
   },
-});
-
-export const botBoost = mutation({
-  args: { userId: v.id("user") },
-  handler: async ({ db }, { userId }) => {
+  handler: async ({ db }, { userId, boost }) => {
     const user = await db.get(userId);
 
     if (!user) {
-      throw new Error("User not found");
+      throw new ConvexError({
+        message: "User not found",
+        code: 404,
+        status: "failed",
+      });
     }
 
-    await db.patch(userId, {
-      botBoost: { ...user.botBoost, isActive: true },
-      mineHours: user.mineHours + user.botBoost.hours,
-    });
+    if (user && !user?.mineActive) {
+      throw new ConvexError({
+        message: "Mining has not been activated",
+        code: 401,
+        status: "failed",
+      });
+    }
+
+    // Update users mining configs
+    const config = await db.query("config").first();
+
+    // Check for xpBalance
+
+    if (boost?.xpCost > user?.xpCount) {
+      throw new ConvexError({
+        message: "Insufficient XP Points",
+        code: 404,
+        status: "failed",
+      });
+    }
+
+    // Check if boost type is bot, activate and add to user boostStatus
+
+    if (boost?.type === "bot") {
+      await db.patch(userId, {
+        xpCount: user?.xpCount - boost?.xpCost,
+        mineHours: config?.miningHours! * boost.rate,
+        boostStatus: user?.boostStatus
+          ? [...user?.boostStatus, { boostId: boost?.uuid, isActive: true }]
+          : [{ boostId: boost?.uuid, isActive: true }],
+      });
+    } else {
+      await db.patch(userId, {
+        xpCount: user?.xpCount - boost?.xpCost,
+        mineHours: config?.miningHours,
+        miningRate: config?.miningCount,
+        boostStatus: user?.boostStatus
+          ? [...user?.boostStatus, { boostId: boost?.uuid, isActive: true }]
+          : [{ boostId: boost?.uuid, isActive: true }],
+      });
+
+      await db.patch(userId, {});
+    }
   },
 });
