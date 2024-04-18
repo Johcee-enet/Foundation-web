@@ -215,3 +215,17 @@ export const getAppConfigForApp = query({
     return await db.query("config").first();
   },
 });
+
+// Get the ads config from the dashboard
+export const getAdsConfig = query({
+  handler: async ({ db, storage }) => {
+    const adConfig = await db.query("ads").first();
+
+    const adUrl = await storage.getUrl(adConfig?.storageId as Id<"_storage">);
+
+    return {
+      ...adConfig,
+      adUrl,
+    };
+  },
+});

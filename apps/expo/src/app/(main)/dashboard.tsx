@@ -20,7 +20,7 @@ import {
 } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 import { Image } from "expo-image";
-import { router, Stack, useLocalSearchParams } from "expo-router";
+import { Link, router, Stack, useLocalSearchParams } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { delay } from "@/appUtils";
 // import { checkCountdown } from "@/appUtils";
@@ -91,6 +91,7 @@ export default function DashboardPage() {
   const taskSheetRef = useRef<BottomSheetMethods>(null);
   const speedBoost = useMutation(api.mutations.speedBoost);
   const botBoost = useMutation(api.mutations.botBoost);
+  const adConfig = useQuery(api.queries.getAdsConfig);
 
   // console.log(bottom, top, ":::Bottom Top, size", height, height - top);
 
@@ -487,6 +488,51 @@ export default function DashboardPage() {
                   xpEarned={userDetail?.xpCount ?? 0}
                   redeemableCount={userDetail?.redeemableCount ?? 0}
                 />
+
+                {
+                  /* Conditional render ad image  */
+                  adConfig && (
+                    <TouchableOpacity
+                      onPress={async () => {
+                        await WebBrowser.openBrowserAsync(adConfig.link!);
+                      }}
+                      style={{
+                        position: "relative",
+                        marginVertical: 10,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          position: "absolute",
+                          top: 40,
+                          left: 10,
+                          color: "black",
+                          backgroundColor: "white",
+                          paddingHorizontal: 6,
+                          paddingVertical: 2,
+                          borderRadius: 8,
+                          zIndex: 30,
+                          fontSize: 13,
+                          fontWeight: "700",
+                        }}
+                      >
+                        Ad
+                      </Text>
+                      <Image
+                        source={{
+                          uri: adConfig.adUrl!,
+                        }}
+                        style={{
+                          // width: "100%",
+                          borderRadius: 18,
+                          // flex: 1,
+                          aspectRatio: 16 / 9,
+                        }}
+                        contentFit="contain"
+                      />
+                    </TouchableOpacity>
+                  )
+                }
 
                 <View
                   style={{ marginTop: 17 }}
