@@ -165,6 +165,7 @@ export default function DashboardPage() {
     const promptHasBeenShown = getData("@enet-store/referralPromptShown", true);
     console.log(promptHasBeenShown, ":::Referral prompt system");
 
+    // setReferralPromptModalVisible(true);
     if (!promptHasBeenShown || typeof promptHasBeenShown === "undefined") {
       console.log(promptHasBeenShown, ":::Inside condition");
       setReferralPromptModalVisible(true);
@@ -456,7 +457,8 @@ export default function DashboardPage() {
                     >
                       <TouchableOpacity
                         style={{
-                          width: "100%",
+                          // width: "100%",
+                          flex: 1,
                           backgroundColor: "transparent",
                           borderWidth: 1,
                           borderColor: "black",
@@ -473,7 +475,7 @@ export default function DashboardPage() {
                       >
                         <Text
                           style={{
-                            color: "white",
+                            color: "black",
                             fontSize: 14,
                             fontWeight: "700",
                           }}
@@ -483,7 +485,8 @@ export default function DashboardPage() {
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={{
-                          width: "100%",
+                          // width: "100%",
+                          flex: 1,
                           backgroundColor: "black",
                           borderRadius: 8,
                           padding: 12,
