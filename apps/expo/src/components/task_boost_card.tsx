@@ -620,7 +620,24 @@ const Boost = ({ boost, index, onBoostPressed }: any) => {
       <View className="flex flex-col items-start justify-center gap-1">
         <Text
           className="font-[nunito] text-lg"
-          style={{ fontSize: 14, fontWeight: "500" }}
+          style={{
+            fontSize: 14,
+            fontWeight: "500",
+            opacity:
+              user?.boostStatus?.find(
+                (status) => status?.boostId === boost?.uuid,
+              )?.isActive && boost?.type === "bot"
+                ? 0.3
+                : user?.boostStatus?.find(
+                      (status) => status?.boostId === boost?.uuid,
+                    )?.isActive &&
+                    boost?.type === "bot" &&
+                    (user?.boostStatus?.find(
+                      (status) => status?.boostId === boost?.uuid,
+                    )?.currentLevel ?? 0) >= boost?.totalLevel
+                  ? 0.3
+                  : 1,
+          }}
         >
           {boost?.title}
         </Text>
@@ -632,7 +649,24 @@ const Boost = ({ boost, index, onBoostPressed }: any) => {
         /> */}
           <Text
             className="font-[nunito] text-lg font-medium"
-            style={{ fontSize: 13, fontWeight: "700" }}
+            style={{
+              fontSize: 13,
+              fontWeight: "700",
+              opacity:
+                user?.boostStatus?.find(
+                  (status) => status?.boostId === boost?.uuid,
+                )?.isActive && boost?.type === "bot"
+                  ? 0.3
+                  : user?.boostStatus?.find(
+                        (status) => status?.boostId === boost?.uuid,
+                      )?.isActive &&
+                      boost?.type === "bot" &&
+                      (user?.boostStatus?.find(
+                        (status) => status?.boostId === boost?.uuid,
+                      )?.currentLevel ?? 0) >= boost?.totalLevel
+                    ? 0.3
+                    : 1,
+            }}
           >
             {user?.boostStatus?.find(
               (status) => status?.boostId === boost?.uuid,
