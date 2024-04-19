@@ -905,7 +905,14 @@ export default function DashboardPage() {
             indicatorStyle="default"
             style={{ width: "100%" }}
           >
-            <View style={{ flex: 1, width: "100%", paddingHorizontal: 4 }}>
+            <View
+              style={{
+                flex: 1,
+                width: "100%",
+                paddingHorizontal: 4,
+                marginTop: 15,
+              }}
+            >
               {eventSheetContent &&
                 eventSheetContent?.actions?.map((action, index) => (
                   <TouchableOpacity

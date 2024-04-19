@@ -636,7 +636,7 @@ const Boost = ({ boost, index, onBoostPressed }: any) => {
           >
             {user?.boostStatus?.find(
               (status) => status?.boostId === boost?.uuid,
-            )?.isActive
+            )?.isActive && boost?.type !== "bot"
               ? user?.boostStatus
                   ?.find((status) => status?.boostId === boost?.uuid)
                   ?.currentXpCost?.toLocaleString("en-US")

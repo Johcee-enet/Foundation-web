@@ -86,8 +86,7 @@ export const StatsCard: FC<IStatsCardProps> = ({
         <View className="my-3" />
         <View className="rounded-lg bg-black px-4 py-2">
           <Text className="text-start font-[nunito] font-normal text-white">
-            Mining rate: {appConfig ? appConfig.miningCount : miningRate}{" "}
-            FOUND/hr
+            Mining rate: {miningRate} FOUND/hr
           </Text>
         </View>
       </View>
