@@ -565,7 +565,29 @@ const Boost = ({ boost, index, onBoostPressed }: any) => {
 
   return (
     <TouchableOpacity
-      onPress={() => onBoostPressed(boost)}
+      onPress={() => {
+        if (
+          boost?.type === "bot" &&
+          user?.boostStatus?.some(
+            (stats) => stats?.boostId === boost?.uuid && stats?.isActive,
+          )
+        ) {
+          Alert.alert("Auto mining bot is already active");
+          return;
+        } else if (
+          boost?.type !== "bot" &&
+          user?.boostStatus?.some(
+            (stats) =>
+              stats?.boostId === boost?.uuid &&
+              stats.currentLevel! >= boost?.totalLevel,
+          )
+        ) {
+          Alert.alert("Maximum boost level reached!");
+          return;
+        }
+
+        onBoostPressed(boost);
+      }}
       key={index}
       style={{ marginVertical: 8 }}
       className="flex w-full flex-row items-center justify-center gap-4"
@@ -587,7 +609,7 @@ const Boost = ({ boost, index, onBoostPressed }: any) => {
         )}
         <Image
           source={
-            boost?.type === "speed"
+            boost?.type !== "bot"
               ? require("../../assets/main/icons/boosts_flash_black.png")
               : require("../../assets/main/icons/tasks_coin_black.png")
           }
@@ -630,7 +652,7 @@ const Boost = ({ boost, index, onBoostPressed }: any) => {
       </View>
       <View className="flex-1" />
       <View className="flex flex-row items-center justify-end gap-1">
-        {boost?.type === "speed" && (
+        {boost?.type !== "bot" && (
           <Text
             className="font-[nunito]"
             style={{ fontSize: 11, fontWeight: "700", color: "black" }}

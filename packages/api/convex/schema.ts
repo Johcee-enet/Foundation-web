@@ -136,10 +136,14 @@ export default defineSchema(
         v.array(
           v.object({
             uuid: v.string(),
-            rate: v.number(),
+            rate: v.float64(),
             xpCost: v.number(),
             title: v.string(),
-            type: v.union(v.literal("bot"), v.literal("speed")),
+            type: v.union(
+              v.literal("bot"),
+              v.literal("rate"),
+              v.literal("duration"),
+            ),
             totalLevel: v.optional(v.number()),
           }),
         ),

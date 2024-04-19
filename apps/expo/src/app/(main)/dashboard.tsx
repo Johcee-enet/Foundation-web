@@ -90,8 +90,7 @@ export default function DashboardPage() {
   // EVent bottom sheet
   const eventSheetRef = useRef<BottomSheetMethods>(null);
   const taskSheetRef = useRef<BottomSheetMethods>(null);
-  const speedBoost = useMutation(api.mutations.speedBoost);
-  const botBoost = useMutation(api.mutations.botBoost);
+
   const adConfig = useQuery(api.queries.getAdsConfig);
 
   // console.log(bottom, top, ":::Bottom Top, size", height, height - top);

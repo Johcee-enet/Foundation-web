@@ -4,8 +4,8 @@ const z = require("zod");
 /* eslint-disable */
 const path = require("path");
 
-const APP_ENV = process.env.APP_ENV;
-// console.log(__dirname, ":::dirname");
+const APP_ENV = "local";
+// console.log(__dirname, ":::dirname", APP_ENV);
 const envPath = path.resolve(__dirname, `.env.${APP_ENV}`);
 
 if (APP_ENV !== "expo") {

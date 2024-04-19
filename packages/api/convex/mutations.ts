@@ -3,7 +3,7 @@ import { ConvexError, v } from "convex/values";
 import { differenceInHours } from "date-fns";
 
 import { internal } from "./_generated/api";
-import { Doc } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
 import {
   action,
   internalAction,
@@ -37,16 +37,6 @@ export const storeEmail = internalMutation({
         mineHours: 6,
         redeemableCount: 0,
         xpCount: config?.xpCount ?? 1000,
-        speedBoost: {
-          isActive: false,
-          rate: 2,
-          level: 1,
-        },
-        botBoost: {
-          isActive: false,
-          hours: 3,
-          level: 1,
-        },
       });
       return previouslyDeleted._id;
     }
@@ -67,16 +57,6 @@ export const storeEmail = internalMutation({
       mineHours: 6,
       redeemableCount: 0,
       xpCount: config?.xpCount ?? 1000,
-      speedBoost: {
-        isActive: false,
-        rate: 2,
-        level: 1,
-      },
-      botBoost: {
-        isActive: false,
-        hours: 3,
-        level: 1,
-      },
     });
 
     console.log(userId, ":::User id");
@@ -497,7 +477,7 @@ export const activateBoost = mutation({
       rate: v.number(),
       xpCost: v.number(),
       title: v.string(),
-      type: v.union(v.literal("bot"), v.literal("speed")),
+      type: v.union(v.literal("bot"), v.literal("rate"), v.literal("duration")),
       totalLevel: v.optional(v.number()),
     }),
   },
@@ -543,7 +523,7 @@ export const activateBoost = mutation({
     if (boost?.type === "bot") {
       await db.patch(userId, {
         xpCount: user?.xpCount - boost?.xpCost,
-        mineHours: config.miningHours * boost.rate,
+        mineHours: config.miningHours + boost.rate,
         boostStatus: user?.boostStatus
           ? [
               ...(user?.boostStatus ?? []),
@@ -557,6 +537,27 @@ export const activateBoost = mutation({
       // Check if the totalLevel has not been passed
       // Validate that the current xpCost is available in the users xpBalance
       if (user?.boostStatus && user?.boostStatus.length) {
+        if (user?.boostStatus?.some((stat) => stat.boostId !== boost.uuid)) {
+          // Add a new object to the array
+
+          await db.patch(userId, {
+            xpCount: user?.xpCount - boost?.xpCost,
+            ...(boost?.type === "rate"
+              ? { miningRate: user?.miningRate + boost?.rate }
+              : { mineHours: user?.mineHours + boost?.rate }),
+            boostStatus: [
+              {
+                boostId: boost?.uuid,
+                isActive: true,
+                currentLevel: 1,
+                currentXpCost: boost?.xpCost * 2,
+              },
+            ],
+          });
+
+          return;
+        }
+
         console.log(":::Should increement");
         const updatedBoostStats = user?.boostStatus.map((stat) => {
           if (boost?.uuid === stat.boostId) {
@@ -576,8 +577,9 @@ export const activateBoost = mutation({
             user?.xpCount -
             updatedBoostStats.find((stat) => stat.boostId === boost.uuid)
               ?.currentXpCost!,
-          mineHours: config?.miningHours,
-          miningRate: config?.miningCount,
+          ...(boost?.type === "rate"
+            ? { miningRate: user?.miningRate + boost?.rate }
+            : { mineHours: user?.mineHours + boost?.rate }),
           boostStatus: updatedBoostStats,
         });
 
@@ -586,8 +588,9 @@ export const activateBoost = mutation({
 
       await db.patch(userId, {
         xpCount: user?.xpCount - boost?.xpCost,
-        mineHours: config?.miningHours,
-        miningRate: config?.miningCount,
+        ...(boost?.type === "rate"
+          ? { miningRate: user?.miningRate + boost?.rate }
+          : { mineHours: user?.mineHours + boost?.rate }),
         boostStatus: [
           {
             boostId: boost?.uuid,
@@ -597,8 +600,6 @@ export const activateBoost = mutation({
           },
         ],
       });
-
-      await db.patch(userId, {});
     }
   },
 });
