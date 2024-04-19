@@ -785,7 +785,7 @@ export default function DashboardPage() {
                       }
                     }}
                     onBoostPressed={async (boost: any) => {
-                      console.log(boost, ":::selected boosts!");
+                      // console.log(boost, ":::selected boosts!");
                       // TODO: activate boost
                       try {
                         await activateBoost({

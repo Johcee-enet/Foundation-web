@@ -511,7 +511,16 @@ export const activateBoost = mutation({
     }
 
     // Check for xpBalance
-    if (boost?.xpCost > user?.xpCount) {
+    const currentBoostXpCost =
+      user?.boostStatus?.find((stat) => stat?.boostId === boost?.uuid)
+        ?.currentXpCost ?? 0;
+    if (boost.xpCost > user.xpCount || currentBoostXpCost > user.xpCount) {
+      console.log(
+        user?.xpCount,
+        currentBoostXpCost,
+        ":::XP Points",
+        boost?.xpCost,
+      );
       throw new ConvexError({
         message: "Insufficient XP Points",
         code: 404,
@@ -537,15 +546,55 @@ export const activateBoost = mutation({
       // Check if the totalLevel has not been passed
       // Validate that the current xpCost is available in the users xpBalance
       if (user?.boostStatus && user?.boostStatus.length) {
-        if (user?.boostStatus?.some((stat) => stat.boostId !== boost.uuid)) {
-          // Add a new object to the array
+        // if (user?.boostStatus?.some((stat) => stat.boostId !== boost.uuid)) {
+        //   // Add a new object to the array
 
+        //   await db.patch(userId, {
+        //     xpCount: user?.xpCount - boost?.xpCost,
+        //     ...(boost?.type === "rate"
+        //       ? { miningRate: user?.miningRate + boost?.rate }
+        //       : { mineHours: user?.mineHours + boost?.rate }),
+        //     boostStatus: [
+        //       ...user?.boostStatus,
+
+        //     ],
+        //   });
+
+        //   return;
+        // }
+
+        const unaffected = user?.boostStatus.filter(
+          (stat) => stat?.boostId !== boost?.uuid,
+        );
+        const affected = user?.boostStatus.find(
+          (stat) => stat?.boostId === boost?.uuid,
+        );
+
+        if (affected) {
+          await db.patch(userId, {
+            xpCount: user?.xpCount - affected?.currentXpCost! * 2,
+            ...(boost?.type === "rate"
+              ? { miningRate: user?.miningRate + boost?.rate }
+              : { mineHours: user?.mineHours + boost?.rate }),
+            boostStatus: [
+              ...unaffected,
+              {
+                ...affected,
+                currentXpCost: affected.currentXpCost! * 2,
+                currentLevel: affected.currentLevel! + 1,
+              },
+            ],
+          });
+
+          return;
+        } else {
           await db.patch(userId, {
             xpCount: user?.xpCount - boost?.xpCost,
             ...(boost?.type === "rate"
               ? { miningRate: user?.miningRate + boost?.rate }
               : { mineHours: user?.mineHours + boost?.rate }),
             boostStatus: [
+              ...unaffected,
               {
                 boostId: boost?.uuid,
                 isActive: true,
@@ -558,32 +607,41 @@ export const activateBoost = mutation({
           return;
         }
 
-        console.log(":::Should increement");
-        const updatedBoostStats = user?.boostStatus.map((stat) => {
-          if (boost?.uuid === stat.boostId) {
-            return {
-              ...stat,
-              currentXpCost: stat.currentXpCost! * 2,
-              currentLevel: stat.currentLevel! + 1,
-            };
-          }
+        // const updatedBoostStats = user?.boostStatus.map((stat) => {
+        //   if (boost?.uuid === stat.boostId) {
+        //     return {
+        //       ...stat,
+        //       currentXpCost: stat.currentXpCost! * 2,
+        //       currentLevel: stat.currentLevel! + 1,
+        //     };
+        //   }
 
-          return stat;
-        });
+        //   return stat;
+        // });
 
-        // Update the user db with new stats
-        await db.patch(userId, {
-          xpCount:
-            user?.xpCount -
-            updatedBoostStats.find((stat) => stat.boostId === boost.uuid)
-              ?.currentXpCost!,
-          ...(boost?.type === "rate"
-            ? { miningRate: user?.miningRate + boost?.rate }
-            : { mineHours: user?.mineHours + boost?.rate }),
-          boostStatus: updatedBoostStats,
-        });
+        // console.log(updatedBoostStats, ":::Current status list");
 
-        return;
+        // // Update the user db with new stats
+        // await db.patch(userId, {
+        //   xpCount:
+        //     user?.xpCount -
+        //     updatedBoostStats.find((stat) => stat.boostId === boost.uuid)
+        //       ?.currentXpCost!,
+        //   ...(boost?.type === "rate"
+        //     ? { miningRate: user?.miningRate + boost?.rate }
+        //     : { mineHours: user?.mineHours + boost?.rate }),
+        //   boostStatus: [
+        //     ...updatedBoostStats.filter((stat) => stat.boostId !== boost?.uuid),
+        //     {
+        //       boostId: boost?.uuid,
+        //       isActive: true,
+        //       currentLevel: 1,
+        //       currentXpCost: boost?.xpCost * 2,
+        //     },
+        //   ],
+        // });
+
+        // return;
       }
 
       await db.patch(userId, {
