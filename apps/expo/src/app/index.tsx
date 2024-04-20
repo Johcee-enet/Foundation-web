@@ -1,3 +1,14 @@
+// ---------------?---------------@---------------!---------------
+
+// ? file is the first render of screen after the auto gen splash screen
+// ? handles auto login and redirection based on auth state
+// ? handles authenticaton both 3rd party and internal authentications
+// ? initializes twitter oauth2 logic and handles callback after authing
+// ? reads and updates local storage data
+// @
+// ! might block launch and proper start if redirection is not handled properly
+// ! might throw unwanted delays in Promise logic
+
 // import type { TokenResponse } from "expo-auth-session";
 import { useEffect, useState } from "react";
 import {
@@ -142,13 +153,6 @@ export default function Register() {
               });
             }
           } else {
-            // Store the returned data
-            storeData("@enet-store/isOnboarded", true);
-            storeData("@enet-store/token", {
-              access: tokenResponse?.access_token,
-              refresh: tokenResponse?.refresh_token,
-            });
-
             if (tokenResponse) {
               const userData = await Twitter.userData({
                 token: tokenResponse?.access_token,
@@ -170,6 +174,13 @@ export default function Register() {
                   nickname: userData?.data?.username.trim(),
                 });
                 setTwitterAuthLoading(false);
+
+                // Store the returned data
+                storeData("@enet-store/isOnboarded", true);
+                storeData("@enet-store/token", {
+                  access: tokenResponse?.access_token,
+                  refresh: tokenResponse?.refresh_token,
+                });
 
                 router.push({
                   pathname: "/(main)/dashboard",

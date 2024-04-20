@@ -22,6 +22,7 @@ import {
   SimpleLineIcons,
 } from "@expo/vector-icons";
 import { useMutation } from "convex/react";
+import { ConvexError } from "convex/values";
 
 import type { Id } from "@acme/api/convex/_generated/dataModel";
 import { api } from "@acme/api/convex/_generated/api";
@@ -191,12 +192,19 @@ export default function DashboardHeader({
                           style: "destructive",
                           onPress: () => {
                             (async () => {
-                              // TODO: Delete logic
-                              await deleteAccount({
-                                userId: params?.userId as Id<"user">,
-                              });
-                              storage.clearAll();
-                              router.replace("/");
+                              try {
+                                // TODO: Delete logic
+                                await deleteAccount({
+                                  userId: params?.userId as Id<"user">,
+                                });
+                                storage.clearAll();
+                                router.replace("/");
+                              } catch (err: any) {
+                                const errorMessage =
+                                  err instanceof ConvexError
+                                    ? (err.data as { message: string }).message
+                                    : "Unexpected error occurred!";
+                              }
                             })().catch((result) =>
                               console.log(result, ":::IIFE_async block"),
                             );

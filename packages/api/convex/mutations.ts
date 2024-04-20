@@ -328,8 +328,15 @@ export const deleteAccount = mutation({
         completedTasks: undefined,
         eventsJoined: undefined,
         mineActive: false,
+        mineHours: 0,
+        miningRate: 0,
+        otpSecret: undefined,
         password: undefined,
         referralCount: 0,
+        boostStatus: undefined,
+        mineStartTime: undefined,
+        nickname: undefined,
+        email: undefined,
       });
 
       // Delete the activity of the user as well
@@ -337,11 +344,15 @@ export const deleteAccount = mutation({
         .query("activity")
         .filter((q) => q.eq(q.field("userId"), args.userId))
         .collect();
-      for (const activity of usersActivity) {
-        await ctx.db.delete(activity._id);
+
+      if (usersActivity.length) {
+        for (const activity of usersActivity) {
+          await ctx.db.delete(activity._id);
+        }
       }
     } catch (e: any) {
-      throw new Error("Error trying to delete account");
+      console.log(e, e.message ?? e.toString(), ":::Error deleting");
+      throw new ConvexError({ message: "Error trying to delete account" });
     }
   },
 });

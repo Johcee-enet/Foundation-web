@@ -155,26 +155,21 @@ export const storeNickname = mutation({
 
         // If user already has a referralCode and a referreeCode and deleted is true then re-initialize account
 
-        if (user?.referralCode?.length ?? user?.referreeCode?.length) {
+        if (
+          user?.referralCode?.length ??
+          user?.referreeCode?.length ??
+          user?.deleted
+        ) {
           await ctx.db.patch(user._id, {
             minedCount: 0,
             miningRate: 2.0,
             mineActive: false,
             referralCount: 0,
-            mineHours: 6,
+            mineHours: config?.miningHours ?? 6,
             redeemableCount: 0,
             xpCount: config?.xpCount ?? 1000,
-            speedBoost: {
-              isActive: false,
-              rate: 2,
-              level: 1,
-            },
-            botBoost: {
-              isActive: false,
-              hours: 3,
-              level: 1,
-            },
             deleted: false,
+            nickname,
           });
 
           return user?._id;
@@ -225,19 +220,9 @@ export const storeNickname = mutation({
             miningRate: 2.0,
             mineActive: false,
             referralCount: 0,
-            mineHours: 6,
+            mineHours: config?.miningHours ?? 6,
             redeemableCount: 0,
             xpCount: config?.xpCount ?? 1000,
-            speedBoost: {
-              isActive: false,
-              rate: 2,
-              level: 1,
-            },
-            botBoost: {
-              isActive: false,
-              hours: 3,
-              level: 1,
-            },
             deleted: false,
           });
           return previouslyDeleted._id;
@@ -252,19 +237,9 @@ export const storeNickname = mutation({
           miningRate: 2.0,
           mineActive: false,
           referralCount: 0,
-          mineHours: 6,
+          mineHours: config?.miningHours ?? 6,
           redeemableCount: 0,
           xpCount: config?.xpCount ?? 1000,
-          speedBoost: {
-            isActive: false,
-            rate: 2,
-            level: 1,
-          },
-          botBoost: {
-            isActive: false,
-            hours: 3,
-            level: 1,
-          },
         });
 
         // Increment users referree count
