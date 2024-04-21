@@ -10,39 +10,32 @@
 // ! might throw unwanted delays in Promise logic
 
 // import type { TokenResponse } from "expo-auth-session";
-import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
+  // useEffect,
+  useState,
+} from "react";
+import {
+  // ActivityIndicator,
   Alert,
   Keyboard,
   KeyboardAvoidingView,
   ScrollView,
   Text,
   TextInput,
-  TouchableOpacity,
+  // TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { makeRedirectUri, useAuthRequest } from "expo-auth-session";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import LoadingModal from "@/components/loading_modal";
-import { getData, storeData } from "@/storageUtils";
-import { Twitter, TwitterAuth } from "@/twitterUtils";
-import { Env } from "@env";
-import { FontAwesome6 } from "@expo/vector-icons";
-import { useAction, useMutation } from "convex/react";
+// import LoadingModal from "@/components/loading_modal";
+import { storeData } from "@/storageUtils";
+// import { FontAwesome6 } from "@expo/vector-icons";
+import { useAction } from "convex/react";
 
 import { api } from "@acme/api/convex/_generated/api";
-
-WebBrowser.maybeCompleteAuthSession();
-const discovery = {
-  authorizationEndpoint: "https://twitter.com/i/oauth2/authorize",
-  tokenEndpoint: "https://twitter.com/i/oauth2/token",
-  revocationEndpoint: "https://twitter.com/i/oauth2/revoke",
-};
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -54,159 +47,9 @@ export default function Register() {
   const initiateUser = useAction(api.onboarding.initializeNewUser);
   const loginUser = useAction(api.onboarding.loginUser);
 
-  const storeNickname = useMutation(api.onboarding.storeNickname);
-  const isNicknameValid = useMutation(api.onboarding.isNicknameValid);
-  const loginTwitterUser = useAction(api.onboarding.loginTwitterUser);
-
-  const [isTwitterAuthLoading, setTwitterAuthLoading] =
-    useState<boolean>(false);
-
-  const redirectUri = makeRedirectUri({
-    // native: "com.enetminer.enet/",
-    scheme: "com.enetminer.enet",
-    path: "/",
-    isTripleSlashed: true,
-  });
-
-  // Twitter auth test
-  const [request, response, promptAsync] = useAuthRequest(
-    {
-      clientId: Env.TWITTER_CLIENT_ID,
-      redirectUri,
-      usePKCE: true,
-      scopes: [
-        "tweet.read",
-        "tweet.write",
-        "users.read",
-        "like.write",
-        "list.read",
-        "follows.write",
-        "space.read",
-        "follows.read",
-        "list.read",
-        "offline.access",
-      ],
-    },
-    discovery,
-  );
-
-  // Handle useAuthRequest response after twitter callback
-  useEffect(() => {
-    if (response && response?.type === "success") {
-      const { code } = response.params;
-      exchangeCodeForToken(code!)
-        .then((result) => {
-          console.log(result, ":::Result of code exchange");
-        })
-        .catch((error: any) =>
-          console.log(
-            error.message ?? error.toString(),
-            ":::Error for code exchange",
-          ),
-        );
-    }
-
-    async function exchangeCodeForToken(code: string) {
-      try {
-        // Get TwitterAuth namespace
-        if (code && redirectUri && request) {
-          setTwitterAuthLoading(true);
-          const tokenResponse = await TwitterAuth.exchangeCodeForToken({
-            code,
-            clientId: Env.TWITTER_CLIENT_ID,
-            redirectUrl: redirectUri,
-            codeVerifier: request.codeVerifier!,
-          });
-          console.log(tokenResponse, ":::Token response");
-
-          const isOnboarded = getData("@enet-store/isOnboarded", true);
-
-          if (isOnboarded) {
-            // if user has already onbaorded
-            setTwitterAuthLoading(true);
-
-            if (tokenResponse) {
-              storeData("@enet-store/token", {
-                access: tokenResponse?.access_token,
-                refresh: tokenResponse?.refresh_token,
-              });
-              const userData = await Twitter.userData({
-                token: tokenResponse?.access_token,
-              });
-              console.log(userData, ":::User data");
-
-              // Get user by nickname
-              const user = await loginTwitterUser({
-                nickname: userData?.data.username,
-              });
-
-              const userId = user._id;
-
-              storeData("@enet-store/user", {
-                userId,
-                nickname: userData?.data?.username.trim(),
-              });
-              setTwitterAuthLoading(false);
-
-              return router.push({
-                pathname: "/(main)/dashboard",
-                params: { userId, nickname: userData?.data?.username.trim() },
-              });
-            }
-          } else {
-            if (tokenResponse) {
-              const userData = await Twitter.userData({
-                token: tokenResponse?.access_token,
-              });
-              console.log(userData, ":::User data");
-
-              // TODO: Create user if not already created and store email and username as nickname
-              const isValid = await isNicknameValid({
-                nickname: userData?.data?.username.trim(),
-              });
-
-              if (isValid) {
-                const userId = await storeNickname({
-                  nickname: userData?.data?.username.trim(),
-                  referreeCode,
-                });
-                storeData("@enet-store/user", {
-                  userId,
-                  nickname: userData?.data?.username.trim(),
-                });
-                setTwitterAuthLoading(false);
-
-                // Store the returned data
-                storeData("@enet-store/isOnboarded", true);
-                storeData("@enet-store/token", {
-                  access: tokenResponse?.access_token,
-                  refresh: tokenResponse?.refresh_token,
-                });
-
-                router.push({
-                  pathname: "/(main)/dashboard",
-                  params: { userId, nickname: userData?.data?.username.trim() },
-                });
-              } else {
-                setTwitterAuthLoading(false);
-                return Alert.alert(
-                  "Nickname/Username is already in use, try another one",
-                );
-              }
-            }
-          }
-
-          setTwitterAuthLoading(false);
-
-          // Get basic user info before proceeding
-        }
-      } catch (err: any) {
-        setTwitterAuthLoading(false);
-        console.log(err.message ?? err.toString(), ":::Error");
-        throw new Error(err);
-      }
-    }
-  }, [response, redirectUri, request]);
+  // const storeNickname = useMutation(api.onboarding.storeNickname);
+  // const isNicknameValid = useMutation(api.onboarding.isNicknameValid);
+  // const loginTwitterUser = useAction(api.onboarding.loginTwitterUser);
 
   return (
     <SafeAreaView className="bg-[#EBEBEB]">
@@ -228,7 +71,7 @@ export default function Register() {
                 THE Web3 STANDARD
               </Text>
             </View>
-            {/* <View className="flex h-auto w-full flex-col items-center justify-center px-[20px] py-5">
+            <View className="flex h-auto w-full flex-col items-center justify-center px-[20px] py-5">
               <View style={{ marginVertical: 10 }} />
               <TextInput
                 placeholder="Email address"
@@ -281,7 +124,7 @@ export default function Register() {
                   </Link>
                 )}
               </View>
-            </View> */}
+            </View>
 
             <View className="flex-1" />
 
@@ -290,7 +133,7 @@ export default function Register() {
               style={{ marginVertical: 120 }}
             >
               <View className="flex w-full flex-row items-center justify-center gap-3">
-                {/* <Link
+                <Link
                   suppressHighlighting
                   href="/#"
                   className="flex flex-1 items-center justify-center overflow-hidden rounded-lg bg-black p-4 text-center font-[nunito] text-lg font-normal text-white transition-colors"
@@ -353,26 +196,7 @@ export default function Register() {
                   }}
                 >
                   {authState === "login" ? "Login" : "Signup"}
-                  {/* <Text className=""></Text>
-                </Link> */}
-                <TouchableOpacity
-                  // suppressHighlighting
-                  // href="/#"
-                  disabled={!request}
-                  className="flex w-full flex-row items-center justify-center overflow-hidden rounded-lg bg-black p-4 text-center font-[nunito] text-lg font-normal text-white transition-colors"
-                  onPress={async (e) => {
-                    e.preventDefault();
-
-                    console.log("Twitter button", redirectUri);
-
-                    await promptAsync({
-                      dismissButtonStyle: "close",
-                    });
-                  }}
-                >
-                  <Text className="mr-2 text-white">Authenticate with</Text>
-                  <FontAwesome6 name="x-twitter" size={20} color="white" />
-                </TouchableOpacity>
+                </Link>
               </View>
 
               <Text
@@ -410,15 +234,6 @@ export default function Register() {
                 </Link>
                 .
               </Text>
-              <LoadingModal
-                isLoadingModalVisible={isTwitterAuthLoading}
-                setLoadingModalVisible={setTwitterAuthLoading}
-              >
-                <View className="flex w-full flex-col items-center justify-center p-4">
-                  <ActivityIndicator size={"large"} color={"black"} />
-                  <Text>Authorizing your twitter account...</Text>
-                </View>
-              </LoadingModal>
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>

@@ -93,7 +93,7 @@ export default function OTPPage() {
                   <Text
                     key={index}
                     style={[styles.cell, isFocused && styles.focusCell]}
-                    className="mx-1 h-14 w-14 rounded-xl border border-slate-400 bg-[#EBEBEB] text-center font-[nunito] text-2xl leading-[50px] active:border-black"
+                    className="mx-1 flex h-14 w-14 items-center justify-center rounded-xl border border-slate-400 bg-[#EBEBEB] text-center font-[nunito] text-2xl leading-[50px] active:border-black"
                     onLayout={getCellOnLayoutHandler(index)}
                   >
                     {symbol || (isFocused ? <Cursor /> : null)}
@@ -104,7 +104,6 @@ export default function OTPPage() {
             <View className="flex w-full flex-1 flex-col items-start justify-center gap-4 px-[24px]">
               <Link
                 // suppressHighlighting
-                // @ts-expect-error href
                 href="/otp/#"
                 onPress={async (e) => {
                   e.preventDefault();
@@ -123,7 +122,6 @@ export default function OTPPage() {
                   });
 
                   if (isValid) {
-                    // @ts-expect-error routing
                     router.push({ pathname: "/(onboarding)/password", params });
                   } else {
                     return Alert.alert("Onboarding error", "Invalid OTP code");
@@ -136,7 +134,6 @@ export default function OTPPage() {
               </Link>
               <Link
                 // suppressHighlighting
-                // @ts-expect-error href
                 href="/otp/#"
                 onPress={async (e) => {
                   e.preventDefault();
@@ -177,7 +174,7 @@ const styles = StyleSheet.create({
   cell: {
     // width: 40,
     // height: 40,
-    // lineHeight: 45,
+    lineHeight: 60,
     // fontSize: 24,
     // borderWidth: 1,
     // borderColor: "#00000030",

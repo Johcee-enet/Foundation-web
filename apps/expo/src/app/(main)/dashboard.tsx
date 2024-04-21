@@ -19,6 +19,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
+import { makeRedirectUri, useAuthRequest } from "expo-auth-session";
 import { Image } from "expo-image";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -34,9 +35,16 @@ import TaskBoostCard, {
   icons,
   TaskRenderer,
 } from "@/components/task_boost_card";
-import { getData, storeData } from "@/storageUtils";
+import { getData, removeData, storeData } from "@/storageUtils";
+import { Twitter, TwitterAuth } from "@/twitterUtils";
 import BottomSheet from "@devvie/bottom-sheet";
-import { FontAwesome, MaterialIcons, Octicons } from "@expo/vector-icons";
+import { Env } from "@env";
+import {
+  FontAwesome,
+  FontAwesome6,
+  MaterialIcons,
+  Octicons,
+} from "@expo/vector-icons";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { addHours, differenceInSeconds } from "date-fns";
@@ -49,6 +57,13 @@ export type EventType = Partial<Doc<"events">> & {
 };
 // type Network = "twitter" | "discord" | "telegram" | "website";
 // type ActionType = "follow" | "post" | "join" | "visit";
+
+WebBrowser.maybeCompleteAuthSession();
+const discovery = {
+  authorizationEndpoint: "https://twitter.com/i/oauth2/authorize",
+  tokenEndpoint: "https://twitter.com/i/oauth2/token",
+  revocationEndpoint: "https://twitter.com/i/oauth2/revoke",
+};
 
 export default function DashboardPage() {
   const params = useLocalSearchParams();
@@ -163,12 +178,7 @@ export default function DashboardPage() {
   // Check if user just onboarded and prompt to enter a referral code
   useEffect(() => {
     const promptHasBeenShown = getData("@enet-store/referralPromptShown", true);
-    const isTwitterAuthed = getData("@enet-store/token", true);
-    console.log(
-      promptHasBeenShown,
-      isTwitterAuthed,
-      ":::Referral prompt system",
-    );
+    // const isTwitterAuthed = getData("@enet-store/token", true);
 
     // setReferralPromptModalVisible(true);
     if (!promptHasBeenShown || typeof promptHasBeenShown === "undefined") {
@@ -185,6 +195,176 @@ export default function DashboardPage() {
   const rewardEventXpCount = useMutation(api.mutations.rewardEventXp);
   const updateEventAction = useMutation(api.mutations.updateEventsForUser);
   const activateBoost = useMutation(api.mutations.activateBoost);
+
+  // Twitter auth refactor
+  const [isTwitterAuthLoading, setTwitterAuthLoading] =
+    useState<boolean>(false);
+
+  const redirectUri = makeRedirectUri({
+    // native: "com.enetminer.enet/",
+    scheme: "com.enetminer.enet",
+    path: "/(main)/dashboard",
+    isTripleSlashed: true,
+    queryParams: {
+      userId: params?.userId as Id<"user">,
+    },
+  });
+
+  // Twitter auth test
+  const [request, response, promptAsync] = useAuthRequest(
+    {
+      clientId: Env.TWITTER_CLIENT_ID,
+      redirectUri,
+      usePKCE: true,
+      scopes: [
+        "tweet.read",
+        "tweet.write",
+        "users.read",
+        "like.write",
+        "list.read",
+        "follows.write",
+        "space.read",
+        "follows.read",
+        "list.read",
+        "offline.access",
+      ],
+    },
+    discovery,
+  );
+
+  // Handle useAuthRequest response after twitter callback
+  useEffect(() => {
+    if (response && response?.type === "success") {
+      const { code } = response.params;
+      exchangeCodeForToken(code!)
+        .then((result) => {
+          console.log(result, ":::Result of code exchange");
+        })
+        .catch((error: any) =>
+          console.log(
+            error.message ?? error.toString(),
+            ":::Error for code exchange",
+          ),
+        );
+    }
+
+    async function exchangeCodeForToken(code: string) {
+      try {
+        // Get TwitterAuth namespace
+        if (code && redirectUri && request) {
+          // setTwitterAuthLoading(true);
+          const tokenResponse = await TwitterAuth.exchangeCodeForToken({
+            code,
+            clientId: Env.TWITTER_CLIENT_ID,
+            redirectUrl: redirectUri,
+            codeVerifier: request.codeVerifier!,
+          });
+          console.log(tokenResponse, ":::Token response");
+
+          // const isOnboarded = getData("@enet-store/isOnboarded", true);
+
+          // if (isOnboarded) {
+          //   // if user has already onbaorded
+          //   setTwitterAuthLoading(true);
+
+          //   if (tokenResponse) {
+          //     storeData("@enet-store/token", {
+          //       access: tokenResponse?.access_token,
+          //       refresh: tokenResponse?.refresh_token,
+          //     });
+          //     const userData = await Twitter.userData({
+          //       token: tokenResponse?.access_token,
+          //     });
+          //     console.log(userData, ":::User data");
+
+          //     // Get user by nickname
+          //     const user = await loginTwitterUser({
+          //       nickname: userData?.data.username,
+          //     });
+
+          //     const userId = user._id;
+
+          //     storeData("@enet-store/user", {
+          //       userId,
+          //       nickname: userData?.data?.username.trim(),
+          //     });
+          //     setTwitterAuthLoading(false);
+
+          //     return router.push({
+          //       pathname: "/(main)/dashboard",
+          //       params: { userId, nickname: userData?.data?.username.trim() },
+          //     });
+          //   }
+          // } else {
+          if (tokenResponse) {
+            const userData = await Twitter.userData({
+              token: tokenResponse?.access_token,
+            });
+            console.log(userData, ":::User data");
+            storeData("@enet-store/token", {
+              access: tokenResponse?.access_token,
+              refresh: tokenResponse?.refresh_token,
+            });
+
+            // TODO: Create user if not already created and store email and username as nickname
+            // const isValid = await isNicknameValid({
+            //   nickname: userData?.data?.username.trim(),
+            // });
+
+            // if (isValid) {
+            //   const userId = await storeNickname({
+            //     nickname: userData?.data?.username.trim(),
+            //     referreeCode,
+            //   });
+            //   storeData("@enet-store/user", {
+            //     userId,
+            //     nickname: userData?.data?.username.trim(),
+            //   });
+            //   setTwitterAuthLoading(false);
+
+            //   // Store the returned data
+            //   storeData("@enet-store/isOnboarded", true);
+            //   storeData("@enet-store/token", {
+            //     access: tokenResponse?.access_token,
+            //     refresh: tokenResponse?.refresh_token,
+            //   });
+
+            //   router.push({
+            //     pathname: "/(main)/dashboard",
+            //     params: { userId, nickname: userData?.data?.username.trim() },
+            //   });
+            // } else {
+            //   setTwitterAuthLoading(false);
+            //   return Alert.alert(
+            //     "Nickname/Username is already in use, try another one",
+            //   );
+            // }
+          }
+        }
+
+        setTwitterAuthModalVisible(false);
+
+        // Get basic user info before proceeding
+        // }
+      } catch (err: any) {
+        // setTwitterAuthModalVisible(true);
+        console.log(err.message ?? err.toString(), ":::Error");
+        throw new Error(err);
+      }
+    }
+  }, [response, redirectUri, request]);
+
+  const [twitterAuthModalVisible, setTwitterAuthModalVisible] = useState(false);
+
+  const checkAndShowTwitterAuthModal = () => {
+    // const localUser = getData("@enet-store/user");
+    const localTwitterAuthToken = getData("@enet-store/token", true);
+
+    if (!localTwitterAuthToken) {
+      // TODO
+      setTwitterAuthModalVisible(true);
+    }
+  };
 
   return (
     <SafeAreaView
@@ -394,7 +574,7 @@ export default function DashboardPage() {
                 <LoadingModal
                   isLoadingModalVisible={isReferralPromptModalVisible}
                   setLoadingModalVisible={setReferralPromptModalVisible}
-                  tapToClose
+                  tapToClose={false}
                 >
                   <View
                     style={{
@@ -475,9 +655,11 @@ export default function DashboardPage() {
                           alignItems: "center",
                           justifyContent: "center",
                         }}
-                        onPress={async () => {
+                        onPress={() => {
+                          removeData("@enet-store/token");
                           storeData("@enet-store/referralPromptShown", true);
                           setReferralPromptModalVisible(false);
+                          checkAndShowTwitterAuthModal();
                         }}
                       >
                         <Text
@@ -515,6 +697,7 @@ export default function DashboardPage() {
 
                             storeData("@enet-store/referralPromptShown", true);
                             setReferralPromptModalVisible(false);
+                            checkAndShowTwitterAuthModal();
                           } catch (error: any) {
                             const errorMessage =
                               error instanceof ConvexError
@@ -537,6 +720,76 @@ export default function DashboardPage() {
                         </Text>
                       </TouchableOpacity>
                     </View>
+                  </View>
+                </LoadingModal>
+
+                {/* Twitter auth modal */}
+                <LoadingModal
+                  isLoadingModalVisible={twitterAuthModalVisible}
+                  setLoadingModalVisible={setTwitterAuthModalVisible}
+                  tapToClose={false}
+                >
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 180,
+                      left: 6,
+                      right: 6,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-start",
+                      justifyContent: "center",
+                      backgroundColor: "white",
+                      minHeight: 200,
+                      borderRadius: 20,
+                      gap: 10,
+                      padding: 24,
+                    }}
+                  >
+                    <View>
+                      <Text
+                        style={{
+                          fontSize: 18,
+                          fontWeight: "700",
+                          fontFamily: "nunito",
+                          color: "black",
+                          textAlign: "left",
+                        }}
+                      >
+                        Add twitter account
+                      </Text>
+
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: "500",
+                          fontFamily: "nunito",
+                          color: "black",
+                          textAlign: "left",
+                        }}
+                      >
+                        Authenticate your twitter account to get full access to
+                        app feaatures
+                      </Text>
+                    </View>
+
+                    <TouchableOpacity
+                      disabled={!request}
+                      style={{ gap: 10 }}
+                      className="flex w-full flex-row items-center justify-center gap-3 overflow-hidden rounded-lg bg-black p-4 text-center font-[nunito] text-lg font-normal text-white transition-colors"
+                      onPress={async (e) => {
+                        e.preventDefault();
+
+                        console.log("Twitter button", redirectUri);
+
+                        await promptAsync({
+                          dismissButtonStyle: "close",
+                        });
+                      }}
+                    >
+                      <Text className="mr-2 text-white">Authenticate with</Text>
+                      <FontAwesome6 name="x-twitter" size={20} color="white" />
+                    </TouchableOpacity>
                   </View>
                 </LoadingModal>
 
@@ -893,6 +1146,15 @@ export default function DashboardPage() {
                         Activating Boost
                       </Text>
                       <ActivityIndicator size={"large"} color={"black"} />
+                    </View>
+                  </LoadingModal>
+                  <LoadingModal
+                    isLoadingModalVisible={isTwitterAuthLoading}
+                    setLoadingModalVisible={setTwitterAuthLoading}
+                  >
+                    <View className="flex w-full flex-col items-center justify-center p-4">
+                      <ActivityIndicator size={"large"} color={"black"} />
+                      <Text>Authorizing your twitter account...</Text>
                     </View>
                   </LoadingModal>
                 </View>
