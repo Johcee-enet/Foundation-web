@@ -411,9 +411,9 @@ export const mine = internalMutation({
 
         await db.patch(userId, {
           mineActive: false,
-          boostStatus: undefined,
-          mineHours: config?.miningHours,
-          miningRate: config?.miningCount,
+          // boostStatus: undefined,
+          // mineHours: config?.miningHours,
+          // miningRate: config?.miningCount,
           redeemableCount:
             user.miningRate *
             differenceInHours(Date.now(), new Date(user.mineStartTime!), {
@@ -617,42 +617,6 @@ export const activateBoost = mutation({
 
           return;
         }
-
-        // const updatedBoostStats = user?.boostStatus.map((stat) => {
-        //   if (boost?.uuid === stat.boostId) {
-        //     return {
-        //       ...stat,
-        //       currentXpCost: stat.currentXpCost! * 2,
-        //       currentLevel: stat.currentLevel! + 1,
-        //     };
-        //   }
-
-        //   return stat;
-        // });
-
-        // console.log(updatedBoostStats, ":::Current status list");
-
-        // // Update the user db with new stats
-        // await db.patch(userId, {
-        //   xpCount:
-        //     user?.xpCount -
-        //     updatedBoostStats.find((stat) => stat.boostId === boost.uuid)
-        //       ?.currentXpCost!,
-        //   ...(boost?.type === "rate"
-        //     ? { miningRate: user?.miningRate + boost?.rate }
-        //     : { mineHours: user?.mineHours + boost?.rate }),
-        //   boostStatus: [
-        //     ...updatedBoostStats.filter((stat) => stat.boostId !== boost?.uuid),
-        //     {
-        //       boostId: boost?.uuid,
-        //       isActive: true,
-        //       currentLevel: 1,
-        //       currentXpCost: boost?.xpCost * 2,
-        //     },
-        //   ],
-        // });
-
-        // return;
       }
 
       await db.patch(userId, {
