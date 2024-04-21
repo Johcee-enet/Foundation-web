@@ -24,7 +24,10 @@ export default function LoadingModal({
       transparent={true}
       visible={isLoadingModalVisible}
       onRequestClose={() => {
-        setLoadingModalVisible(false);
+        if (tapToClose) {
+          setLoadingModalVisible(false);
+        }
+        console.log("back request!");
       }}
     >
       <TouchableWithoutFeedback
