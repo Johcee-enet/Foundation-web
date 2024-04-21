@@ -180,7 +180,7 @@ export default function DashboardPage() {
     const promptHasBeenShown = getData("@enet-store/referralPromptShown", true);
     const isTwitterAuthed = getData("@enet-store/token", true);
 
-    if (isTwitterAuthed) {
+    if (!isTwitterAuthed) {
       setTwitterAuthModalVisible(true);
     }
 
