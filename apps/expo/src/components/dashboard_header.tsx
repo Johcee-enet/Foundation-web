@@ -78,7 +78,11 @@ export default function DashboardHeader({
                     router.push({ pathname: "/(main)/history", params });
                   }}
                 >
-                  <MaterialIcons name="chat" size={20} color="black" />
+                  <Image
+                    source={require("../../assets/icons/history.png")}
+                    style={{ width: 20, height: 20 }}
+                    contentFit="contain"
+                  />
                   <Text className="font-[nunito] text-lg font-normal text-black">
                     History
                   </Text>
@@ -90,7 +94,11 @@ export default function DashboardHeader({
                     setModalVisible(false);
                   }}
                 >
-                  <SimpleLineIcons name="globe" size={20} color="black" />
+                  <Image
+                    source={require("../../assets/icons/global.png")}
+                    style={{ width: 20, height: 20 }}
+                    contentFit="contain"
+                  />
                   <Text className="font-[nunito] text-lg font-normal text-black">
                     Leaderboard
                   </Text>
@@ -103,7 +111,11 @@ export default function DashboardHeader({
                     setModalVisible(false);
                   }}
                 >
-                  <FontAwesome6 name="x-twitter" size={20} color="black" />
+                  <Image
+                    source={require("../../assets/icons/x.png")}
+                    style={{ width: 20, height: 20 }}
+                    contentFit="contain"
+                  />
                   <Text className="font-[nunito] text-lg font-normal text-black">
                     X-Earn
                   </Text>
@@ -116,7 +128,11 @@ export default function DashboardHeader({
                     setModalVisible(false);
                   }}
                 >
-                  <FontAwesome6 name="x-twitter" size={20} color="black" />
+                  <Image
+                    source={require("../../assets/icons/x.png")}
+                    style={{ width: 20, height: 20 }}
+                    contentFit="contain"
+                  />
                   <Text className="font-[nunito] text-lg font-normal text-black">
                     Spaces
                   </Text>
@@ -148,12 +164,11 @@ export default function DashboardHeader({
                               token: token.access,
                               clientId: Env.TWITTER_CLIENT_ID,
                             });
+                            removeData("@enet-store/user");
+                            removeData("@enet-store/token");
                           })()
                             .then((result) => {
                               console.log(result, ":::Access token revoked");
-
-                              removeData("@enet-store/token");
-                              removeData("@enet-store/user");
                             })
                             .catch((error) =>
                               console.log(
@@ -167,7 +182,11 @@ export default function DashboardHeader({
                     ]);
                   }}
                 >
-                  <AntDesign name="logout" size={20} color="black" />
+                  <Image
+                    source={require("../../assets/icons/logout.png")}
+                    style={{ width: 20, height: 20 }}
+                    contentFit="contain"
+                  />
                   <Text className="font-[nunito] text-lg font-normal text-black">
                     Logout
                   </Text>
@@ -214,10 +233,10 @@ export default function DashboardHeader({
                     );
                   }}
                 >
-                  <MaterialIcons
-                    name="delete-outline"
-                    size={24}
-                    color="#FF4747"
+                  <Image
+                    source={require("../../assets/icons/trash.png")}
+                    style={{ width: 20, height: 20 }}
+                    contentFit="contain"
                   />
                   <Text className="font-[nunito] text-lg font-normal text-[#FF4747]">
                     Delete Account
@@ -283,9 +302,11 @@ const styles = StyleSheet.create({
     minWidth: 200,
     maxWidth: 200,
     margin: 20,
+    gap: 8,
     backgroundColor: "white",
     borderRadius: 20,
-    padding: 20,
+    paddingVertical: 20,
+    paddingHorizontal: 15,
     alignItems: "flex-start",
     display: "flex",
     flexDirection: "column",
