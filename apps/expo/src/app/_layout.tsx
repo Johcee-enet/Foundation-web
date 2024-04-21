@@ -85,42 +85,44 @@ export default function Layout() {
               pathname: "/(main)/dashboard",
               params: { ...user },
             });
-          } else if (!user && token) {
-            // setTwitterAuthLoading(true);
-            // If token object is available then refresh the token and fetch new user details
-            console.log(token, ":::Stored token");
+          }
+          // else if (!user && token) {
+          //   // setTwitterAuthLoading(true);
+          //   // If token object is available then refresh the token and fetch new user details
+          //   console.log(token, ":::Stored token");
 
-            // Get user token and fetch user data
-            const userData = await Twitter.userData({ token: token?.access });
-            console.log(userData, ":::User data");
+          //   // Get user token and fetch user data
+          //   const userData = await Twitter.userData({ token: token?.access });
+          //   console.log(userData, ":::User data");
 
-            if (!userData) {
-              // setTwitterAuthLoading(false);
-              Alert.alert("Failed to authenticate and login user");
-              return;
-            }
+          //   if (!userData) {
+          //     // setTwitterAuthLoading(false);
+          //     Alert.alert("Failed to authenticate and login user");
+          //     return;
+          //   }
 
-            console.log(userData?.data?.username);
+          //   console.log(userData?.data?.username);
 
-            // const user: Doc<"user"> | undefined = await loginTwiitter({
-            //   nickname: userData?.data?.username,
-            // });
+          //   // const user: Doc<"user"> | undefined = await loginTwiitter({
+          //   //   nickname: userData?.data?.username,
+          //   // });
 
-            // storeData("@enet-store/user", {
-            //   userId: user?._id,
-            //   nickname: userData?.data?.username.trim(),
-            // });
+          //   // storeData("@enet-store/user", {
+          //   //   userId: user?._id,
+          //   //   nickname: userData?.data?.username.trim(),
+          //   // });
 
-            // setTwitterAuthLoading(false);
+          //   // setTwitterAuthLoading(false);
 
-            router.push({
-              pathname: "/(main)/dashboard",
-              params: {
-                userId: user?._id,
-                nickname: userData?.data?.username.trim(),
-              },
-            });
-          } else if (user && !token) {
+          //   router.push({
+          //     pathname: "/(main)/dashboard",
+          //     params: {
+          //       userId: user?._id,
+          //       nickname: userData?.data?.username.trim(),
+          //     },
+          //   });
+          // }
+          else if (user && !token) {
             router.replace({
               pathname: "/(main)/dashboard",
               params: { ...user },

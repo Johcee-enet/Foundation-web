@@ -163,7 +163,12 @@ export default function DashboardPage() {
   // Check if user just onboarded and prompt to enter a referral code
   useEffect(() => {
     const promptHasBeenShown = getData("@enet-store/referralPromptShown", true);
-    console.log(promptHasBeenShown, ":::Referral prompt system");
+    const isTwitterAuthed = getData("@enet-store/token", true);
+    console.log(
+      promptHasBeenShown,
+      isTwitterAuthed,
+      ":::Referral prompt system",
+    );
 
     // setReferralPromptModalVisible(true);
     if (!promptHasBeenShown || typeof promptHasBeenShown === "undefined") {
@@ -171,6 +176,8 @@ export default function DashboardPage() {
       setReferralPromptModalVisible(true);
     }
   }, []);
+
+  const [isBoostLoadingVisible, setBoostLoadingModalVisible] = useState(false);
 
   // handle tasks cycle
   const [isLoadingModalVisible, setLoadingModalVisible] = useState(false);
@@ -790,6 +797,7 @@ export default function DashboardPage() {
                     onBoostPressed={async (boost: any) => {
                       // console.log(boost, ":::selected boosts!");
                       // TODO: activate boost
+                      setBoostLoadingModalVisible(true);
                       try {
                         await activateBoost({
                           userId: params?.userId as Id<"user">,
@@ -797,7 +805,9 @@ export default function DashboardPage() {
                             ...boost,
                           },
                         });
+                        setBoostLoadingModalVisible(false);
                       } catch (error: any) {
+                        setBoostLoadingModalVisible(false);
                         console.log(
                           error,
                           ":::Convex Error",
@@ -848,6 +858,39 @@ export default function DashboardPage() {
                         }}
                       >
                         Finishing task...
+                      </Text>
+                      <ActivityIndicator size={"large"} color={"black"} />
+                    </View>
+                  </LoadingModal>
+                  <LoadingModal
+                    isLoadingModalVisible={isBoostLoadingVisible}
+                    setLoadingModalVisible={setBoostLoadingModalVisible}
+                  >
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: 180,
+                        left: 6,
+                        right: 6,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: "white",
+                        minHeight: 200,
+                        borderRadius: 20,
+                        gap: 10,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          fontWeight: "700",
+                          fontFamily: "nunito",
+                          color: "black",
+                        }}
+                      >
+                        Activating Boost
                       </Text>
                       <ActivityIndicator size={"large"} color={"black"} />
                     </View>

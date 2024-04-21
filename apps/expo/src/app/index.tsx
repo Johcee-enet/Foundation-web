@@ -19,6 +19,7 @@ import {
   ScrollView,
   Text,
   TextInput,
+  TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
@@ -227,10 +228,7 @@ export default function Register() {
                 THE Web3 STANDARD
               </Text>
             </View>
-            <View className="flex h-auto w-full flex-col items-center justify-center px-[20px] py-5">
-              {/* <Text className="mb-[27px] font-[nunito] text-xl font-medium">
-                Input your email address
-              </Text> */}
+            {/* <View className="flex h-auto w-full flex-col items-center justify-center px-[20px] py-5">
               <View style={{ marginVertical: 10 }} />
               <TextInput
                 placeholder="Email address"
@@ -283,11 +281,16 @@ export default function Register() {
                   </Link>
                 )}
               </View>
-            </View>
+            </View> */}
 
-            <View className="flex h-auto w-full flex-col items-center justify-center px-[20px]">
+            <View className="flex-1" />
+
+            <View
+              className="flex h-auto w-full flex-col items-center justify-center px-[20px]"
+              style={{ marginVertical: 120 }}
+            >
               <View className="flex w-full flex-row items-center justify-center gap-3">
-                <Link
+                {/* <Link
                   suppressHighlighting
                   href="/#"
                   className="flex flex-1 items-center justify-center overflow-hidden rounded-lg bg-black p-4 text-center font-[nunito] text-lg font-normal text-white transition-colors"
@@ -350,13 +353,13 @@ export default function Register() {
                   }}
                 >
                   {authState === "login" ? "Login" : "Signup"}
-                  {/* <Text className=""></Text> */}
-                </Link>
-                <Link
-                  suppressHighlighting
-                  href="/#"
+                  {/* <Text className=""></Text>
+                </Link> */}
+                <TouchableOpacity
+                  // suppressHighlighting
+                  // href="/#"
                   disabled={!request}
-                  className="flex w-16 max-w-16 items-center justify-center overflow-hidden rounded-lg bg-black p-4 text-center font-[nunito] text-lg font-normal text-white transition-colors"
+                  className="flex w-full flex-row items-center justify-center overflow-hidden rounded-lg bg-black p-4 text-center font-[nunito] text-lg font-normal text-white transition-colors"
                   onPress={async (e) => {
                     e.preventDefault();
 
@@ -367,8 +370,9 @@ export default function Register() {
                     });
                   }}
                 >
+                  <Text className="mr-2 text-white">Authenticate with</Text>
                   <FontAwesome6 name="x-twitter" size={20} color="white" />
-                </Link>
+                </TouchableOpacity>
               </View>
 
               <Text
