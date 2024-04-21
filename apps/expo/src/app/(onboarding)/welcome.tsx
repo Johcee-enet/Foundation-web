@@ -27,7 +27,7 @@ export default function WelcomePage() {
   const { width } = useWindowDimensions();
   const carouselRef = useRef(null);
 
-  const [nickname, setNickname] = useState("");
+  const [nickname, setNickname] = useState<string>();
   const [isValid, setIsValid] = useState(false);
 
   const storeNickname = useMutation(api.onboarding.storeNickname);
@@ -244,7 +244,7 @@ export default function WelcomePage() {
                           onPress={async () => {
                             try {
                               // Create nickname and add to db
-                              if (!nickname.length) {
+                              if (!nickname ?? !nickname?.length) {
                                 return Alert.alert(
                                   "Onboarding error",
                                   "Nickname must be added",
