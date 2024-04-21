@@ -12,7 +12,6 @@ import { useEffect } from "react";
 import { Alert } from "react-native";
 // import LoadingModal from "@/components/loading_modal";
 import { getData } from "@/storageUtils";
-import { Twitter } from "@/twitterUtils";
 import { Env } from "@env";
 
 // import { useAction } from "convex/react";
@@ -47,7 +46,7 @@ export default function Layout() {
           await Updates.reloadAsync();
         }
 
-        getUserLocalData().catch((result) => console.log(result, ":::Resutl"));
+        getUserLocalData();
       } catch (error: any) {
         // You can also add an alert() to see the error message in case of an error when fetching updates.
         Alert.alert("Update error", `Error fetching latest update: ${error}`, [
@@ -55,16 +54,14 @@ export default function Layout() {
             style: "cancel",
             text: "Continue to app",
             onPress: () => {
-              getUserLocalData().catch((result) =>
-                console.log(result, ":::Resutl"),
-              );
+              getUserLocalData();
             },
           },
         ]);
       }
     }
 
-    async function getUserLocalData() {
+    function getUserLocalData() {
       try {
         const isOnboarded = getData("@enet-store/isOnboarded", true);
         console.log(isOnboarded, ":::Onboarded value");

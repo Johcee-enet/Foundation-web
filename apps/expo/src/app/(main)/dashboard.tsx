@@ -178,7 +178,11 @@ export default function DashboardPage() {
   // Check if user just onboarded and prompt to enter a referral code
   useEffect(() => {
     const promptHasBeenShown = getData("@enet-store/referralPromptShown", true);
-    // const isTwitterAuthed = getData("@enet-store/token", true);
+    const isTwitterAuthed = getData("@enet-store/token", true);
+
+    if (isTwitterAuthed) {
+      setTwitterAuthModalVisible(true);
+    }
 
     // setReferralPromptModalVisible(true);
     if (!promptHasBeenShown || typeof promptHasBeenShown === "undefined") {
