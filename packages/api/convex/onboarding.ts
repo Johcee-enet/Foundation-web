@@ -156,9 +156,8 @@ export const storeNickname = mutation({
         // If user already has a referralCode and a referreeCode and deleted is true then re-initialize account
 
         if (
-          user?.referralCode?.length ??
-          user?.referreeCode?.length ??
-          user?.deleted
+          (user?.referralCode ?? user?.referreeCode ?? user?.deleted) &&
+          user?.referreeCode === referreeCode
         ) {
           await ctx.db.patch(user._id, {
             minedCount: 0,
