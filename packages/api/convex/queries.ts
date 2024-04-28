@@ -35,7 +35,7 @@ export const getUserDetails = query({
     }
 
     // Compute user global rank and return total user count
-    const totalUserCount = (await db.query("user").collect()).length;
+    const totalUserCount = (await db.query("user").filter((q) => q.eq(q.field("deleted"), false)).collect()).length;
     const globalRank = calculateRank(
       await db.query("user").collect(),
       user?._id,
@@ -58,7 +58,7 @@ export const getUserWithEmail = internalQuery({
     try {
       return await db
         .query("user")
-        .filter((q) => q.eq(q.field("email"), email))
+        .filter((q) => q.and(q.eq(q.field("email"), email), q.eq(q.field("deleted"), false)))
         .first();
     } catch (e: any) {
       console.log(e.message ?? e.toString());
@@ -90,10 +90,13 @@ export const getLeaderBoard = query({
     const rankedUsers = await db
       .query("user")
       .withIndex("by_xpCount")
+      .filter((q) => q.eq(q.field("deleted"), false))
       .order("desc")
       .take(25);
 
-    const users = await db.query("user").collect();
+    const users = await db.query("user")
+      .filter((q) => q.eq(q.field("deleted"), false))
+      .collect();
 
     const user = await db.get(userId);
 
@@ -119,7 +122,9 @@ export const getLeaderBoard = query({
 export const getWeeklyTopRanked = internalQuery({
   handler: async ({ db }) => {
     return (
-      (await db.query("user").withIndex("by_xpCount").order("desc").take(3)) ??
+      (await db.query("user")
+        .filter((q) => q.eq(q.field("deleted"), false))
+        .withIndex("by_xpCount").order("desc").take(3)) ??
       []
     );
   },

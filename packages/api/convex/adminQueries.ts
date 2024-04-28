@@ -4,10 +4,11 @@ import { Id } from "./_generated/dataModel";
 export const dashboardData = queryWithAuth({
   args: {},
   handler: async ({ db }) => {
-    const users = await db.query("user").order("asc").collect();
+    const users = await db.query("user")
+    .filter((q) => q.eq(q.field("deleted"), false))
+    .order("asc").collect();
 
     // Filter and extract
-
     const totalMined = users.reduce((c, obj) => c + (obj.minedCount ?? 0), 0);
     const totalXp = users.reduce((c, obj) => c + (obj.xpCount ?? 0), 0);
     const totalReferrals = users.reduce(
@@ -24,7 +25,7 @@ export const dashboardData = queryWithAuth({
 export const fetchUsers = queryWithAuth({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("user").collect();
+    return await ctx.db.query("user").filter((q) => q.eq(q.field("deleted"), false)).collect();
   },
 });
 
