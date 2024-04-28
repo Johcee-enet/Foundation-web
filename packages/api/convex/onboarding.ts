@@ -1,6 +1,6 @@
 // TODO: Create convex action to store user data, create OTP and send email with novu
 import bcrypt from "bcryptjs";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { customAlphabet } from "nanoid";
 
 import type { Doc, Id } from "./_generated/dataModel";
@@ -146,30 +146,33 @@ export const storeNickname = mutation({
       const referralCode = generateReferralCode();
       const config = await ctx.db.query("config").first();
 
-      if (userId) {
-        const user = await ctx.db.get(userId);
+      if (!userId) {
+        throw new ConvexError({
+          message: "No user has been created",
+          code: 500,
+          status: "failed",
+        });
+      }
 
-        // If user already has a referralCode and a referreeCode and deleted is true then re-initialize account
-        if (
-          (user?.referralCode ?? user?.referreeCode ?? user?.deleted) &&
-          user?.referreeCode === referreeCode
-        ) {
-          await ctx.db.patch(user._id, {
-            minedCount: 0,
-            miningRate: 2.0,
-            mineActive: false,
-            referralCount: 0,
-            mineHours: config?.miningHours ?? 6,
-            redeemableCount: 0,
-            xpCount: config?.xpCount ?? 1000,
-            deleted: false,
-            nickname,
-          });
+      // if (userId) {
+      const user = await ctx.db.get(userId);
 
-          return user?._id;
-        }
+      // If user already has a referralCode and a referreeCode and deleted is true then re-initialize account
+      if (
+        (user?.referralCode ?? user?.referreeCode ?? user?.deleted) &&
+        user?.referreeCode === referreeCode
+      ) {
+        await ctx.db.patch(user._id, {
+          ...user,
+          nickname,
+        });
 
-        await ctx.db.patch(userId, { nickname: nickname, referralCode });
+        return user?._id;
+      } else {
+        await ctx.db.patch(userId, {
+          nickname: nickname,
+          referralCode: referralCode ?? generateReferralCode(),
+        });
 
         // Increment users referree count
         // Get new user data
@@ -196,73 +199,74 @@ export const storeNickname = mutation({
         }
 
         return userId;
-      } else {
-        const previouslyDeleted = await ctx.db
-          .query("user")
-          .filter((q) =>
-            q.and(
-              q.eq(q.field("nickname"), nickname),
-              q.eq(q.field("deleted"), true),
-            ),
-          )
-          .first();
-
-        // If user was previously deleted update fields
-        if (previouslyDeleted) {
-          await ctx.db.patch(previouslyDeleted._id, {
-            minedCount: 0,
-            miningRate: 2.0,
-            mineActive: false,
-            referralCount: 0,
-            mineHours: config?.miningHours ?? 6,
-            redeemableCount: 0,
-            xpCount: config?.xpCount ?? 1000,
-            deleted: false,
-          });
-          return previouslyDeleted._id;
-        }
-
-        const userId = await ctx.db.insert("user", {
-          // email: args.email,
-          nickname,
-          referreeCode: referreeCode,
-          referralCode,
-          minedCount: 0,
-          miningRate: 2.0,
-          mineActive: false,
-          referralCount: 0,
-          mineHours: config?.miningHours ?? 6,
-          redeemableCount: 0,
-          xpCount: config?.xpCount ?? 1000,
-        });
-
-        // Increment users referree count
-        // Get new user data
-        const referree = await ctx.db
-          .query("user")
-          .filter((q) =>
-            q.eq(q.field("referralCode"), referreeCode?.toUpperCase().trim()),
-          )
-          .first();
-
-        if (referree) {
-          // Patch referree count
-          console.log(referree, ":::Update referree xpCount");
-          await ctx.db.patch(referree?._id as Id<"user">, {
-            referralCount: Number(referree?.referralCount) + 1,
-            xpCount: config?.referralXpCount ?? 5000 + referree.xpCount,
-          });
-          await ctx.db.insert("activity", {
-            userId: referree?._id,
-            message: `${nickname} Joined using your referral code`,
-            extra: (config?.referralXpCount ?? 5000).toLocaleString("en-US"),
-            type: "xp", // Can be xp and rank
-          });
-        }
-
-        console.log(userId, ":::User id");
-        return userId;
       }
+      // } else {
+      //   const previouslyDeleted = await ctx.db
+      //     .query("user")
+      //     .filter((q) =>
+      //       q.and(
+      //         q.eq(q.field("nickname"), nickname),
+      //         q.eq(q.field("deleted"), true),
+      //       ),
+      //     )
+      //     .first();
+
+      //   // If user was previously deleted update fields
+      //   if (previouslyDeleted) {
+      //     await ctx.db.patch(previouslyDeleted._id, {
+      //       minedCount: 0,
+      //       miningRate: 2.0,
+      //       mineActive: false,
+      //       referralCount: 0,
+      //       mineHours: config?.miningHours ?? 6,
+      //       redeemableCount: 0,
+      //       xpCount: config?.xpCount ?? 1000,
+      //       deleted: false,
+      //     });
+      //     return previouslyDeleted._id;
+      //   }
+
+      //   const userId = await ctx.db.insert("user", {
+      //     // email: args.email,
+      //     nickname,
+      //     referreeCode: referreeCode,
+      //     referralCode,
+      //     minedCount: 0,
+      //     miningRate: 2.0,
+      //     mineActive: false,
+      //     referralCount: 0,
+      //     mineHours: config?.miningHours ?? 6,
+      //     redeemableCount: 0,
+      //     xpCount: config?.xpCount ?? 1000,
+      //   });
+
+      //   // Increment users referree count
+      //   // Get new user data
+      //   const referree = await ctx.db
+      //     .query("user")
+      //     .filter((q) =>
+      //       q.eq(q.field("referralCode"), referreeCode?.toUpperCase().trim()),
+      //     )
+      //     .first();
+
+      //   if (referree) {
+      //     // Patch referree count
+      //     console.log(referree, ":::Update referree xpCount");
+      //     await ctx.db.patch(referree?._id as Id<"user">, {
+      //       referralCount: Number(referree?.referralCount) + 1,
+      //       xpCount: config?.referralXpCount ?? 5000 + referree.xpCount,
+      //     });
+      //     await ctx.db.insert("activity", {
+      //       userId: referree?._id,
+      //       message: `${nickname} Joined using your referral code`,
+      //       extra: (config?.referralXpCount ?? 5000).toLocaleString("en-US"),
+      //       type: "xp", // Can be xp and rank
+      //     });
+      //   }
+
+      //   console.log(userId, ":::User id");
+      //   return userId;
+      // }
     } catch (e: any) {
       console.log(e.message ?? e.toString());
       throw new Error(e.message ?? e.toString());
