@@ -277,44 +277,44 @@ export const updateEventsForUser = mutation({
       await db.patch(userId, {
         eventsJoined: user.eventsJoined
           ? [
-              ...user.eventsJoined,
-              {
-                eventId: event._id,
-                completed: false,
-                actions: event.actions.map((action) => {
-                  if (action.name === actionName) {
-                    return {
-                      completed: true,
-                      link: action.link,
-                      channel: action.channel,
-                      name: action.name,
-                      type: action.type,
-                    };
-                  } else {
-                    return { ...action, completed: false };
-                  }
-                }),
-              },
-            ]
+            ...user.eventsJoined,
+            {
+              eventId: event._id,
+              completed: false,
+              actions: event.actions.map((action) => {
+                if (action.name === actionName) {
+                  return {
+                    completed: true,
+                    link: action.link,
+                    channel: action.channel,
+                    name: action.name,
+                    type: action.type,
+                  };
+                } else {
+                  return { ...action, completed: false };
+                }
+              }),
+            },
+          ]
           : [
-              {
-                eventId: event._id,
-                completed: false,
-                actions: event.actions.map((action) => {
-                  if (action.name === actionName) {
-                    return {
-                      completed: true,
-                      link: action.link,
-                      channel: action.channel,
-                      name: action.name,
-                      type: action.type,
-                    };
-                  } else {
-                    return { ...action, completed: false };
-                  }
-                }),
-              },
-            ],
+            {
+              eventId: event._id,
+              completed: false,
+              actions: event.actions.map((action) => {
+                if (action.name === actionName) {
+                  return {
+                    completed: true,
+                    link: action.link,
+                    channel: action.channel,
+                    name: action.name,
+                    type: action.type,
+                  };
+                } else {
+                  return { ...action, completed: false };
+                }
+              }),
+            },
+          ],
       });
     }
   },
@@ -375,12 +375,18 @@ export const beforeMine = internalMutation({
   args: { userId: v.id("user") },
   handler: async ({ db }, { userId }) => {
     // Update users mining configs
+    const user = await db.get(userId);
     const config = await db.query("config").first();
 
-    await db.patch(userId, {
-      mineHours: config?.miningHours,
-      miningRate: config?.miningCount,
-    });
+
+    // Check if users has boost active before starting mine
+    if (!user?.boostStatus?.length) {
+      await db.patch(userId, {
+        mineHours: config?.miningHours,
+        miningRate: config?.miningCount,
+      });
+    }
+
   },
 });
 
@@ -551,9 +557,9 @@ export const activateBoost = mutation({
         mineHours: config.miningHours + boost.rate,
         boostStatus: user?.boostStatus
           ? [
-              ...(user?.boostStatus ?? []),
-              { boostId: boost?.uuid, isActive: true },
-            ]
+            ...(user?.boostStatus ?? []),
+            { boostId: boost?.uuid, isActive: true },
+          ]
           : [{ boostId: boost?.uuid, isActive: true }],
       });
     } else {
@@ -588,7 +594,7 @@ export const activateBoost = mutation({
 
         if (affected) {
           await db.patch(userId, {
-            xpCount: user?.xpCount - (affected?.currentXpCost ?? 0) * 2,
+            xpCount: user?.xpCount - (affected?.currentXpCost ?? 0),
             ...(boost?.type === "rate"
               ? { miningRate: user?.miningRate + boost?.rate }
               : { mineHours: user?.mineHours + boost?.rate }),
