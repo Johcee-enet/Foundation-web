@@ -146,6 +146,14 @@ export const storeNickname = mutation({
       const referralCode = generateReferralCode();
       const config = await ctx.db.query("config").first();
 
+      if (!referralCode) {
+        throw new ConvexError({
+          message: "Could not cerate referral code for user",
+          code: 500,
+          status: "failed",
+        });
+      }
+
       if (!userId) {
         throw new ConvexError({
           message: "No user has been created",
@@ -158,17 +166,18 @@ export const storeNickname = mutation({
       const user = await ctx.db.get(userId);
 
       // If user already has a referralCode and a referreeCode and deleted is true then re-initialize account
-      if (
-        (user?.referralCode ?? user?.referreeCode ?? user?.deleted) &&
-        user?.referreeCode === referreeCode
-      ) {
+      if (user?.deleted && user?.referreeCode === referreeCode) {
+        console.log("Existing referreeCode and deleted account");
         await ctx.db.patch(user._id, {
           ...user,
           nickname,
+          referralCode: referralCode ?? generateReferralCode(),
+          deleted: false,
         });
 
         return user?._id;
       } else {
+        console.log("New user created and is not deleted");
         await ctx.db.patch(userId, {
           nickname: nickname,
           referralCode: referralCode ?? generateReferralCode(),
@@ -187,8 +196,8 @@ export const storeNickname = mutation({
           // Patch referree count
           console.log(referree, ":::Update referree xpCount");
           await ctx.db.patch(referree?._id as Id<"user">, {
-            referralCount: Number(referree?.referralCount) + 1,
-            xpCount: config?.referralXpCount ?? 5000 + referree.xpCount,
+            referralCount: (referree?.referralCount ?? 0) + 1,
+            xpCount: (config?.referralXpCount ?? 5000) + referree.xpCount,
           });
           await ctx.db.insert("activity", {
             userId: referree?._id,
