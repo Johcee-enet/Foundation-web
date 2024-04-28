@@ -63,6 +63,7 @@ export const storeEmail = internalMutation({
       mineHours: config?.miningHours ?? 6,
       redeemableCount: 0,
       xpCount: config?.xpCount ?? 1000,
+      deleted: false,
     });
 
     return userId;
