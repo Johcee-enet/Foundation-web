@@ -13,7 +13,6 @@ const generateOTPCode = customAlphabet("0123456789", 6);
 export const initializeNewUser = action({
   args: { email: v.string(), referreeCode: v.optional(v.string()) },
   handler: async (ctx, args): Promise<string> => {
-    // TODO: handle oslo OTP creation and novu email workflow trigger
     const userId: Id<"user"> = await ctx.runMutation(
       internal.mutations.storeEmail,
       {
@@ -22,23 +21,20 @@ export const initializeNewUser = action({
       },
     );
 
-    // TODO: Create OTP
+    // DONE:✅ Create OTP
     const otp = generateOTPCode();
-    console.log(otp, ":::User OTP");
 
     await ctx.runMutation(internal.mutations.storeOTPSecret, {
       userId,
-      secret: otp,
+      secret: otp ?? generateOTPCode(),
     });
 
-    // TODO: call novu action
-    const novuResult = await ctx.runAction(internal.novu.triggerOTPWorkflow, {
-      otp,
+    // DONE:✅ call novu action
+    await ctx.runAction(internal.novu.triggerOTPWorkflow, {
+      otp: otp ?? generateOTPCode(),
       userId: userId,
       email: args.email,
     });
-
-    console.log(novuResult, ":::Novu result");
 
     return userId;
   },
@@ -154,7 +150,6 @@ export const storeNickname = mutation({
         const user = await ctx.db.get(userId);
 
         // If user already has a referralCode and a referreeCode and deleted is true then re-initialize account
-
         if (
           (user?.referralCode ?? user?.referreeCode ?? user?.deleted) &&
           user?.referreeCode === referreeCode
@@ -293,7 +288,7 @@ export const isNicknameValid = mutation({
 });
 
 const generateReferralCode = (): string => {
-  const nanoid = customAlphabet("1234567890abcdef", 6);
+  const nanoid = customAlphabet("1234567890abcdefghijklmnopqrstuvwxyz", 6);
   const referralCode = nanoid().toUpperCase();
   return referralCode;
 };

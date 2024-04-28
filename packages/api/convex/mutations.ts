@@ -2,8 +2,8 @@ import { mutationWithAuth } from "@convex-dev/convex-lucia-auth";
 import { ConvexError, v } from "convex/values";
 import { differenceInHours } from "date-fns";
 
+import type { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
-import { Doc, Id } from "./_generated/dataModel";
 import {
   action,
   internalAction,
@@ -14,8 +14,18 @@ import {
 export const storeEmail = internalMutation({
   args: { email: v.string(), referreeCode: v.optional(v.string()) },
   handler: async (ctx, args) => {
+    const config = await ctx.db.query("config").first();
     // Check if email already exists
     const existingUsers = await ctx.db.query("user").collect();
+
+    // Checking if the users email already exists without being deleted
+    if (
+      existingUsers?.some((user) => user.email === args.email && !user?.deleted)
+    ) {
+      throw new Error("Email already exist!");
+    }
+
+    // Fetch dangling user details after deleted account
     const previouslyDeleted = await ctx.db
       .query("user")
       .filter((q) =>
@@ -25,25 +35,22 @@ export const storeEmail = internalMutation({
         ),
       )
       .first();
-    const config = await ctx.db.query("config").first();
 
     // If user was previously deleted update fields
     if (previouslyDeleted) {
       await ctx.db.patch(previouslyDeleted._id, {
+        ...previouslyDeleted,
         minedCount: 0,
-        miningRate: 2.0,
+        miningRate: config?.miningCount,
         mineActive: false,
         referralCount: 0,
-        mineHours: 6,
+        mineHours: config?.miningHours,
         redeemableCount: 0,
         xpCount: config?.xpCount ?? 1000,
+        deleted: false,
       });
-      return previouslyDeleted._id;
-    }
 
-    if (existingUsers?.some((user) => user.email === args.email)) {
-      // Checking
-      throw new Error("Email already exist!");
+      return previouslyDeleted._id;
     }
 
     // Store email and referral
@@ -51,15 +58,14 @@ export const storeEmail = internalMutation({
       email: args.email,
       referreeCode: args.referreeCode,
       minedCount: 0,
-      miningRate: 2.0,
+      miningRate: config?.miningCount ?? 2.0,
       mineActive: false,
       referralCount: 0,
-      mineHours: 6,
+      mineHours: config?.miningHours ?? 6,
       redeemableCount: 0,
       xpCount: config?.xpCount ?? 1000,
     });
 
-    console.log(userId, ":::User id");
     return userId;
   },
 });
@@ -382,7 +388,7 @@ export const beforeMine = internalMutation({
 export const mine = internalMutation({
   args: { userId: v.id("user") },
   handler: async ({ db, scheduler }, { userId }) => {
-    const config = await db.query("config").first();
+    // const config = await db.query("config").first();
     const user = await db.get(userId);
 
     if (!user) {
@@ -583,7 +589,7 @@ export const activateBoost = mutation({
 
         if (affected) {
           await db.patch(userId, {
-            xpCount: user?.xpCount - affected?.currentXpCost! * 2,
+            xpCount: user?.xpCount - (affected?.currentXpCost ?? 0) * 2,
             ...(boost?.type === "rate"
               ? { miningRate: user?.miningRate + boost?.rate }
               : { mineHours: user?.mineHours + boost?.rate }),
