@@ -105,7 +105,7 @@ export const loginUser = action({
       if (await bcrypt.compare(password, user?.password)) {
         return user;
       } else {
-        throw new Error("Invalid email pr password");
+        throw new Error("Invalid email or password");
       }
     } catch (e: any) {
       throw new Error("Issue with getting user");

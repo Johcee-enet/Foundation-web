@@ -9,7 +9,24 @@ import { mutationWithAuth } from "@convex-dev/convex-lucia-auth";
 export const deleteUserWithId = mutationWithAuth({
   args: { userId: v.id("user") },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.userId);
+    await ctx.db.patch(args.userId, {
+      deleted: true,
+      xpCount: 0,
+      minedCount: 0,
+      redeemableCount: 0,
+      completedTasks: undefined,
+      eventsJoined: undefined,
+      mineActive: false,
+      mineHours: 0,
+      miningRate: 0,
+      otpSecret: undefined,
+      password: undefined,
+      referralCount: 0,
+      boostStatus: undefined,
+      mineStartTime: undefined,
+      nickname: undefined,
+      email: undefined,
+    });
   },
 });
 
