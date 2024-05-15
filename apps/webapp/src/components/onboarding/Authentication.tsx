@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAction, useMutation } from "convex/react";
+import { useAction } from "convex/react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -43,6 +43,7 @@ const Authentication = ({ login }: any) => {
     // ✅ This will be type-safe and validated.
     try {
       console.log(values, ":::entry values");
+
       if (values.password) {
         // Call Login convex function
         const user = await loginUser({
