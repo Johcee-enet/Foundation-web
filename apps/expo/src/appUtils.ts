@@ -95,6 +95,6 @@ export const Base64 = {
   },
 };
 
-export function delay(seconds) {
+export function delay(seconds: number) {
   return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 }
