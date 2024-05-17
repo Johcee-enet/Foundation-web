@@ -6,6 +6,7 @@ import "./globals.css";
 import type { Viewport } from "next";
 import ConvexClientProvider from "@/app/ConvexClientProvider";
 import { Toaster } from "@/components/ui/toaster";
+import SessionProvider from "@/lib/sessionContext";
 import { cn } from "@/lib/utils";
 
 const fontSans = FontSans({
@@ -40,7 +41,9 @@ export default function RootLayout({
         )}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <ConvexClientProvider>{children}</ConvexClientProvider>
+          <ConvexClientProvider>
+            <SessionProvider>{children}</SessionProvider>
+          </ConvexClientProvider>
           <Toaster />
         </ThemeProvider>
       </body>
