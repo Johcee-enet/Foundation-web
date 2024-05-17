@@ -1,5 +1,6 @@
 "use client";
 
+import { AsyncHook } from "async_hooks";
 import {
   createContext,
   ReactNode,
@@ -7,17 +8,19 @@ import {
   useEffect,
   useState,
 } from "react";
+import { useRouter } from "next/navigation";
 
 type ISession = {
-  session: { userId: string | null } | null;
+  userId: string | null;
 };
 
-const SessionContext = createContext<ISession | null>(null);
+const SessionContext = createContext<ISession | null>({ userId: null });
 
 interface SessionProps {
   children: ReactNode;
 }
 export default function SessionProvider({ children }: SessionProps) {
+  const router = useRouter();
   const [session, setSession] = useState<{ userId: string | null } | null>(
     null,
   );
@@ -25,11 +28,14 @@ export default function SessionProvider({ children }: SessionProps) {
     const _session = sessionStorage.getItem("fd-session");
     if (_session) {
       setSession(JSON.parse(_session));
+      router.replace("/dashboard");
     }
   }, []);
 
   return (
-    <SessionContext.Provider value={{ session }}>
+    <SessionContext.Provider
+      value={{ userId: session?.userId as string | null }}
+    >
       {children}
     </SessionContext.Provider>
   );
