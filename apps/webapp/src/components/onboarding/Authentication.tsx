@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +37,13 @@ const Authentication = ({ login }: any) => {
     },
   });
 
+  // Change password field value when login is toggled
+  useEffect(() => {
+    if (!login) {
+      form.setValue("password", "");
+    }
+  }, [login]);
+
   // Define a submit handler.
   async function onSubmit(values: z.infer<typeof formSchema>) {
     // Do something with the form values.
@@ -50,22 +57,34 @@ const Authentication = ({ login }: any) => {
           email: values.email,
           password: values?.password,
         });
+        // Set session before pushing
+        sessionStorage.setItem(
+          "fd-session",
+          JSON.stringify({ userId: user?._id }),
+        );
         router.push("/dashboard");
       } else {
         // Call sign up convex function
-        const result = await signUp({ email: values?.email });
+        const userId = await signUp({ email: values?.email });
+        // Set session before pushing
+        sessionStorage.setItem(
+          "fd-session",
+          JSON.stringify({ userId: userId }),
+        );
         toast({
           title: "Onboarding",
           description: "OTP Sent to email",
         });
-        router.push("/authentication/otp");
+        router.push(
+          `/authentication/otp?email=${values?.email}&userId=${userId}`,
+        );
       }
     } catch (err: any) {
       console.log(err, ":::Onboarding_error");
       toast({
+        variant: "destructive",
         title: "Onboarding error",
         description: err?.message ?? err.toString(),
-        variant: "destructive",
       });
       return;
     }
