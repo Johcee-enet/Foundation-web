@@ -42,7 +42,12 @@ export const getUserDetails = query({
         .collect()
     ).length;
     const globalRank = calculateRank(
-      await db.query("user").collect(),
+      await db
+        .query("user")
+        .withIndex("by_xpCount")
+        .filter((q) => q.eq(q.field("deleted"), false))
+        .order("desc")
+        .collect(),
       user?._id,
     );
 
@@ -99,7 +104,7 @@ export const getLeaderBoard = query({
       .withIndex("by_xpCount")
       .filter((q) => q.eq(q.field("deleted"), false))
       .order("desc")
-      .take(25);
+      .take(13);
 
     const users = await db
       .query("user")
