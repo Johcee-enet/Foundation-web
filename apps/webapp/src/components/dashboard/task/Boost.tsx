@@ -1,7 +1,11 @@
 "use client";
 
+import { FC, Suspense } from "react";
 import Image from "next/image";
 import BotHead from "@/assets/bot-head.svg";
+import Duration from "@/assets/duration.svg";
+import Flash from "@/assets/flash.svg";
+import { Loader } from "@/components/loader";
 import { useSession } from "@/lib/sessionContext";
 import { useQuery } from "convex/react";
 import { FaDiscord, FaTelegramPlane } from "react-icons/fa";
@@ -9,66 +13,162 @@ import { FaCircleCheck, FaXTwitter } from "react-icons/fa6";
 import { HiMiniUserGroup } from "react-icons/hi2";
 
 import { api } from "@acme/api/convex/_generated/api";
+import { Id } from "@acme/api/convex/_generated/dataModel";
 
 const Boost = () => {
   const session = useSession();
-  const adConfig = useQuery(api.queries.getAdsConfig);
+  const appConfig = useQuery(api.queries.getAppConfigForApp);
 
   return (
     <div>
-      <ul className="grid gap-4">
-        {ecosystemTaskList.map((items, ki) => (
-          <li key={ki} className="dark:bg-primary-dark rounded-xl bg-white">
-            <button
-              className={`w-full px-5 py-4 ${
-                items.completed ? "opacity-30" : ""
-              } block space-y-2`}
-              onClick={(e) => {
-                if (items.completed) {
-                  e.preventDefault();
-                }
-              }}
-            >
-              <div className="flex w-full items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`boost-icon-container ${items.type == "bot" ? "" : "border-[1.5px]"}`}
-                  >
-                    {/* Can be replaced with an image tag if image is to be rendered instead */}
-                    {items.type == "bot" && !items.completed && (
-                      <Image src={BotHead} height={60} width={60} alt="bot" />
-                    )}
-                    {items.type == "twitter" && !items.completed && (
-                      <FaXTwitter />
-                    )}
-                    {items.type == "discord" && !items.completed && (
-                      <FaDiscord />
-                    )}
-                    {items.type == "telegram" && !items.completed && (
-                      <FaTelegramPlane />
-                    )}
-                    {items.completed && <FaCircleCheck />}
-                  </div>
-                  <div className="space-y-2 text-left">
-                    <h4 className="text-xl font-semibold">{items.name}</h4>
-                    <p className="background inline-block rounded-full px-2 py-1 text-base font-semibold text-[#767676]">
-                      <span>+{items.reward} XP</span>
-                    </p>
-                  </div>
-                </div>
-                <div>
-                  {items.type == "bot" && (
-                    <p className="text-lg font-semibold">0/10</p>
-                  )}
-                </div>{" "}
-              </div>
-              <div className="text-left"></div>
-            </button>
-          </li>
-        ))}
-      </ul>
+      <Suspense fallback={<Loader color="white" />}>
+        <BoostItems
+          boosts={appConfig?.boosts}
+          userId={session?.userId as string}
+          xpPerToken={appConfig?.xpPerToken ?? 0}
+          minimumCost={appConfig?.minimumSaleToken ?? 0}
+        />
+      </Suspense>
     </div>
   );
+};
+
+const BoostItems: FC<{
+  boosts: any[] | undefined;
+  userId: string;
+  xpPerToken: number;
+  minimumCost: number;
+}> = ({ boosts, userId, xpPerToken, minimumCost }) => {
+  const user = useQuery(api.queries.getUserDetails, {
+    userId: userId as Id<"user">,
+  });
+
+  if (boosts) {
+    return (
+      <ul className="grid gap-4">
+        {boosts.map((item, ki) => {
+          const activeBoost = user?.boostStatus?.find(
+            (val) => val?.boostId === item?.uuid,
+          );
+          return (
+            <li key={ki} className="dark:bg-primary-dark rounded-xl bg-white">
+              <button
+                className={`w-full px-5 py-4 ${
+                  item.completed ? "opacity-30" : ""
+                } block space-y-2`}
+                onClick={(e) => {
+                  console.log(item, ":::ONBoost clicke", activeBoost);
+                  // if (items.completed) {
+                  //   e.preventDefault();
+                  // }
+                }}
+              >
+                <div className="flex w-full items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`boost-icon-container ${item?.type == "bot" ? "" : "border-[1.5px]"} h-24 w-24 bg-[#23262D] p-2`}
+                    >
+                      {/* Can be replaced with an image tag if image is to be rendered instead */}
+                      {item?.type === "bot" && (
+                        <Image src={BotHead} height={60} width={60} alt="bot" />
+                      )}
+                      {item.type === "rate" && (
+                        <Image src={Flash} height={60} width={60} alt="rate" />
+                      )}
+                      {item.type === "duration" && (
+                        <Image
+                          src={Duration}
+                          height={60}
+                          width={60}
+                          alt="duration"
+                        />
+                      )}
+                    </div>
+
+                    <div className="space-y-2 text-left">
+                      <h4 className="text-xl font-semibold">{item?.title}</h4>
+                      <div>
+                        <p className="inline-block rounded-lg bg-[#D9D9D9] px-2 py-1 text-base font-semibold text-[#767676]">
+                          <span>
+                            {Number(item?.xpCost ?? 0).toLocaleString("en-US", {
+                              maximumFractionDigits: 2,
+                              minimumFractionDigits: 2,
+                            })}{" "}
+                            XP
+                          </span>
+                        </p>
+                        {item?.type === "bot" && (
+                          <span className="ml-3 text-[#767676]">
+                            Mine For Extra 3hrs
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    {item?.type !== "bot" && (
+                      <p className="text-lg font-semibold text-[#767676]">
+                        {activeBoost?.currentLevel ?? 0}/{item?.totalLevel}
+                      </p>
+                    )}
+                  </div>{" "}
+                </div>
+                <div className="text-left"></div>
+              </button>
+            </li>
+          );
+        })}
+        <li className="dark:bg-primary-dark rounded-xl bg-white">
+          <button
+            className={`block w-full space-y-2 px-5 py-4`}
+            onClick={(e) => {
+              console.log(":::On buy clicked");
+              // if (items.completed) {
+              //   e.preventDefault();
+              // }
+            }}
+          >
+            <div className="flex w-full items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`boost-icon-container h-24 w-24 bg-[#23262D] p-2`}
+                >
+                  {/* Can be replaced with an image tag if image is to be rendered instead */}
+
+                  <Image src={Duration} height={60} width={60} alt="duration" />
+                </div>
+
+                <div className="space-y-2 text-left">
+                  <h4 className="text-xl font-semibold">Buy Xp</h4>
+                  <p className="inline-block rounded-lg bg-[#D9D9D9] px-2 py-1 text-base font-semibold text-[#767676]">
+                    <span>
+                      {Number(minimumCost).toLocaleString("en-US", {
+                        maximumFractionDigits: 0,
+                        minimumFractionDigits: 0,
+                      })}
+                      $FOUND /
+                      {Number(xpPerToken * minimumCost).toLocaleString(
+                        "en-US",
+                        {
+                          maximumFractionDigits: 1,
+                          minimumFractionDigits: 1,
+                        },
+                      )}{" "}
+                      XP
+                    </span>
+                  </p>
+                </div>
+              </div>
+              <div className="inline-block rounded-lg bg-[#D9D9D9] px-2 py-1 text-base font-semibold text-[#767676]">
+                <p className="text-lg font-semibold text-[#767676]">$FOUND</p>
+              </div>{" "}
+            </div>
+            <div className="text-left"></div>
+          </button>
+        </li>
+      </ul>
+    );
+  }
 };
 
 export default Boost;
