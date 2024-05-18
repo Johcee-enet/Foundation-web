@@ -78,6 +78,43 @@ export default function Users() {
       ),
     },
     {
+      accessorKey: "lastActive",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() =>
+              column.toggleSorting(column.getIsSorted() === "desc")
+            }
+          >
+            Last active
+            <CaretSortIcon className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => (
+        <span className="lowercase">
+          {new Date(
+            row.getValue("lastActive") ?? Date.now(),
+          ).toLocaleDateString()}
+        </span>
+      ),
+    },
+    {
+      header: "Referred by",
+      accessorKey: "referreeCode",
+      cell: ({ row }) => {
+        const referree = users?.find(
+          (val) => val?.referralCode === row?.getValue("referreeCode"),
+        );
+
+        if (referree) {
+          return <div>{referree?.nickname}</div>;
+        }
+        return <span>NIL</span>;
+      },
+    },
+    {
       accessorKey: "referralCode",
       header: "Referral Code",
       cell: ({ row }) => (
