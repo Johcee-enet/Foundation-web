@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import Overview from "@/components/dashboard/Overview";
 import PlannedTask from "@/components/dashboard/PlannedTask";
 import Status from "@/components/dashboard/Status";
@@ -11,7 +12,6 @@ import Header from "@/components/Header";
 import { useSession } from "@/lib/sessionContext";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
-import { addHours, differenceInSeconds } from "date-fns";
 import { HiMiniUserGroup } from "react-icons/hi2";
 
 import type { Doc, Id } from "@acme/api/convex/_generated/dataModel";
@@ -22,82 +22,20 @@ export type EventType = Partial<Doc<"events">> & {
 };
 
 const Dashboard = () => {
+  const searchParams = useSearchParams();
   const session = useSession();
+
+  const userId = searchParams.get("userId");
 
   // Fetch users data
   const userDetail = useQuery(api.queries.getUserDetails, {
-    userId: session?.userId as Id<"user">,
+    userId: (session?.userId ?? userId) as Id<"user">,
   });
 
   const claimReward = useMutation(api.mutations.claimRewards);
   const triggerMiner = useAction(api.mutations.triggerMining);
 
   // console.log(bottom, top, ":::Bottom Top, size", height, height - top);
-
-  // Embeding
-  // const [tweetEmbedHeight, setTweetEmbedHeight] = useState<number>();
-  const [remaining, setRemaining] = useState<string>();
-
-  useEffect(() => {
-    if (
-      !(userDetail?.mineActive ?? false) &&
-      (userDetail?.redeemableCount ?? 0) > 0
-    ) {
-      // setClaimModalVisible(true);
-    }
-  }, [userDetail?.mineActive, userDetail?.redeemableCount, userDetail]);
-
-  // countdown
-  useEffect(() => {
-    // Function to check if the countdown has ended
-
-    if (userDetail?.mineActive) {
-      checkCountdown({
-        startTime: userDetail.mineStartTime ?? Date.now(),
-        countdownDuration: userDetail?.mineHours,
-      });
-    }
-
-    function checkCountdown({
-      startTime,
-      countdownDuration = 6,
-    }: {
-      startTime: number;
-      countdownDuration: number;
-    }) {
-      // Set the start time of the countdown
-      // const startTime = new Date();
-
-      // Define the duration for the countdown (6 hours)
-      // const countdownDuration = 6;
-
-      // Calculate the end time for the countdown
-      const endTime = addHours(startTime, countdownDuration);
-
-      const currentTime = Date.now();
-      const remainingTime = differenceInSeconds(endTime, currentTime);
-
-      if (remainingTime <= 0) {
-        // Perform the action here
-      } else {
-        // const formattedRemainingTime = formatDuration(
-        //   { seconds: remainingTime },
-        //   { format: ["hours", "minutes", "seconds"] },
-        // );
-        const hours = Math.floor(remainingTime / 3600);
-        const minutes = Math.floor((remainingTime % 3600) / 60);
-        const seconds = remainingTime % 60;
-
-        // Check again after 1 second
-        setTimeout(
-          () => checkCountdown({ startTime, countdownDuration }),
-          1000,
-        );
-
-        setRemaining(`${hours}h ${minutes}m ${seconds}s`);
-      }
-    }
-  }, [userDetail, remaining]);
 
   // handle tasks cycle
   const [isLoadingModalVisible, setLoadingModalVisible] = useState(false);
@@ -113,6 +51,7 @@ const Dashboard = () => {
         mineRate={userDetail?.miningRate ?? 0}
         minedCount={userDetail?.minedCount ?? 0}
         mineHours={userDetail?.mineHours ?? 0}
+        userId={userId}
       />
       <h3 className="mb-2 mt-7 text-base font-semibold">Overview</h3>
       <Overview
@@ -134,7 +73,7 @@ const Dashboard = () => {
           </div>
         </Link>
       </div>
-      <PlannedTask />
+      <PlannedTask userId={userId} />
       <TwitterProfile />
       <ClaimXP />
     </main>
