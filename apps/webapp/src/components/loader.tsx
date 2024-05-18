@@ -13,11 +13,12 @@ const Loader = React.forwardRef<HTMLDivElement, LoaderProps>(
       className={cn(
         "grid h-auto min-h-max w-full place-items-center overflow-x-scroll rounded-lg p-6 lg:overflow-visible",
       )}
+      // color={longPathColor}
       ref={ref}
       {...props}
     >
       <svg
-        // style={longPathColor && { color: longPathColor }}
+        style={longPathColor ? { color: longPathColor } : undefined}
         className="animate-spin text-slate-50 dark:text-slate-900"
         viewBox="0 0 64 64"
         fill="none"
@@ -39,7 +40,7 @@ const Loader = React.forwardRef<HTMLDivElement, LoaderProps>(
           stroke-linecap="round"
           stroke-linejoin="round"
           className="text-slate-900 dark:text-slate-50"
-          // style={shortPathColor && { color: shortPathColor }}
+          style={shortPathColor ? { color: shortPathColor } : undefined}
         ></path>
       </svg>
     </div>
