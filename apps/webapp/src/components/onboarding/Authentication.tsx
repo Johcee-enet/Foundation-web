@@ -62,7 +62,7 @@ const Authentication = ({ login }: any) => {
           "fd-session",
           JSON.stringify({ userId: user?._id }),
         );
-        router.push("/dashboard");
+        router.push(`/dashboard?userId=${user?._id}`);
       } else {
         // Call sign up convex function
         const userId = await signUp({ email: values?.email });
