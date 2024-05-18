@@ -53,6 +53,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@acme/ui/src/components/ui/select";
+import { Textarea } from "@acme/ui/src/components/ui/textarea";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -408,16 +409,24 @@ function EventDialog({
 }: IEventDialogProps) {
   // Add task state
   const [title, setTitle] = useState<string>();
+  const [description, setDescription] = useState<string>();
   const [reward, setReward] = useState<number>();
   const [companyId, setCompanyId] = useState<Id<"company">>();
   const [actions, setActions] =
     useState<
       { name: string; link: string; channel: Network; type: ActionType }[]
     >();
+  const [coverStorageId, setCoverStorageId] = useState<Id<"_storage">>();
 
   const updateEvent = useMutationWithAuth(api.adminMutations.updateEvent);
   const createEvent = useMutationWithAuth(api.adminMutations.createEvent);
   const getCompanies = useQueryWithAuth(api.adminQueries.fetchCompanies, {});
+  const generateUploadUrl = useMutationWithAuth(
+    api.files.generateUploadUrlForEventCover,
+  );
+  const saveAfterUpload = async (uploaded: UploadFileResponse[]) => {
+    setCoverStorageId((uploaded[0]?.response as any)?.storageId);
+  };
 
   useEffect(() => {
     if (event) {
@@ -425,6 +434,7 @@ function EventDialog({
       setReward(event?.reward);
       setCompanyId(event?.companyId);
       setActions(event?.actions);
+      setCoverStorageId(event?.coverStorageId);
     }
   }, [event, closeCleanup, open]);
 
@@ -487,6 +497,40 @@ function EventDialog({
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               className="max-w-sm"
+            />
+          </div>
+          <div>
+            <Label htmlFor="title">Event Description</Label>
+            <Textarea
+              name="description"
+              id="description"
+              placeholder="Description"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              className="max-w-sm"
+            />
+          </div>
+          <div>
+            <Label>Uplaod event cover image</Label>
+            <UploadButton
+              uploadUrl={generateUploadUrl}
+              fileTypes={["image/*"]}
+              onUploadComplete={saveAfterUpload}
+              onUploadError={(error: unknown) => {
+                // Do something with the error.
+                alert(`ERROR! ${error as string}`);
+              }}
+              content={(progress) =>
+                progress ? `Uploading... ${progress}%` : "Upload cover"
+              }
+              className={(progress) =>
+                cn(
+                  "flex items-center justify-center rounded-lg bg-gray-200 px-4 py-2 text-black hover:cursor-pointer",
+                  {
+                    "border border-gray-500 bg-background text-white": progress,
+                  },
+                )
+              }
             />
           </div>
           <div>
@@ -672,6 +716,8 @@ function EventDialog({
                   await updateEvent({
                     eventId: event?._id as Id<"events">,
                     title: title as string,
+                    coverStorageId: coverStorageId as Id<"_storage">,
+                    description: description as string,
                     reward: reward as number,
                     companyId: companyId as Id<"company">,
                     actions: actions
@@ -690,6 +736,8 @@ function EventDialog({
 
                   await createEvent({
                     title: title as string,
+                    coverStorageId: coverStorageId as Id<"_storage">,
+                    description: description as string,
                     reward: reward as number,
                     companyId: companyId as Id<"company">,
                     actions: actions.map(({ name, link, type, channel }) => ({

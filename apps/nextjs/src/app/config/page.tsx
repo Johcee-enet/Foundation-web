@@ -32,6 +32,8 @@ function ConfigPage() {
   const [miningHours, setMiningHours] = useState<number>(6);
   const [xpCount, setXpCount] = useState<number>(1000);
   const [referralXpCount, setReferralXpCount] = useState<number>(5000);
+  const [xpPerToken, setXpPerToken] = useState<number>();
+  const [minimumSaleToken, setMinimumSaleToken] = useState<number>();
 
   const { toast } = useToast();
 
@@ -73,6 +75,8 @@ function ConfigPage() {
       setMiningHours(appConfig.miningHours);
       setXpCount(appConfig.xpCount);
       setBoosts(appConfig?.boosts);
+      setXpPerToken(appConfig?.xpPerToken);
+      setMinimumSaleToken(appConfig?.minimumSaleToken);
     }
   }, [appConfig]);
 
@@ -267,6 +271,74 @@ function ConfigPage() {
               </CardFooter>
             </Card>
           ))}
+        </div>
+
+        {/* XP Sale config */}
+        <div className="h-full w-full flex-1 flex-col space-y-8 p-8 md:flex">
+          <div className="flex items-center justify-between space-y-2">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">
+                Buy XP Configuration
+              </h2>
+              <p className="text-muted-foreground">
+                Configure the XP sale amount per $FOUND token and minimum sale
+                amount
+              </p>
+            </div>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>XP/$FOUND and Minimum amount</CardTitle>
+              {/* <CardDescription>
+                  Change the default mining rate of users (i.e $EN/hour)
+                </CardDescription> */}
+            </CardHeader>
+            <CardContent>
+              <form className="grid gap-4">
+                <Label className="grid gap-2">
+                  XP/$FOUND
+                  <Input
+                    placeholder="XP/$FOUND"
+                    type="number"
+                    value={xpPerToken}
+                    onChange={(e) => setXpPerToken(e.target.valueAsNumber)}
+                  />
+                </Label>
+                <Label className="grid gap-2">
+                  Minimum $FOUND amount to purchase XP
+                  <Input
+                    placeholder="Minimum $FOUND amount"
+                    type="number"
+                    value={minimumSaleToken}
+                    onChange={(e) =>
+                      setMinimumSaleToken(e.target.valueAsNumber)
+                    }
+                  />
+                </Label>
+              </form>
+            </CardContent>
+            <CardFooter className="border-t px-6 py-4">
+              <Button
+                onClick={async () => {
+                  const t = toast({
+                    title: "Updating config data",
+                  });
+                  await updateConfigs({
+                    data: {
+                      xpPerToken,
+                      minimumSaleToken,
+                    },
+                    configId: appConfig?._id,
+                  });
+
+                  t.update({ title: "Update completed!" });
+                }}
+              >
+                Update
+              </Button>
+            </CardFooter>
+          </Card>
         </div>
       </div>
     </MainLayout>
