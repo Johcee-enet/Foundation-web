@@ -34,6 +34,19 @@ export const generateUploadUrlForCompanyLogo = mutationWithAuth({
   },
 });
 
+export const generateUploadUrlForEventCover = mutationWithAuth({
+  args: {},
+  handler: async (ctx) => {
+    if (!ctx.session || !ctx.session.user) {
+      throw new ConvexError({
+        message: "Must be logged in to upload",
+      });
+    }
+
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
 export const saveStorageId = mutationWithAuth({
   // You can customize these as you like
   args: {

@@ -135,6 +135,8 @@ export default defineSchema(
       miningHours: v.number(),
       xpCount: v.float64(),
       referralXpCount: v.float64(),
+      xpPerToken: v.optional(v.float64()),
+      minimumSaleToken: v.optional(v.float64()),
       boosts: v.optional(
         v.array(
           v.object({

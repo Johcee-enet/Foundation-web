@@ -5,7 +5,7 @@ import { customAlphabet } from "nanoid";
 
 import type { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
-import { action, mutation } from "./_generated/server";
+import { action, internalMutation, mutation } from "./_generated/server";
 
 // Random OTP code
 const generateOTPCode = customAlphabet("0123456789", 6);
@@ -91,7 +91,7 @@ export const storePassword = action({
 
 export const loginUser = action({
   args: { email: v.string(), password: v.string() },
-  handler: async ({ runQuery }, { email, password }) => {
+  handler: async ({ runQuery, runMutation }, { email, password }) => {
     // console.log(email, "::::Loging email");
     try {
       const user: any = await runQuery(internal.queries.getUserWithEmail, {
@@ -103,6 +103,10 @@ export const loginUser = action({
 
       // Compare password
       if (await bcrypt.compare(password, user?.password)) {
+        // Update users lastActive
+        await runMutation(internal?.onboarding.updateUserLastActive, {
+          userId: user?._id,
+        });
         return user;
       } else {
         throw new Error("Invalid email or password");
@@ -110,6 +114,13 @@ export const loginUser = action({
     } catch (e: any) {
       throw new Error("Issue with getting user");
     }
+  },
+});
+
+export const updateUserLastActive = internalMutation({
+  args: { userId: v.id("user") },
+  handler: async ({ db }, { userId }) => {
+    await db.patch(userId, { lastActive: Date.now() });
   },
 });
 

@@ -1,5 +1,5 @@
-import { ConvexError, v } from "convex/values";
 import { mutationWithAuth } from "@convex-dev/convex-lucia-auth";
+import { ConvexError, v } from "convex/values";
 
 // Write your Convex functions in any file inside this directory (`convex`).
 // See https://docs.convex.dev/functions for more.
@@ -97,6 +97,8 @@ export const updateTask = mutationWithAuth({
 export const createEvent = mutationWithAuth({
   args: {
     title: v.string(),
+    description: v.string(),
+    coverStorageId: v.id("_storage"),
     reward: v.number(),
     companyId: v.id("company"),
     actions: v.array(
@@ -131,6 +133,8 @@ export const updateEvent = mutationWithAuth({
   args: {
     eventId: v.id("events"),
     title: v.string(),
+    description: v.string(),
+    coverStorageId: v.id("_storage"),
     reward: v.number(),
     companyId: v.id("company"),
     actions: v.array(
