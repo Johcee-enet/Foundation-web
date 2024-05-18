@@ -65,6 +65,7 @@ export default defineSchema(
         ),
       ),
       deleted: v.optional(v.boolean()),
+      lastActive: v.optional(v.number()),
     })
       .index("by_xpCount", ["xpCount"])
       .index("by_mineActive", ["mineActive"]),
@@ -103,6 +104,7 @@ export default defineSchema(
       title: v.string(),
       reward: v.number(),
       description: v.optional(v.string()),
+      coverStorageId: v.optional(v.id("_storage")),
       companyId: v.id("company"),
       actions: v.array(
         v.object({
