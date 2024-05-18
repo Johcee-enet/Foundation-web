@@ -102,6 +102,7 @@ export default defineSchema(
     events: defineTable({
       title: v.string(),
       reward: v.number(),
+      description: v.optional(v.string()),
       companyId: v.id("company"),
       actions: v.array(
         v.object({
