@@ -125,7 +125,8 @@ export const redeemReferralCode = mutation({
       console.log(referree, ":::Update referree xpCount");
       await db.patch(referree?._id as Id<"user">, {
         referralCount: Number(referree?.referralCount) + 1,
-        xpCount: (config?.referralXpCount ?? 5000) + referree.xpCount,
+        referralXp:
+          (config?.referralXpCount ?? 5000) + (referree?.referralXp ?? 0),
       });
       await db.insert("activity", {
         userId: referree?._id,
@@ -186,7 +187,7 @@ export const rewardTaskXp = mutation({
     }
 
     await db.patch(userId, {
-      xpCount: user.xpCount + xpCount,
+      claimedXp: (user?.claimedXp ?? 0) + xpCount,
       completedTasks: user.completedTasks
         ? [...user.completedTasks, taskId]
         : [taskId],
@@ -218,7 +219,7 @@ export const rewardEventXp = mutation({
 
     // Add xp and and reward user
     await db.patch(userId, {
-      xpCount: user.xpCount + xpCount,
+      claimedXp: (user?.claimedXp ?? 0) + xpCount,
       eventsJoined: udpatedEvents,
     });
   },
@@ -278,44 +279,44 @@ export const updateEventsForUser = mutation({
       await db.patch(userId, {
         eventsJoined: user.eventsJoined
           ? [
-            ...user.eventsJoined,
-            {
-              eventId: event._id,
-              completed: false,
-              actions: event.actions.map((action) => {
-                if (action.name === actionName) {
-                  return {
-                    completed: true,
-                    link: action.link,
-                    channel: action.channel,
-                    name: action.name,
-                    type: action.type,
-                  };
-                } else {
-                  return { ...action, completed: false };
-                }
-              }),
-            },
-          ]
+              ...user.eventsJoined,
+              {
+                eventId: event._id,
+                completed: false,
+                actions: event.actions.map((action) => {
+                  if (action.name === actionName) {
+                    return {
+                      completed: true,
+                      link: action.link,
+                      channel: action.channel,
+                      name: action.name,
+                      type: action.type,
+                    };
+                  } else {
+                    return { ...action, completed: false };
+                  }
+                }),
+              },
+            ]
           : [
-            {
-              eventId: event._id,
-              completed: false,
-              actions: event.actions.map((action) => {
-                if (action.name === actionName) {
-                  return {
-                    completed: true,
-                    link: action.link,
-                    channel: action.channel,
-                    name: action.name,
-                    type: action.type,
-                  };
-                } else {
-                  return { ...action, completed: false };
-                }
-              }),
-            },
-          ],
+              {
+                eventId: event._id,
+                completed: false,
+                actions: event.actions.map((action) => {
+                  if (action.name === actionName) {
+                    return {
+                      completed: true,
+                      link: action.link,
+                      channel: action.channel,
+                      name: action.name,
+                      type: action.type,
+                    };
+                  } else {
+                    return { ...action, completed: false };
+                  }
+                }),
+              },
+            ],
       });
     }
   },
@@ -379,7 +380,6 @@ export const beforeMine = internalMutation({
     const user = await db.get(userId);
     const config = await db.query("config").first();
 
-
     // Check if users has boost active before starting mine
     if (!user?.boostStatus?.length) {
       await db.patch(userId, {
@@ -387,7 +387,6 @@ export const beforeMine = internalMutation({
         miningRate: config?.miningCount,
       });
     }
-
   },
 });
 
@@ -458,7 +457,7 @@ export const claimRewards = mutation({
     if (!user?.mineActive && user?.redeemableCount > 0) {
       await db.patch(userId, {
         minedCount: (user?.minedCount ?? 0) + user?.redeemableCount,
-        redeemableCount: 0,
+        redeemableCount: undefined,
       });
     }
   },
@@ -558,9 +557,9 @@ export const activateBoost = mutation({
         mineHours: config.miningHours + boost.rate,
         boostStatus: user?.boostStatus
           ? [
-            ...(user?.boostStatus ?? []),
-            { boostId: boost?.uuid, isActive: true },
-          ]
+              ...(user?.boostStatus ?? []),
+              { boostId: boost?.uuid, isActive: true },
+            ]
           : [{ boostId: boost?.uuid, isActive: true }],
       });
     } else {

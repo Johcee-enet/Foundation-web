@@ -26,6 +26,9 @@ export default defineSchema(
       referralCode: v.optional(v.string()),
       referralCount: v.number(),
       xpCount: v.number(),
+      referralXp: v.optional(v.number()),
+      claimedXp: v.optional(v.number()),
+      multiplier: v.optional(v.number()),
       boostStatus: v.optional(
         v.array(
           v.object({
