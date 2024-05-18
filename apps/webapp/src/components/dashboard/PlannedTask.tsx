@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { FC, useState } from "react";
 import Multiplier from "@/components/dashboard/Multiplier";
 import Boost from "@/components/dashboard/task/Boost";
 import Events from "@/components/dashboard/task/Events";
@@ -13,7 +13,7 @@ import { TiFlash } from "react-icons/ti";
 
 import Tasks from "./task/Tasks";
 
-const PlannedTask = () => {
+const PlannedTask: FC<{ userId: string | null }> = ({ userId }) => {
   const [showMultiplier, setShowMultiplier] = useState(false);
   return (
     <Tabs defaultValue="socialXps" className="drop-shadow-sm">
@@ -53,7 +53,7 @@ const PlannedTask = () => {
       </div>
       <Multiplier toggleru={showMultiplier} />
       <TabsContent value="socialXps" className="tasktab-container-content">
-        <Tasks />
+        <Tasks userId={userId} />
       </TabsContent>
       <TabsContent value="events" className="tasktab-container-content">
         <Events />

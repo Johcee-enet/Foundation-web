@@ -1,7 +1,13 @@
 "use client";
 
-import { FC } from "react";
+import { FC, useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSession } from "@/lib/sessionContext";
+import { useQuery } from "convex/react";
+import { addHours, differenceInSeconds } from "date-fns";
+
+import { api } from "@acme/api/convex/_generated/api";
+import { Id } from "@acme/api/convex/_generated/dataModel";
 
 import MiningStats from "./MiningStats";
 import SocialStats from "./SocialStats";
@@ -10,7 +16,78 @@ const Status: FC<{
   minedCount: number;
   mineRate: number;
   mineHours: number;
-}> = ({ minedCount, mineRate, mineHours }) => {
+  userId: string | null;
+}> = ({ minedCount, mineRate, mineHours, userId }) => {
+  const session = useSession();
+
+  const userDetail = useQuery(api.queries.getUserDetails, {
+    userId: (session?.userId ?? userId) as Id<"user">,
+  });
+  // Embeding
+  // const [tweetEmbedHeight, setTweetEmbedHeight] = useState<number>();
+  const [remaining, setRemaining] = useState<string>("4h 59m 59s");
+
+  useEffect(() => {
+    if (
+      !(userDetail?.mineActive ?? false) &&
+      (userDetail?.redeemableCount ?? 0) > 0
+    ) {
+      // setClaimModalVisible(true);
+    }
+  }, [userDetail?.mineActive, userDetail?.redeemableCount, userDetail]);
+
+  // countdown
+  useEffect(() => {
+    // Function to check if the countdown has ended
+
+    if (userDetail?.mineActive) {
+      checkCountdown({
+        startTime: userDetail.mineStartTime ?? Date.now(),
+        countdownDuration: userDetail?.mineHours,
+      });
+    }
+
+    function checkCountdown({
+      startTime,
+      countdownDuration = 6,
+    }: {
+      startTime: number;
+      countdownDuration: number;
+    }) {
+      // Set the start time of the countdown
+      // const startTime = new Date();
+
+      // Define the duration for the countdown (6 hours)
+      // const countdownDuration = 6;
+
+      // Calculate the end time for the countdown
+      const endTime = addHours(startTime, countdownDuration);
+
+      const currentTime = Date.now();
+      const remainingTime = differenceInSeconds(endTime, currentTime);
+
+      if (remainingTime <= 0) {
+        // Perform the action here
+      } else {
+        // const formattedRemainingTime = formatDuration(
+        //   { seconds: remainingTime },
+        //   { format: ["hours", "minutes", "seconds"] },
+        // );
+        const hours = Math.floor(remainingTime / 3600);
+        const minutes = Math.floor((remainingTime % 3600) / 60);
+        const seconds = remainingTime % 60;
+
+        // Check again after 1 second
+        setTimeout(
+          () => checkCountdown({ startTime, countdownDuration }),
+          1000,
+        );
+
+        setRemaining(`${hours}h ${minutes}m ${seconds}s`);
+      }
+    }
+  }, [userDetail, remaining]);
+
   return (
     <>
       <Tabs defaultValue="mining" className="drop-shadow-sm">
@@ -27,17 +104,20 @@ const Status: FC<{
           <MiningStats
             mined={Number(minedCount ?? 49500.71)}
             mining={Number(mineHours ?? 6)}
-            time={"19hrs  23m  12s"}
+            time={remaining}
             rate={Number(mineRate ?? 0.25)}
+            userId={userId}
           />
         </TabsContent>
         <TabsContent value="social" className="tab-content">
           {/* props for social stats info */}
           <SocialStats
-            earned={35545700}
-            claimed={35500000}
-            referral={500000}
-            multiplier={10}
+            earned={
+              (userDetail?.claimedXp ?? 0) + (userDetail?.referralXp ?? 0) ?? 0
+            }
+            claimed={userDetail?.claimedXp ?? 0}
+            referral={userDetail?.referralXp ?? 0}
+            multiplier={userDetail?.multiplier ?? 0}
           />
         </TabsContent>
       </Tabs>

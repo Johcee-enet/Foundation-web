@@ -29,7 +29,7 @@ const FormSchema = z.object({
 
 const TwitterProfile = () => {
   const { toast } = useToast();
-  const [connected, setConnected] = useState(false);
+  const [connected, setConnected] = useState(true);
   const [auth, setAuth] = useState(false);
 
   // Redeem referral
