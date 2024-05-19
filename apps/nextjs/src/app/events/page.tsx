@@ -734,12 +734,16 @@ function EventDialog({
                     return alert("At least 1 action must be given");
                   }
 
+                  if (!coverStorageId) {
+                    return alert("Upload a cover image");
+                  }
+
                   await createEvent({
-                    title: title as string,
-                    coverStorageId: coverStorageId as Id<"_storage">,
-                    description: description as string,
-                    reward: reward as number,
-                    companyId: companyId as Id<"company">,
+                    title: title!,
+                    coverStorageId: coverStorageId!,
+                    description: description!,
+                    reward: reward!,
+                    companyId: companyId!,
                     actions: actions.map(({ name, link, type, channel }) => ({
                       name,
                       link,
