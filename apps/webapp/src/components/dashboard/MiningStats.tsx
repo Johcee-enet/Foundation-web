@@ -80,15 +80,19 @@ const MiningStats: FC<Mining> = ({ mined, mining, time, rate, userId }) => {
               color: userDetail?.redeemableCount ? "black" : "white",
             }}
             onClick={async () => {
-              await claimReward({
-                userId: (session?.userId ?? userId) as Id<"user">,
-              });
-              toast({
-                title: "Mine reward successfully claimed!",
-              });
+              if (!userDetail?.mineActive) {
+                await claimReward({
+                  userId: (session?.userId ?? userId) as Id<"user">,
+                });
+                toast({
+                  title: "Mine reward successfully claimed!",
+                });
+              } else {
+                toast({ title: "Mining is still ongoing" });
+              }
             }}
           >
-            Claim ${userDetail?.redeemableCount ?? 0} mined token{" "}
+            Claim $FOUND {userDetail?.redeemableCount ?? 0}{" "}
             <BiCoinStack className="shrink-0" />
           </Button>
         )}

@@ -24,7 +24,7 @@ const Tasks: FC<{ userId: string | null }> = ({ userId }) => {
   const session = useSession();
 
   const tasks = useQuery(api.queries.fetchTasks, {
-    userId: session?.userId as Id<"user">,
+    userId: (session?.userId ?? userId) as Id<"user">,
   });
 
   const config = useQuery(api.queries.getAppConfigForApp);

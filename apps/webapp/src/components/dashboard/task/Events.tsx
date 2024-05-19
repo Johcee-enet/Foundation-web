@@ -1,5 +1,6 @@
 "use client";
 
+import { FC } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Event from "@/assets/eventimg.png";
@@ -26,16 +27,16 @@ import { Id } from "@acme/api/convex/_generated/dataModel";
 
 import TaskCompleted from "../TaskCompleted";
 
-const Events = () => {
+const Events: FC<{ userId: string }> = ({ userId }) => {
   const session = useSession();
 
   // Get tasks and events
   const fetchEvents = useQuery(api.queries.fetchEvents, {
-    userId: session?.userId as Id<"user">,
+    userId: (session?.userId ?? userId) as Id<"user">,
   });
 
   const user = useQuery(api.queries.getUserDetails, {
-    userId: session?.userId as Id<"user">,
+    userId: (session?.userId ?? userId) as Id<"user">,
   });
 
   return (
@@ -63,25 +64,13 @@ const Events = () => {
                     >
                       <div className="flex w-full items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="icon-container">
-                            {/* {item.type == "invite" && !items.completed && (
-                          <HiMiniUserGroup />
-                        )}
-                        {items.type == "twitter" && !items.completed && (
-                          <FaXTwitter />
-                        )}
-                        {items.type == "discord" && !items.completed && (
-                          <FaDiscord />
-                        )}
-                        {items.type == "telegram" && !items.completed && (
-                          <FaTelegramPlane />
-                        )}
-                        {items.completed && <FaCircleCheck />} */}
-
-                            <Image
+                          <div className="icon-container rounded-md border border-white/20 p-1">
+                            <img
                               src={item?.company?.logoUrl}
+                              width={"100%"}
+                              height={"100%"}
                               alt="Company logo"
-                              className="h-6 w-6"
+                              className="rounded-sm"
                             />
                           </div>
                           <div className="text-left">
@@ -120,21 +109,27 @@ const Events = () => {
 
                   <DrawerContent className="foreground large-screen pb-4">
                     <div className="mx-auto h-fit max-h-[85vh] w-full overflow-y-auto px-5">
-                      <DrawerHeader>
+                      <DrawerHeader className="h-auto">
                         {item?.company?.logoUrl && (
-                          <DrawerTitle className="relative h-52 ">
-                            <Image
+                          <DrawerTitle className="relative max-h-16 w-full">
+                            <img
                               src={item?.company?.logoUrl}
-                              fill={true}
                               sizes="100%"
                               alt="event"
+                              className="absolute left-2 top-2 h-14 w-14 rounded-md"
+                            />
+                            <img
+                              src={item?.coverUrl!}
+                              sizes="100%"
+                              alt="cover-img"
+                              className="rounded-md"
                             />
                           </DrawerTitle>
                         )}
 
                         <DrawerDescription className="flex items-center justify-between pt-2 text-black dark:text-white">
-                          <h2 className="text-xl font-semibold">
-                            Enetecosystem
+                          <h2 className="text-xl font-semibold text-white">
+                            {item?.title}
                           </h2>{" "}
                           <span className="text-base text-[#989898]">
                             Reward:{" "}
@@ -229,76 +224,3 @@ const Events = () => {
 };
 
 export default Events;
-
-const ecosystemTaskList = [
-  {
-    name: "Join Discord",
-    reward: 2000,
-    link: "https://discord.gg/RQqVWPxuwq",
-    type: "discord",
-    completed: false,
-    details: {
-      image: Event,
-      title: "Enetecosystem",
-      reward: 100000,
-      description:
-        "E•network/Enetecosystem is a web3 company delivering an extensive array of infrastructural products and technology solutions",
-      tasks: [
-        {
-          task: "Visit Website",
-          type: "website",
-          completed: true,
-        },
-        {
-          task: "Follow On X (Twitter)",
-          type: "twitter",
-          completed: true,
-        },
-        {
-          task: "Join Telegram",
-          type: "telegram",
-          completed: false,
-        },
-        {
-          task: "Join Telegram Channel",
-          type: "telegram",
-          completed: false,
-        },
-        {
-          task: "Join Discord",
-          type: "discord",
-          completed: false,
-        },
-      ],
-    },
-  },
-
-  {
-    name: "Join Telegram Channel",
-    reward: 2000,
-    link: "https://t.me/enetecosystem",
-    type: "telegram",
-    completed: false,
-  },
-  {
-    name: "Invite 10 Friends",
-    reward: 10000,
-    link: "/",
-    type: "invite",
-    completed: false,
-  },
-  {
-    name: "Join Telegram",
-    reward: 2000,
-    link: "https://t.me/enetworkchannel",
-    type: "telegram",
-    completed: false,
-  },
-  {
-    name: "Follow On X(Twitter)",
-    reward: 2000,
-    link: "https://twitter.com/Enetecosystem",
-    type: "twitter",
-    completed: true,
-  },
-];

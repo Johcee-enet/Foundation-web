@@ -56,7 +56,7 @@ const PlannedTask: FC<{ userId: string | null }> = ({ userId }) => {
         <Tasks userId={userId} />
       </TabsContent>
       <TabsContent value="events" className="tasktab-container-content">
-        <Events />
+        <Events userId={userId} />
       </TabsContent>
       <TabsContent value="boost" className="tasktab-container-content">
         <Boost />
