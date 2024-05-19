@@ -208,8 +208,13 @@ export const fetchEvents = query({
           company?.logoStorageId as Id<"_storage">,
         );
 
+        const coverUrl = await storage?.getUrl(
+          event?.coverStorageId as Id<"_storage">,
+        );
+
         return {
           ...event,
+          coverUrl,
           company: {
             ...company,
             logoUrl: logoUrl ?? "",

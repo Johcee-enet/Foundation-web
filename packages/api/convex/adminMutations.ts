@@ -124,6 +124,8 @@ export const createEvent = mutationWithAuth({
     await ctx.db.insert("events", {
       title: args.title,
       reward: args.reward,
+      description: args.description,
+      coverStorageId: args.coverStorageId,
       companyId: args.companyId,
       actions: args.actions,
     }),
@@ -160,6 +162,8 @@ export const updateEvent = mutationWithAuth({
     await ctx.db.replace(args.eventId, {
       title: args.title,
       reward: args.reward,
+      description: args.description,
+      coverStorageId: args.coverStorageId,
       companyId: args.companyId,
       actions: args.actions,
     }),
