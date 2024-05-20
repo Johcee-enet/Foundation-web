@@ -226,23 +226,33 @@ const Events: FC<{ userId: string }> = ({ userId }) => {
                         </ul>
                       </div>
                       <DrawerFooter>
+                        {/* Close event Drawer sheet and complete event if all tasks are completed */}
                         <DrawerClose asChild>
                           <TaskCompleted
                             isEventCompleted={event?.completed}
                             reward={item?.reward}
                             onClick={async () => {
-                              setDrawerOpen(false);
+                              try {
+                                setDrawerOpen(false);
 
-                              if (event?.completed) {
-                                toast({
+                                if (event?.completed) {
+                                  toast({
+                                    title:
+                                      "All tasks in event has been completed!",
+                                  });
+                                } else {
+                                  await completeEvent({
+                                    userId: (user?._id ?? userId) as Id<"user">,
+                                    eventId: item?._id,
+                                    xpCount: item?.reward,
+                                  });
+                                }
+                              } catch (err: any) {
+                                console.log(err, ":::OnEventComplete_error");
+                                return toast({
                                   title:
-                                    "All tasks in event has been completed!",
-                                });
-                              } else {
-                                await completeEvent({
-                                  userId: (user?._id ?? userId) as Id<"user">,
-                                  eventId: item?._id,
-                                  xpCount: item?.reward,
+                                    "Something went wrong completing event",
+                                  variant: "default",
                                 });
                               }
                             }}
