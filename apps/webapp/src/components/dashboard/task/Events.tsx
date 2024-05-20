@@ -1,6 +1,6 @@
 "use client";
 
-import { FC } from "react";
+import { FC, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Event from "@/assets/eventimg.png";
@@ -14,8 +14,10 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { useToast } from "@/components/ui/use-toast";
 import { useSession } from "@/lib/sessionContext";
-import { useQuery } from "convex/react";
+import { delay } from "@/lib/utils";
+import { useMutation, useQuery } from "convex/react";
 import { BsGlobe } from "react-icons/bs";
 import { FaDiscord, FaTelegramPlane } from "react-icons/fa";
 import { FaCircleCheck, FaXTwitter } from "react-icons/fa6";
@@ -24,11 +26,13 @@ import { IoIosArrowForward } from "react-icons/io";
 
 import { api } from "@acme/api/convex/_generated/api";
 import { Id } from "@acme/api/convex/_generated/dataModel";
+import { rewardEventXp } from "@acme/api/convex/mutations";
 
 import TaskCompleted from "../TaskCompleted";
 
 const Events: FC<{ userId: string }> = ({ userId }) => {
   const session = useSession();
+  const { toast } = useToast();
 
   // Get tasks and events
   const fetchEvents = useQuery(api.queries.fetchEvents, {
@@ -39,25 +43,36 @@ const Events: FC<{ userId: string }> = ({ userId }) => {
     userId: (session?.userId ?? userId) as Id<"user">,
   });
 
+  // Event interaction api functions
+  const completeEvent = useMutation(api.mutations.rewardEventXp);
+  const updateEventTaskStatus = useMutation(api.mutations.updateEventsForUser);
+
+  // drawer controls
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
   return (
     <div>
       <ul className="grid gap-4">
         {fetchEvents &&
           fetchEvents.map((item, ki) => {
-            const completedEvent = user?.eventsJoined?.find(
+            const event = user?.eventsJoined?.find(
               (joined) => joined?.eventId === item?._id,
             );
 
             return (
               <li key={ki} className="task-list">
-                <Drawer>
+                <Drawer
+                  open={drawerOpen}
+                  // onOpenChange={(open) => setDrawerOpen(open)}
+                >
                   <DrawerTrigger asChild>
                     <button
                       className={`w-full px-5 py-4 ${
-                        completedEvent ? "opacity-30" : ""
+                        event?.completed ? "opacity-30" : ""
                       } block space-y-2`}
                       onClick={(e) => {
-                        if (completedEvent) {
+                        setDrawerOpen(true);
+                        if (event) {
                           e.preventDefault();
                         }
                       }}
@@ -80,14 +95,14 @@ const Events: FC<{ userId: string }> = ({ userId }) => {
                           </div>
                         </div>
                         <div>
-                          {!completedEvent && (
+                          {!event?.completed && (
                             <IoIosArrowForward className="text-xl text-black dark:text-white" />
                           )}
                         </div>{" "}
                       </div>
                       <div className="text-left">
                         <p className="background inline-block rounded-full px-2 py-1 text-lg font-semibold text-[#767676]">
-                          {completedEvent ? (
+                          {event?.completed ? (
                             "Completed"
                           ) : (
                             <span>
@@ -110,29 +125,30 @@ const Events: FC<{ userId: string }> = ({ userId }) => {
                   <DrawerContent className="foreground large-screen pb-4">
                     <div className="mx-auto h-fit max-h-[85vh] w-full overflow-y-auto px-5">
                       <DrawerHeader className="h-auto">
-                        {item?.company?.logoUrl && (
-                          <DrawerTitle className="relative max-h-16 w-full">
-                            <img
-                              src={item?.company?.logoUrl}
-                              sizes="100%"
-                              alt="event"
-                              className="absolute left-2 top-2 h-14 w-14 rounded-md"
-                            />
-                            <img
-                              src={item?.coverUrl!}
-                              sizes="100%"
-                              alt="cover-img"
-                              className="rounded-md"
-                            />
-                          </DrawerTitle>
-                        )}
+                        {/* {!item?.company?.logoUrl && ( */}
+                        {/* <DrawerTitle className="max-h-16 w-full"> */}
+                        <div className="relative">
+                          <img
+                            src={item?.company?.logoUrl}
+                            sizes="100%"
+                            alt="event"
+                            className="absolute left-2 top-2 h-14 w-14 rounded-md"
+                          />
+                          <img
+                            src={item?.coverUrl!}
+                            sizes="100%"
+                            alt="cover-img"
+                            className="rounded-lg"
+                          />
+                        </div>
+                        {/* </DrawerTitle> */}
+                        {/* )} */}
 
                         <DrawerDescription className="flex items-center justify-between pt-2 text-black dark:text-white">
-                          <h2 className="text-xl font-semibold text-white">
+                          <h2 className="text-2xl font-semibold text-white">
                             {item?.title}
                           </h2>{" "}
-                          <span className="text-base text-[#989898]">
-                            Reward:{" "}
+                          <span className="text-bold rounded-2xl bg-[#D9D9D9] px-4 py-1 text-[#767676]">
                             {Number(item?.reward ?? 0).toLocaleString("en-US", {
                               maximumFractionDigits: 2,
                               minimumFractionDigits: 2,
@@ -147,10 +163,9 @@ const Events: FC<{ userId: string }> = ({ userId }) => {
                       <div className="p-4 pb-0">
                         <ul className="grid gap-5">
                           {item?.actions?.map((action, idx) => {
-                            const completedAction =
-                              completedEvent?.actions?.find(
-                                (val) => val?.name === action?.name,
-                              );
+                            const completedAction = event?.actions?.find(
+                              (val) => val?.name === action?.name,
+                            );
 
                             return (
                               <li key={idx}>
@@ -160,9 +175,17 @@ const Events: FC<{ userId: string }> = ({ userId }) => {
                                   className={`flex items-center justify-between py-2 ${
                                     completedAction?.completed && "opacity-30"
                                   }`}
-                                  onClick={(e) => {
+                                  onClick={async (e) => {
                                     if (completedAction?.completed) {
                                       e.preventDefault();
+                                    } else {
+                                      await delay(2);
+                                      await updateEventTaskStatus({
+                                        userId: (user?._id ??
+                                          userId) as Id<"user">,
+                                        eventId: item?._id,
+                                        actionName: action?.name!,
+                                      });
                                     }
                                   }}
                                 >
@@ -204,7 +227,26 @@ const Events: FC<{ userId: string }> = ({ userId }) => {
                       </div>
                       <DrawerFooter>
                         <DrawerClose asChild>
-                          <TaskCompleted reward={item?.reward} />
+                          <TaskCompleted
+                            isEventCompleted={event?.completed}
+                            reward={item?.reward}
+                            onClick={async () => {
+                              setDrawerOpen(false);
+
+                              if (event?.completed) {
+                                toast({
+                                  title:
+                                    "All tasks in event has been completed!",
+                                });
+                              } else {
+                                await completeEvent({
+                                  userId: (user?._id ?? userId) as Id<"user">,
+                                  eventId: item?._id,
+                                  xpCount: item?.reward,
+                                });
+                              }
+                            }}
+                          />
                         </DrawerClose>
                       </DrawerFooter>
                     </div>
