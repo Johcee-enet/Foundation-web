@@ -1,8 +1,8 @@
 import { mutationWithAuth } from "@convex-dev/convex-lucia-auth";
-import { Id } from "convex/dist/cjs-types/values/value";
 import { ConvexError, v } from "convex/values";
 
 import { query } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
 
 export const generateUploadUrl = mutationWithAuth({
   args: {
