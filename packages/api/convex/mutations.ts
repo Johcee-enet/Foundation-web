@@ -422,7 +422,7 @@ export const mine = internalMutation({
 
         await db.patch(userId, {
           mineActive: false,
-          // boostStatus: undefined,
+          boostStatus: undefined,
           // mineHours: config?.miningHours,
           // miningRate: config?.miningCount,
           redeemableCount:
@@ -457,7 +457,7 @@ export const claimRewards = mutation({
     if (!user?.mineActive && user?.redeemableCount > 0) {
       await db.patch(userId, {
         minedCount: (user?.minedCount ?? 0) + user?.redeemableCount,
-        redeemableCount: undefined,
+        redeemableCount: 0,
       });
     }
   },
@@ -487,6 +487,48 @@ export const deleteAdConfig = mutationWithAuth({
   args: { adConfigId: v.id("ads") },
   handler: async ({ db }, { adConfigId }) => {
     await db.delete(adConfigId);
+  },
+});
+
+// Buy XP with Mined $FOUND
+export const buyXP = mutation({
+  args: { userId: v.id("user") },
+  handler: async ({ db }, { userId }) => {
+    const user = await db.get(userId);
+    const config = await db.query("config").first();
+    if (!user) {
+      throw new ConvexError({
+        message: "User not found",
+        code: 404,
+        status: "failed",
+      });
+    }
+
+    if (!config) {
+      throw new ConvexError({
+        message: "Config not found",
+        code: 404,
+        status: "failed",
+      });
+    }
+
+    // Check users mined count is not below minimum
+    if ((user.minedCount ?? 0) < (config.minimumSaleToken ?? 0)) {
+      throw new ConvexError({
+        message: "Insufficient $FOUND amount for XP",
+        code: 401,
+        status: "failed",
+      });
+    }
+
+    const xpAmountTopup =
+      (config?.minimumSaleToken ?? 0) * (config?.xpPerToken ?? 0);
+
+    // Debit minedCount and credit xpCount amount
+    await db.patch(userId, {
+      minedCount: (user?.minedCount ?? 0) - (config?.minimumSaleToken ?? 0),
+      xpCount: user?.xpCount + xpAmountTopup,
+    });
   },
 });
 
