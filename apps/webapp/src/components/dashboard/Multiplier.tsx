@@ -1,24 +1,242 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Vector from "@/assets/Vector.svg";
+import { useSession } from "@/lib/sessionContext";
+import { useMutation, useQuery } from "convex/react";
+import { PiTrendDownLight } from "react-icons/pi";
+
+import { api } from "@acme/api/convex/_generated/api";
+import { Id } from "@acme/api/convex/_generated/dataModel";
 
 type TogglerSystem = {
   toggleru: boolean;
+  userId: string | null;
 };
 
 const Multiplier = (props: TogglerSystem) => {
+  const session = useSession();
+  const userDetails = useQuery(api.queries.getUserDetails, {
+    userId: (props?.userId ?? session?.userId) as Id<"user">,
+  });
+  const [multipliers, setMultipliers] = useState([
+    {
+      value: 500000,
+      percent: 5,
+      achieved: false,
+    },
+    {
+      value: 700000,
+      percent: 10,
+      achieved: false,
+    },
+    {
+      value: 5000000,
+      percent: 15,
+      achieved: false,
+    },
+    {
+      value: 10000000,
+      percent: 20,
+      achieved: false,
+    },
+    {
+      value: 50000000,
+      percent: 25,
+      achieved: false,
+    },
+  ]);
+
+  useEffect(() => {
+    if (userDetails?.multiplier) {
+      if (userDetails?.multiplier === 5) {
+        setMultipliers([
+          {
+            value: 500000,
+            percent: 5,
+            achieved: true,
+          },
+          {
+            value: 700000,
+            percent: 10,
+            achieved: false,
+          },
+          {
+            value: 5000000,
+            percent: 15,
+            achieved: false,
+          },
+          {
+            value: 10000000,
+            percent: 20,
+            achieved: false,
+          },
+          {
+            value: 50000000,
+            percent: 25,
+            achieved: false,
+          },
+        ]);
+      } else if (userDetails?.multiplier === 10) {
+        setMultipliers([
+          {
+            value: 500000,
+            percent: 5,
+            achieved: true,
+          },
+          {
+            value: 700000,
+            percent: 10,
+            achieved: true,
+          },
+          {
+            value: 5000000,
+            percent: 15,
+            achieved: false,
+          },
+          {
+            value: 10000000,
+            percent: 20,
+            achieved: false,
+          },
+          {
+            value: 50000000,
+            percent: 25,
+            achieved: false,
+          },
+        ]);
+      } else if (userDetails?.multiplier === 15) {
+        setMultipliers([
+          {
+            value: 500000,
+            percent: 5,
+            achieved: true,
+          },
+          {
+            value: 700000,
+            percent: 10,
+            achieved: true,
+          },
+          {
+            value: 5000000,
+            percent: 15,
+            achieved: true,
+          },
+          {
+            value: 10000000,
+            percent: 20,
+            achieved: false,
+          },
+          {
+            value: 50000000,
+            percent: 25,
+            achieved: false,
+          },
+        ]);
+      } else if (userDetails?.multiplier === 20) {
+        setMultipliers([
+          {
+            value: 500000,
+            percent: 5,
+            achieved: true,
+          },
+          {
+            value: 700000,
+            percent: 10,
+            achieved: true,
+          },
+          {
+            value: 5000000,
+            percent: 15,
+            achieved: true,
+          },
+          {
+            value: 10000000,
+            percent: 20,
+            achieved: true,
+          },
+          {
+            value: 50000000,
+            percent: 25,
+            achieved: false,
+          },
+        ]);
+      } else if (userDetails?.multiplier === 25) {
+        setMultipliers([
+          {
+            value: 500000,
+            percent: 5,
+            achieved: true,
+          },
+          {
+            value: 700000,
+            percent: 10,
+            achieved: true,
+          },
+          {
+            value: 5000000,
+            percent: 15,
+            achieved: true,
+          },
+          {
+            value: 10000000,
+            percent: 20,
+            achieved: true,
+          },
+          {
+            value: 50000000,
+            percent: 25,
+            achieved: true,
+          },
+        ]);
+      } else {
+        setMultipliers([
+          {
+            value: 500000,
+            percent: 5,
+            achieved: false,
+          },
+          {
+            value: 700000,
+            percent: 10,
+            achieved: false,
+          },
+          {
+            value: 5000000,
+            percent: 15,
+            achieved: false,
+          },
+          {
+            value: 10000000,
+            percent: 20,
+            achieved: false,
+          },
+          {
+            value: 50000000,
+            percent: 25,
+            achieved: false,
+          },
+        ]);
+      }
+    }
+  }, [userDetails]);
+
   return (
     <div
-      className={` mx-auto my-3 max-w-lg ${props.toggleru ? "block" : "hidden"} flex items-center gap-2 overflow-y-scroll px-5 pb-5`}
+      className={` mx-auto my-3 max-w-lg ${props.toggleru ? "block" : "hidden"} flex items-center gap-4 overflow-y-scroll px-5 pb-5`}
     >
-      {multiSample.map((items, idx) => (
+      {multipliers.map((items, idx) => (
         <div
           key={idx}
-          className={`h-32 w-28 ${items.achieved ? " " : "opacity-20"} relative flex shrink-0 items-center justify-center object-contain text-[11px] text-white`}
+          className={`h-48 w-36 ${items.achieved ? " " : "opacity-20"} relative flex shrink-0 items-center justify-center object-contain text-[11px] text-white`}
         >
           <Image src={Vector} alt="multiplier" fill={true} sizes="100%" />
           <div className="relative z-10 text-center font-semibold">
-            <p>{items.value}</p>
+            <p>
+              {Number(items.value).toLocaleString("en-US", {
+                maximumFractionDigits: 0,
+                minimumFractionDigits: 0,
+              })}
+            </p>
             <p>XP</p>
             <span className="text-sm text-[#18EAFF]">+{items.percent}%</span>
           </div>
@@ -29,31 +247,3 @@ const Multiplier = (props: TogglerSystem) => {
 };
 
 export default Multiplier;
-
-const multiSample = [
-  {
-    value: 20000,
-    percent: 5,
-    achieved: true,
-  },
-  {
-    value: 60000,
-    percent: 10,
-    achieved: true,
-  },
-  {
-    value: 200000,
-    percent: 15,
-    achieved: false,
-  },
-  {
-    value: 500000,
-    percent: 20,
-    achieved: false,
-  },
-  {
-    value: 1500000,
-    percent: 25,
-    achieved: false,
-  },
-];

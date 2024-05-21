@@ -75,7 +75,7 @@ const BoostItems: FC<{
             <li key={ki} className="dark:bg-primary-dark rounded-xl bg-white">
               <button
                 className={`w-full px-5 py-4 ${
-                  item.completed ? "opacity-30" : ""
+                  activeBoost?.isActive ? "opacity-30" : ""
                 } block space-y-2`}
                 onClick={async (e) => {
                   try {

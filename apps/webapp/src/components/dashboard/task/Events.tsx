@@ -4,6 +4,8 @@ import { FC, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Event from "@/assets/eventimg.png";
+import { Loader } from "@/components/loader";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   Drawer,
   DrawerClose,
@@ -16,7 +18,7 @@ import {
 } from "@/components/ui/drawer";
 import { useToast } from "@/components/ui/use-toast";
 import { useSession } from "@/lib/sessionContext";
-import { delay } from "@/lib/utils";
+import { delay, getErrorMsg } from "@/lib/utils";
 import { useMutation, useQuery } from "convex/react";
 import { BsGlobe } from "react-icons/bs";
 import { FaDiscord, FaTelegramPlane } from "react-icons/fa";
@@ -50,8 +52,19 @@ const Events: FC<{ userId: string | null }> = ({ userId }) => {
   // drawer controls
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  // Loader controls
+  const [isLoading, setIsLoading] = useState(false);
+
   return (
     <div>
+      <Dialog open={isLoading}>
+        <DialogContent
+          hideCloseBtn
+          className="border-none bg-transparent shadow-none"
+        >
+          <Loader color="white" />
+        </DialogContent>
+      </Dialog>
       <ul className="grid gap-4">
         {fetchEvents &&
           fetchEvents.map((item, ki) => {
@@ -233,9 +246,11 @@ const Events: FC<{ userId: string | null }> = ({ userId }) => {
                             reward={item?.reward}
                             onClick={async () => {
                               try {
+                                setIsLoading(true);
                                 setDrawerOpen(false);
 
                                 if (event?.completed) {
+                                  setIsLoading(false);
                                   toast({
                                     title:
                                       "All tasks in event has been completed!",
@@ -246,13 +261,14 @@ const Events: FC<{ userId: string | null }> = ({ userId }) => {
                                     eventId: item?._id,
                                     xpCount: item?.reward,
                                   });
+                                  setIsLoading(false);
                                 }
                               } catch (err: any) {
+                                setIsLoading(false);
                                 console.log(err, ":::OnEventComplete_error");
+                                const errMsg = getErrorMsg(err);
                                 return toast({
-                                  title:
-                                    "Something went wrong completing event",
-                                  variant: "default",
+                                  title: errMsg,
                                 });
                               }
                             }}

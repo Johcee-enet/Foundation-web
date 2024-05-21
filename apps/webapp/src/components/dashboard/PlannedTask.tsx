@@ -51,7 +51,7 @@ const PlannedTask: FC<{ userId: string | null }> = ({ userId }) => {
           />
         </Button>
       </div>
-      <Multiplier toggleru={showMultiplier} />
+      <Multiplier toggleru={showMultiplier} userId={userId} />
       <TabsContent value="socialXps" className="tasktab-container-content">
         <Tasks userId={userId} />
       </TabsContent>
@@ -59,7 +59,7 @@ const PlannedTask: FC<{ userId: string | null }> = ({ userId }) => {
         <Events userId={userId} />
       </TabsContent>
       <TabsContent value="boost" className="tasktab-container-content">
-        <Boost />
+        <Boost userId={userId} />
       </TabsContent>
     </Tabs>
   );
