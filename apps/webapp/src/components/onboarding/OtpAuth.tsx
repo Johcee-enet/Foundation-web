@@ -38,7 +38,7 @@ const OtpAuth = ({
   email,
 }: {
   userId: string | null;
-  email: string;
+  email: string | null;
 }) => {
   const router = useRouter();
   const { toast } = useToast();

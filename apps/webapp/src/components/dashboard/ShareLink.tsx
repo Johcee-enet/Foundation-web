@@ -22,7 +22,7 @@ import { IoCopyOutline } from "react-icons/io5";
 import { api } from "@acme/api/convex/_generated/api";
 import { Doc, Id } from "@acme/api/convex/_generated/dataModel";
 
-const ShareLink: FC<{ referralCode: string }> = ({ referralCode }) => {
+const ShareLink: FC<{ referralCode: string | undefined }> = ({ referralCode }) => {
   const { toast } = useToast();
 
   const session = useSession();
