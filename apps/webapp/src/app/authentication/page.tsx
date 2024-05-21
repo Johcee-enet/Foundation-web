@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import AppleAuth from "@/components/onboarding/AppleAuth";
 import Authentication from "@/components/onboarding/Authentication";
 import GoogleAuth from "@/components/onboarding/GoogleAuth";
@@ -10,6 +11,8 @@ import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const [login, setLogin] = useState<HTMLButtonElement | boolean>(false);
+  const searchParams = useSearchParams();
+  const ref = searchParams.get("ref");
 
   return (
     <main className="flex flex-col">
@@ -28,7 +31,7 @@ export default function Home() {
 
       {/* Form Authentication */}
 
-      <Authentication login={login} />
+      <Authentication login={login} refCode={ref} />
       {!login ? (
         <div className="my-5 space-y-5 text-center">
           <span className="text-lg text-[#6A6A6A]">Or continue with</span>
