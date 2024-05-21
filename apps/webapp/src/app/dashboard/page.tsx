@@ -22,8 +22,8 @@ export type EventType = Partial<Doc<"events">> & {
 };
 
 const Dashboard = () => {
-  const searchParams = useSearchParams();
   const session = useSession();
+  const searchParams = useSearchParams();
 
   const userId = searchParams.get("userId");
 
@@ -44,6 +44,19 @@ const Dashboard = () => {
   const updateEventAction = useMutation(api.mutations.updateEventsForUser);
   const activateBoost = useMutation(api.mutations.activateBoost);
 
+  // refLInk
+  const [refLink, setRefLink] = useState<string>();
+
+  useEffect(() => {
+    if (userDetail) {
+      setRefLink(
+        process.env.NODE_ENV === "development"
+          ? `http://localhost:3000?ref=${userDetail?.referralCode}`
+          : `https://${process.env.NEXT_PUBLIC_VERCEL_URL}?ref=${userDetail?.referralCode}`,
+      );
+    }
+  }, [userDetail]);
+
   return (
     <main className="container pb-10 pt-32">
       <Header nickname={userDetail?.nickname} />
@@ -58,10 +71,17 @@ const Dashboard = () => {
         rank={userDetail?.globalRank ?? 1000}
         referrals={userDetail?.referralCount ?? 16}
         users={userDetail?.totalUserCount ?? 0}
-        referralCode={userDetail?.referralCode ?? "gzrhjtw5"}
+        referralCode={refLink ?? "gzrhjtw5"}
       />
       <div className="my-10">
-        <Link href={"/dashboard/referral"} className="referral-container">
+        <Link
+          href={
+            userId
+              ? `/dashboard/referral?userId=${userId}`
+              : "/dashboard/referral"
+          }
+          className="referral-container"
+        >
           <div className="rounded-lg bg-[#f5f5f5] p-3 dark:bg-[#23262D]">
             <HiMiniUserGroup className="text-4xl text-black dark:text-white" />
           </div>

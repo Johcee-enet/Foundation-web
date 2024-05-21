@@ -1,6 +1,7 @@
 "use client";
 
 import React, { FC, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import ShareLink from "@/components/dashboard/ShareLink";
 import { Loader } from "@/components/loader";
 import ReturnHeader from "@/components/ReturnHeader";
@@ -12,11 +13,18 @@ import { Doc, Id } from "@acme/api/convex/_generated/dataModel";
 
 function Referral() {
   const session = useSession();
+  const searchParams = useSearchParams();
+
+  const userId = searchParams.get("userId");
 
   const referrals: Doc<"activity">[] | undefined = useQuery(
     api.queries.getOnlyXpHistory,
-    { userId: session?.userId as Id<"user"> },
+    { userId: (session?.userId ?? userId) as Id<"user"> },
   );
+
+  const user = useQuery(api.queries.getUserDetails, {
+    userId: (session?.userId ?? userId) as Id<"user">,
+  });
 
   return (
     <main className="pt-32">
@@ -31,7 +39,7 @@ function Referral() {
               Your friends get 1000 Xp upon sign up, task completion and must be
               active for 5 days.
             </p>
-            <ShareLink />
+            <ShareLink referralCode={user?.referralCode} />
           </div>
         </div>
         <div className="dark:bg-primary-dark rounded-t-3xl bg-white p-5 pb-10 drop-shadow md:p-10 lg:px-20">
@@ -70,19 +78,3 @@ const ReferralItem: FC<{ referrals: Doc<"activity">[] | undefined }> = ({
 };
 
 export default Referral;
-
-const referral = [
-  "Johcee joined via your link",
-  "Johcee joined via your link",
-  "Johcee joined via your link",
-  "Johcee joined via your link",
-  "Johcee joined via your link",
-  "Johcee joined via your link",
-  "Johcee joined via your link",
-  "Johcee joined via your link",
-  "Johcee joined via your link",
-  "Johcee joined via your link",
-  "Johcee joined via your link",
-  "Johcee joined via your link",
-  "Johcee joined via your link",
-];
