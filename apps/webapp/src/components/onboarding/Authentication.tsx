@@ -21,7 +21,7 @@ import { api } from "@acme/api/convex/_generated/api";
 import { useToast } from "../ui/use-toast";
 import { formSchema } from "./FormShema";
 
-const Authentication = ({ login }: any) => {
+const Authentication = ({ login, refCode }: any) => {
   const router = useRouter();
   const { toast } = useToast();
   // Convex function to mutate lgoin and signup
@@ -65,7 +65,10 @@ const Authentication = ({ login }: any) => {
         router.push(`/dashboard?userId=${user?._id}`);
       } else {
         // Call sign up convex function
-        const userId = await signUp({ email: values?.email });
+        const userId = await signUp({
+          email: values?.email,
+          referreeCode: refCode,
+        });
         // Set session before pushing
         sessionStorage.setItem(
           "fd-session",

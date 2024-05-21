@@ -131,7 +131,11 @@ const BoostItems: FC<{
                       <div>
                         <p className="inline-block rounded-lg bg-[#D9D9D9] px-2 py-1 text-base font-semibold text-[#767676]">
                           <span>
-                            {Number(item?.xpCost ?? 0).toLocaleString("en-US", {
+                            {Number(
+                              activeBoost && activeBoost?.isActive
+                                ? activeBoost?.currentXpCost
+                                : item?.xpCost,
+                            ).toLocaleString("en-US", {
                               maximumFractionDigits: 2,
                               minimumFractionDigits: 2,
                             })}{" "}

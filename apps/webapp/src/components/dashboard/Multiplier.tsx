@@ -217,6 +217,34 @@ const Multiplier = (props: TogglerSystem) => {
           },
         ]);
       }
+    } else {
+      setMultipliers([
+        {
+          value: 500000,
+          percent: 5,
+          achieved: false,
+        },
+        {
+          value: 700000,
+          percent: 10,
+          achieved: false,
+        },
+        {
+          value: 5000000,
+          percent: 15,
+          achieved: false,
+        },
+        {
+          value: 10000000,
+          percent: 20,
+          achieved: false,
+        },
+        {
+          value: 50000000,
+          percent: 25,
+          achieved: false,
+        },
+      ]);
     }
   }, [userDetails]);
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { FC, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,15 +22,25 @@ import { IoCopyOutline } from "react-icons/io5";
 import { api } from "@acme/api/convex/_generated/api";
 import { Doc, Id } from "@acme/api/convex/_generated/dataModel";
 
-const ShareLink = () => {
+const ShareLink: FC<{ referralCode: string }> = ({ referralCode }) => {
   const { toast } = useToast();
-  const referral = "https://ui.shadcn.com/docs/installation";
 
   const session = useSession();
+  const [refLink, setRefLink] = useState<string>();
 
-  const user: Doc<"user"> | undefined = useQuery(api.queries.getUserDetails, {
-    userId: session?.userId as Id<"user">,
-  });
+  // const user: Doc<"user"> | undefined = useQuery(api.queries.getUserDetails, {
+  //   userId: session?.userId as Id<"user">,
+  // });
+
+  useEffect(() => {
+    if (referralCode) {
+      setRefLink(
+        process.env.NODE_ENV === "development"
+          ? `http://localhost:3000?ref=${referralCode}`
+          : `https://${process.env.NEXT_PUBLIC_VERCEL_URL}?ref=${referralCode}`,
+      );
+    }
+  }, [referralCode]);
 
   return (
     <Dialog>
@@ -54,15 +65,15 @@ const ShareLink = () => {
             <Input
               className="foreground border-0"
               id="link"
-              defaultValue={user && user?.referralCode}
+              defaultValue={refLink && refLink}
               readOnly
             />
           </div>
           <CopyToClipboard
-            text={user ? (user?.referralCode ? user.referralCode : "") : ""}
+            text={referralCode ? (refLink ? refLink : "") : ""}
             onCopy={() => {
               toast({
-                title: user && user?.referralCode,
+                title: refLink && refLink,
                 description: "You have successfully copied your referral link",
               });
             }}

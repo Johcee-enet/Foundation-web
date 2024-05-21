@@ -123,10 +123,25 @@ export const redeemReferralCode = mutation({
     if (referree) {
       // Patch referree count
       console.log(referree, ":::Update referree xpCount");
+      const currentMultiEffectReward = referree?.multiplier
+        ? (config?.referralXpCount ?? 5000) * (referree?.multiplier / 100)
+        : 0;
+      const totalXpCount =
+        (referree?.xpCount ?? 0) +
+        (referree?.claimedXp ?? 0) +
+        (config?.referralXpCount ?? 5000) +
+        currentMultiEffectReward +
+        (referree?.referralXp ?? 0);
+      const multiplier = activateMultiplier(totalXpCount);
+
       await db.patch(referree?._id as Id<"user">, {
         referralCount: Number(referree?.referralCount) + 1,
         referralXp:
-          (config?.referralXpCount ?? 5000) + (referree?.referralXp ?? 0),
+          (config?.referralXpCount ?? 5000) +
+          currentMultiEffectReward +
+          (referree?.referralXp ?? 0),
+        xpCount: totalXpCount,
+        multiplier,
       });
       await db.insert("activity", {
         userId: referree?._id,
@@ -185,12 +200,24 @@ export const rewardTaskXp = mutation({
     if (!user) {
       throw new Error("User not found");
     }
+    const currentMultiEffectReward = user?.multiplier
+      ? xpCount * (user.multiplier / 100)
+      : 0;
+    const totalXpCount =
+      (user?.xpCount ?? 0) +
+      (user?.claimedXp ?? 0) +
+      xpCount +
+      currentMultiEffectReward +
+      (user?.referralXp ?? 0);
+    const multiplier = activateMultiplier(totalXpCount);
 
     await db.patch(userId, {
-      claimedXp: (user?.claimedXp ?? 0) + xpCount,
+      claimedXp: (user?.claimedXp ?? 0) + xpCount + currentMultiEffectReward,
       completedTasks: user.completedTasks
         ? [...user.completedTasks, taskId]
         : [taskId],
+      xpCount: totalXpCount,
+      multiplier,
     });
   },
 });
@@ -217,10 +244,23 @@ export const rewardEventXp = mutation({
       }
     });
 
+    const currentMultiEffectReward = user?.multiplier
+      ? xpCount * (user.multiplier / 100)
+      : 0;
+    const totalXpCount =
+      (user?.xpCount ?? 0) +
+      (user?.claimedXp ?? 0) +
+      xpCount +
+      currentMultiEffectReward +
+      (user?.referralXp ?? 0);
+    const multiplier = activateMultiplier(totalXpCount);
+
     // Add xp and and reward user
     await db.patch(userId, {
-      claimedXp: (user?.claimedXp ?? 0) + xpCount,
+      claimedXp: (user?.claimedXp ?? 0) + xpCount + currentMultiEffectReward,
       eventsJoined: udpatedEvents,
+      xpCount: totalXpCount,
+      multiplier,
     });
   },
 });
@@ -393,7 +433,7 @@ export const beforeMine = internalMutation({
 export const mine = internalMutation({
   args: { userId: v.id("user") },
   handler: async ({ db, scheduler }, { userId }) => {
-    // const config = await db.query("config").first();
+    const config = await db.query("config").first();
     const user = await db.get(userId);
 
     if (!user) {
@@ -420,9 +460,14 @@ export const mine = internalMutation({
       } else {
         // Cancel mine and reset also check for active boosts
 
+        const botUuid = config?.boosts?.find((boost) => boost?.type === "bot");
+        const persistBot = user?.boostStatus?.find(
+          (boost) => boost?.boostId === botUuid?.uuid,
+        );
+
         await db.patch(userId, {
           mineActive: false,
-          boostStatus: undefined,
+          boostStatus: persistBot ? [persistBot] : undefined,
           // mineHours: config?.miningHours,
           // miningRate: config?.miningCount,
           redeemableCount:
@@ -525,9 +570,12 @@ export const buyXP = mutation({
       (config?.minimumSaleToken ?? 0) * (config?.xpPerToken ?? 0);
 
     // Debit minedCount and credit xpCount amount
+    const totalXpCount = user?.xpCount + xpAmountTopup;
+    const multiplier = activateMultiplier(totalXpCount);
     await db.patch(userId, {
       minedCount: (user?.minedCount ?? 0) - (config?.minimumSaleToken ?? 0),
-      xpCount: user?.xpCount + xpAmountTopup,
+      xpCount: totalXpCount,
+      multiplier: multiplier,
     });
   },
 });
@@ -578,7 +626,8 @@ export const activateBoost = mutation({
     const currentBoostXpCost =
       user?.boostStatus?.find((stat) => stat?.boostId === boost?.uuid)
         ?.currentXpCost ?? 0;
-    if (boost.xpCost > user.xpCount || currentBoostXpCost > user.xpCount) {
+
+    if (boost.xpCost > user?.xpCount || currentBoostXpCost > user?.xpCount) {
       console.log(
         user?.xpCount,
         currentBoostXpCost,
@@ -689,3 +738,20 @@ export const activateBoost = mutation({
     }
   },
 });
+
+function activateMultiplier(currentXpCount: number): number | undefined {
+  // Check against array of multiplier values
+  if (currentXpCount < 700000 && currentXpCount >= 500000) {
+    return 5;
+  } else if (currentXpCount < 5000000 && currentXpCount >= 700000) {
+    return 10;
+  } else if (currentXpCount < 10000000 && currentXpCount >= 5000000) {
+    return 15;
+  } else if (currentXpCount < 50000000 && currentXpCount >= 10000000) {
+    return 20;
+  } else if (currentXpCount >= 50000000) {
+    return 25;
+  } else {
+    return undefined;
+  }
+}

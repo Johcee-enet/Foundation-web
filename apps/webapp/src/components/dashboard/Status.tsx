@@ -102,7 +102,7 @@ const Status: FC<{
         <TabsContent value="mining" className="tab-content">
           {/* props for mining stats info */}
           <MiningStats
-            mined={Number(minedCount ?? 49500.71)}
+            mined={Number(minedCount ?? 0)}
             mining={Number(mineHours ?? 6)}
             time={remaining}
             rate={Number(mineRate ?? 0.25)}
@@ -112,9 +112,7 @@ const Status: FC<{
         <TabsContent value="social" className="tab-content">
           {/* props for social stats info */}
           <SocialStats
-            earned={
-              (userDetail?.claimedXp ?? 0) + (userDetail?.referralXp ?? 0) ?? 0
-            }
+            earned={userDetail?.xpCount ?? 0}
             claimed={userDetail?.claimedXp ?? 0}
             referral={userDetail?.referralXp ?? 0}
             multiplier={userDetail?.multiplier ?? 0}
