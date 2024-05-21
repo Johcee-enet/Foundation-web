@@ -1,13 +1,17 @@
 "use client";
 
-import { FC, Suspense } from "react";
+import { BADFLAGS } from "dns/promises";
+import { FC, Suspense, useState } from "react";
 import Image from "next/image";
 import BotHead from "@/assets/bot-head.svg";
 import Duration from "@/assets/duration.svg";
 import Flash from "@/assets/flash.svg";
 import { Loader } from "@/components/loader";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useToast } from "@/components/ui/use-toast";
 import { useSession } from "@/lib/sessionContext";
-import { useQuery } from "convex/react";
+import { getErrorMsg } from "@/lib/utils";
+import { useMutation, useQuery } from "convex/react";
 import { FaDiscord, FaTelegramPlane } from "react-icons/fa";
 import { FaCircleCheck, FaXTwitter } from "react-icons/fa6";
 import { HiMiniUserGroup } from "react-icons/hi2";
@@ -15,8 +19,9 @@ import { HiMiniUserGroup } from "react-icons/hi2";
 import { api } from "@acme/api/convex/_generated/api";
 import { Id } from "@acme/api/convex/_generated/dataModel";
 
-const Boost = () => {
+const Boost: FC<{ userId: string | null }> = ({ userId }) => {
   const session = useSession();
+  const [isLoading, setIsLoading] = useState(false);
   const appConfig = useQuery(api.queries.getAppConfigForApp);
 
   return (
@@ -24,11 +29,20 @@ const Boost = () => {
       <Suspense fallback={<Loader color="white" />}>
         <BoostItems
           boosts={appConfig?.boosts}
-          userId={session?.userId as string}
+          userId={(session?.userId ?? userId) as string}
           xpPerToken={appConfig?.xpPerToken ?? 0}
           minimumCost={appConfig?.minimumSaleToken ?? 0}
+          setIsLoading={setIsLoading}
         />
       </Suspense>
+      <Dialog open={isLoading}>
+        <DialogContent
+          hideCloseBtn
+          className="grid items-center justify-center border-none bg-transparent shadow-none"
+        >
+          <Loader color="white" />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
@@ -38,10 +52,17 @@ const BoostItems: FC<{
   userId: string;
   xpPerToken: number;
   minimumCost: number;
-}> = ({ boosts, userId, xpPerToken, minimumCost }) => {
+  setIsLoading: (prev: boolean) => void;
+}> = ({ boosts, userId, xpPerToken, minimumCost, setIsLoading }) => {
+  const { toast } = useToast();
   const user = useQuery(api.queries.getUserDetails, {
     userId: userId as Id<"user">,
   });
+
+  // Activate boost mutation
+  const activateBoost = useMutation(api.mutations.activateBoost);
+  // Buy XP
+  const buyXP = useMutation(api.mutations.buyXP);
 
   if (boosts) {
     return (
@@ -56,11 +77,31 @@ const BoostItems: FC<{
                 className={`w-full px-5 py-4 ${
                   item.completed ? "opacity-30" : ""
                 } block space-y-2`}
-                onClick={(e) => {
-                  console.log(item, ":::ONBoost clicke", activeBoost);
-                  // if (items.completed) {
-                  //   e.preventDefault();
-                  // }
+                onClick={async (e) => {
+                  try {
+                    setIsLoading(true);
+                    // Only if mining is active then activate boost
+                    if (!user?.mineActive) {
+                      setIsLoading(false);
+                      return toast({
+                        title: "Start a mining session to activate boost",
+                      });
+                    } else {
+                      console.log(item, ":::ONBoost clicke", activeBoost);
+                      await activateBoost({
+                        userId: userId as Id<"user">,
+                        boost: { ...item },
+                      });
+                      setIsLoading(false);
+                    }
+                  } catch (err: any) {
+                    setIsLoading(false);
+                    console.log(err, ":::error on boost activate");
+                    const errMsg = getErrorMsg(err);
+                    toast({
+                      title: errMsg,
+                    });
+                  }
                 }}
               >
                 <div className="flex w-full items-center justify-between">
@@ -118,14 +159,29 @@ const BoostItems: FC<{
             </li>
           );
         })}
+        {/* Buy XP with FOUND token */}
         <li className="dark:bg-primary-dark rounded-xl bg-white">
           <button
             className={`block w-full space-y-2 px-5 py-4`}
-            onClick={(e) => {
+            onClick={async (e) => {
+              setIsLoading(true);
               console.log(":::On buy clicked");
-              // if (items.completed) {
-              //   e.preventDefault();
-              // }
+              try {
+                // Call buy token proceedure
+                await buyXP({
+                  userId: userId as Id<"user">,
+                });
+                setIsLoading(false);
+              } catch (err: any) {
+                setIsLoading(false);
+                const errMsg = getErrorMsg(err);
+                toast({
+                  variant: "destructive",
+                  title: "Error with buying XP",
+                  description: errMsg,
+                });
+                console.log(err, ":::Error on buying token");
+              }
             }}
           >
             <div className="flex w-full items-start justify-between">

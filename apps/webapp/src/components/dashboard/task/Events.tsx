@@ -30,7 +30,7 @@ import { rewardEventXp } from "@acme/api/convex/mutations";
 
 import TaskCompleted from "../TaskCompleted";
 
-const Events: FC<{ userId: string }> = ({ userId }) => {
+const Events: FC<{ userId: string | null }> = ({ userId }) => {
   const session = useSession();
   const { toast } = useToast();
 
