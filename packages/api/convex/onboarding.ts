@@ -95,7 +95,7 @@ export const loginUser = action({
     // console.log(email, "::::Loging email");
     try {
       const user: any = await runQuery(internal.queries.getUserWithEmail, {
-        email,
+        email: email.toLowerCase(),
       });
       if (!user) {
         throw new Error("User not found");

@@ -26,32 +26,35 @@ export const getOTPSecret = internalQuery({
 
 // Get user details to be rendered on main dashboard
 export const getUserDetails = query({
-  args: { userId: v.id("user") },
+  args: { userId: v.optional(v.id("user")) },
   handler: async ({ db }, { userId }) => {
-    const user = await db.get(userId);
+    if (userId) {
+      const user = await db.get(userId);
 
-    if (!user) {
-      throw new Error("No user with that Id");
+      if (!user) {
+        throw new Error("No user with that Id");
+      }
+
+      // Compute user global rank and return total user count
+      const totalUserCount = (
+        await db
+          .query("user")
+          .filter((q) => q.eq(q.field("deleted"), false))
+          .collect()
+      ).length;
+      const globalRank = calculateRank(
+        await db
+          .query("user")
+          .withIndex("by_xpCount")
+          .filter((q) => q.eq(q.field("deleted"), false))
+          .order("desc")
+          .collect(),
+        user?._id,
+      );
+
+      return { ...user, totalUserCount, globalRank };
+
     }
-
-    // Compute user global rank and return total user count
-    const totalUserCount = (
-      await db
-        .query("user")
-        .filter((q) => q.eq(q.field("deleted"), false))
-        .collect()
-    ).length;
-    const globalRank = calculateRank(
-      await db
-        .query("user")
-        .withIndex("by_xpCount")
-        .filter((q) => q.eq(q.field("deleted"), false))
-        .order("desc")
-        .collect(),
-      user?._id,
-    );
-
-    return { ...user, totalUserCount, globalRank };
   },
 });
 
@@ -97,38 +100,40 @@ export const getUserWithNickname = internalQuery({
 
 // Get leader board filtered and ordered by XP
 export const getLeaderBoard = query({
-  args: { userId: v.id("user") },
+  args: { userId: v.optional(v.id("user")) },
   handler: async ({ db }, { userId }) => {
-    const rankedUsers = await db
-      .query("user")
-      .withIndex("by_xpCount")
-      .filter((q) => q.eq(q.field("deleted"), false))
-      .order("desc")
-      .take(13);
+    if (userId) {
+      const rankedUsers = await db
+        .query("user")
+        .withIndex("by_xpCount")
+        .filter((q) => q.eq(q.field("deleted"), false))
+        .order("desc")
+        .take(13);
 
-    const users = await db
-      .query("user")
-      .filter((q) => q.eq(q.field("deleted"), false))
-      .collect();
+      const users = await db
+        .query("user")
+        .filter((q) => q.eq(q.field("deleted"), false))
+        .collect();
 
-    const user = await db.get(userId);
+      const user = await db.get(userId);
 
-    if (!user) {
-      throw new Error("No user with that id");
+      if (!user) {
+        throw new Error("No user with that id");
+      }
+
+      const sortedUsers = rankedUsers
+        .slice()
+        .sort((a, b) => b.xpCount - a.xpCount);
+
+      const globalRank = calculateRank(users ?? [], user?._id);
+
+      return {
+        user,
+        sortedUsers,
+        globalRank,
+        totalUsers: users.length,
+      };
     }
-
-    const sortedUsers = rankedUsers
-      .slice()
-      .sort((a, b) => b.xpCount - a.xpCount);
-
-    const globalRank = calculateRank(users ?? [], user?._id);
-
-    return {
-      user,
-      sortedUsers,
-      globalRank,
-      totalUsers: users.length,
-    };
   },
 });
 
@@ -146,7 +151,7 @@ export const getWeeklyTopRanked = internalQuery({
 });
 
 export const getHistory = query({
-  args: { userId: v.id("user") },
+  args: { userId: v.optional(v.id("user")) },
   handler: async ({ db }, { userId }) => {
     return (
       (await db
