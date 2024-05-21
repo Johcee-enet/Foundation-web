@@ -29,8 +29,10 @@ export default function SessionProvider({ children }: SessionProps) {
     if (_session) {
       setSession(JSON.parse(_session));
       router.replace("/dashboard");
+    } else {
+      router.replace("/authentication")
     }
-  }, []);
+  }, [router]);
 
   return (
     <SessionContext.Provider
