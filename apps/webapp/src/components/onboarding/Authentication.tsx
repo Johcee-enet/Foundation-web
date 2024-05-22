@@ -20,6 +20,7 @@ import { api } from "@acme/api/convex/_generated/api";
 
 import { useToast } from "../ui/use-toast";
 import { formSchema } from "./FormShema";
+import { getErrorMsg } from "@/lib/utils";
 
 const Authentication = ({ login, refCode }: any) => {
   const router = useRouter();
@@ -84,10 +85,11 @@ const Authentication = ({ login, refCode }: any) => {
       }
     } catch (err: any) {
       console.log(err, ":::Onboarding_error");
+      const errMsg = getErrorMsg(err);
       toast({
         variant: "destructive",
         title: "Onboarding error",
-        description: err?.message ?? err.toString(),
+        description: errMsg,
       });
       return;
     }
