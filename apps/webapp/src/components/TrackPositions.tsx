@@ -2,9 +2,9 @@ import React, { FC } from "react";
 import Image from "next/image";
 import { FaCrown } from "react-icons/fa";
 
-const TrackPositions: FC<{ leaderBoards: Record<string, any> | undefined }> = ({
-  leaderBoards,
-}) => {
+const TrackPositions: FC<{
+  leaderBoards: Record<string, any> | undefined;
+}> = ({ leaderBoards }) => {
   const sortedRank = leaderBoards?.sortedUsers;
   return (
     <>
@@ -29,8 +29,8 @@ const TrackPositions: FC<{ leaderBoards: Record<string, any> | undefined }> = ({
                         {Number(ranking?.referralCount ?? 0).toLocaleString(
                           "en-US",
                           {
-                            maximumFractionDigits: 2,
-                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 0,
+                            minimumFractionDigits: 0,
                           },
                         )}
                       </span>
@@ -95,7 +95,7 @@ const TrackPositions: FC<{ leaderBoards: Record<string, any> | undefined }> = ({
                       {" "}
                       {Number(ranking?.referralCount ?? 0).toLocaleString(
                         "en-US",
-                        { maximumFractionDigits: 2, minimumFractionDigits: 2 },
+                        { maximumFractionDigits: 0, minimumFractionDigits: 0 },
                       )}
                     </h4>
                     <p className="text-base text-[#767676]">
@@ -127,7 +127,7 @@ const TrackPositions: FC<{ leaderBoards: Record<string, any> | undefined }> = ({
               <h3>
                 {Number(leaderBoards?.user?.referralCount ?? 0).toLocaleString(
                   "en-US",
-                  { maximumFractionDigits: 2, minimumFractionDigits: 2 },
+                  { maximumFractionDigits: 0, minimumFractionDigits: 0 },
                 )}
               </h3>{" "}
               <h3>

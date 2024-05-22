@@ -15,7 +15,7 @@ const Leaderboard = () => {
   const session = useSession();
 
   const leaderBoards = useQuery(api.queries.getLeaderBoard, {
-    userId: session?.userId as Id<"user">,
+    userId: session?.userId as Id<"user"> | undefined,
   });
 
   return (
@@ -24,7 +24,8 @@ const Leaderboard = () => {
       <div className="container">
         <div className="leader-banner">
           <div className="header-container-img">
-            <Image src="/profile.png" height={50} width={50} alt="profile" />
+            {/* <Image src="/profile.png" height={50} width={50} alt="profile" /> */}
+            <span className="text-[40px]">👍</span>
           </div>
           <h3 className="text-lg font-normal">
             You are doing better than 80% of others
