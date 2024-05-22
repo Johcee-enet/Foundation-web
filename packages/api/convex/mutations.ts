@@ -54,7 +54,7 @@ export const storeEmail = internalMutation({
 
     // Store email and referral
     const userId = await ctx.db.insert("user", {
-      email: args.email,
+      email: args.email.toLowerCase(),
       referreeCode: args.referreeCode,
       minedCount: 0,
       miningRate: config?.miningCount ?? 2.0,
