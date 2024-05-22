@@ -8,18 +8,16 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { PiProjectorScreenChartLight } from "react-icons/pi";
 
-const TaskCompleted = ({ showCompletedDialog, reward, onClick }: any) => {
+const TaskCompleted = ({
+  showCompletedDialog,
+  setShowCompletedDialog,
+  setDrawerOpen,
+  reward,
+}: any) => {
   return (
     <Dialog open={showCompletedDialog}>
-      <DialogTrigger asChild>
-        <button
-          className="block rounded-xl bg-black p-6 text-xl font-medium text-white dark:bg-white dark:text-black"
-          onClick={onClick}
-        >
-          Completed
-        </button>
-      </DialogTrigger>
       <DialogContent className="completed-banner text-white dark:text-black">
         <div className="flex flex-col items-center justify-center gap-5 ">
           <Image
@@ -37,6 +35,10 @@ const TaskCompleted = ({ showCompletedDialog, reward, onClick }: any) => {
             <Button
               type="button"
               className="mx-auto h-fit w-full max-w-md bg-[#15BDCF] py-5 text-xl text-white"
+              onClick={() => {
+                setShowCompletedDialog(false);
+                setDrawerOpen(false);
+              }}
             >
               Close
             </Button>

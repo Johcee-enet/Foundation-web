@@ -53,9 +53,6 @@ const Events: FC<{ userId: string | null }> = ({ userId }) => {
   // Loader controls
   const [isLoading, setIsLoading] = useState(false);
 
-  // completed dialog controls
-  const [showCompletedDialog, setShowCompletedDialog] = useState(false);
-
   return (
     <div>
       <Dialog open={isLoading}>
@@ -82,8 +79,6 @@ const Events: FC<{ userId: string | null }> = ({ userId }) => {
                 userId={(user?._id ?? userId) as string}
                 updateEventTaskStatus={updateEventTaskStatus}
                 completeEvent={completeEvent}
-                setShowCompletedDialog={setShowCompletedDialog}
-                showCompletedDialog={showCompletedDialog}
               />
             );
           })}
@@ -105,8 +100,6 @@ const EventItem: FC<{
   userId: string;
   updateEventTaskStatus: any;
   completeEvent: any;
-  setShowCompletedDialog: any;
-  showCompletedDialog: boolean;
 }> = ({
   item,
   event,
@@ -115,11 +108,11 @@ const EventItem: FC<{
   userId,
   updateEventTaskStatus,
   completeEvent,
-  setShowCompletedDialog,
-  showCompletedDialog,
 }) => {
   // drawer controls
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // completed dialog controls
+  const [showCompletedDialog, setShowCompletedDialog] = useState(false);
   const { toast } = useToast();
 
   return (
@@ -276,40 +269,48 @@ const EventItem: FC<{
             </div>
             <DrawerFooter>
               {/* Close event Drawer sheet and complete event if all tasks are completed */}
-              <DrawerClose asChild>
-                <TaskCompleted
-                  showCompletedDialog={showCompletedDialog}
-                  reward={item?.reward}
-                  onClick={async () => {
-                    try {
-                      setIsLoading(true);
-                      setDrawerOpen(false);
+              {/* <DrawerClose asChild> */}
+              <button
+                className="block rounded-xl bg-black p-6 text-xl font-medium text-white dark:bg-white dark:text-black"
+                onClick={async () => {
+                  try {
+                    setIsLoading(true);
 
-                      if (event?.completed) {
-                        setIsLoading(false);
-                        toast({
-                          title: "All tasks in event has been completed!",
-                        });
-                      } else {
-                        await completeEvent({
-                          userId: userId as Id<"user">,
-                          eventId: item?._id,
-                          xpCount: item?.reward,
-                        });
-                        setIsLoading(false);
-                        setShowCompletedDialog(true);
-                      }
-                    } catch (err: any) {
+                    if (event?.completed) {
                       setIsLoading(false);
-                      console.log(err, ":::OnEventComplete_error");
-                      const errMsg = getErrorMsg(err);
+                      setDrawerOpen(false);
                       toast({
-                        title: errMsg,
+                        title: "All tasks in event has been completed!",
                       });
+                    } else {
+                      await completeEvent({
+                        userId: userId as Id<"user">,
+                        eventId: item?._id,
+                        xpCount: item?.reward,
+                      });
+                      setIsLoading(false);
+                      setShowCompletedDialog(true);
                     }
-                  }}
-                />
-              </DrawerClose>
+                  } catch (err: any) {
+                    setIsLoading(false);
+                    console.log(err, ":::OnEventComplete_error");
+                    const errMsg = getErrorMsg(err);
+                    setShowCompletedDialog(false);
+                    toast({
+                      title: errMsg,
+                    });
+                  }
+                }}
+              >
+                Completed
+              </button>
+              <TaskCompleted
+                showCompletedDialog={showCompletedDialog}
+                setShowCompletedDialog={setShowCompletedDialog}
+                setDrawerOpen={setDrawerOpen}
+                reward={item?.reward}
+              />
+              {/* </DrawerClose> */}
             </DrawerFooter>
           </div>
         </DrawerContent>
