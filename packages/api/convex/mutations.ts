@@ -146,11 +146,23 @@ export const redeemReferralCode = mutation({
       await db.insert("activity", {
         userId: referree?._id,
         message: `${nickname} Joined using your referral code`,
-        extra: (config?.referralXpCount ?? 5000).toLocaleString("en-US"),
+        extra: (
+          (config?.referralXpCount ?? 5000) + currentMultiEffectReward
+        ).toLocaleString("en-US"),
         type: "xp", // Can be xp and rank
       });
 
       await db.patch(userId, { referreeCode });
+
+      // Add multiplier activity
+      if (multiplier) {
+        await db.insert("activity", {
+          userId: userId,
+          message: `You got a multiplier of ${multiplier}%`,
+          extra: `${multiplier}%`,
+          type: "xp", // Can be xp and rank
+        });
+      }
     }
   },
 });
@@ -219,6 +231,16 @@ export const rewardTaskXp = mutation({
       xpCount: totalXpCount,
       multiplier,
     });
+
+    // Add multiplier activity
+    if (multiplier) {
+      await db.insert("activity", {
+        userId: userId,
+        message: `You got a multiplier of ${multiplier}%`,
+        extra: `${multiplier}%`,
+        type: "xp", // Can be xp and rank
+      });
+    }
   },
 });
 
@@ -230,6 +252,29 @@ export const rewardEventXp = mutation({
 
     if (!user) {
       throw new Error("User not found");
+    }
+
+    // Check if all event actions have been comleted
+    const currentEventActions = user?.eventsJoined?.find(
+      (event) => event?.eventId === eventId,
+    )?.actions;
+    if (!currentEventActions) {
+      throw new ConvexError({
+        message: "Can't verify events actions complete status",
+        code: 501,
+        status: "failed",
+      });
+    }
+
+    for (const action of currentEventActions) {
+      if (!action?.completed) {
+        throw new ConvexError({
+          message:
+            "Some actions in this event have not been completed, please complete them to proceed",
+          code: 501,
+          status: "failed",
+        });
+      }
     }
 
     const udpatedEvents = user.eventsJoined?.map((event) => {
@@ -262,6 +307,16 @@ export const rewardEventXp = mutation({
       xpCount: totalXpCount,
       multiplier,
     });
+
+    // Add multiplier activity
+    if (multiplier) {
+      await db.insert("activity", {
+        userId: userId,
+        message: `You got a multiplier of ${multiplier}%`,
+        extra: `${multiplier}%`,
+        type: "xp", // Can be xp and rank
+      });
+    }
   },
 });
 
@@ -504,6 +559,13 @@ export const claimRewards = mutation({
         minedCount: (user?.minedCount ?? 0) + user?.redeemableCount,
         redeemableCount: 0,
       });
+
+      await db.insert("activity", {
+        userId: userId,
+        message: `You successfully redeemed your mined $FOUND token`,
+        extra: (user?.redeemableCount ?? 0).toLocaleString("en-US"),
+        type: "rank", // Can be xp and rank
+      });
     }
   },
 });
@@ -576,6 +638,12 @@ export const buyXP = mutation({
       minedCount: (user?.minedCount ?? 0) - (config?.minimumSaleToken ?? 0),
       xpCount: totalXpCount,
       multiplier: multiplier,
+    });
+    await db.insert("activity", {
+      userId: userId,
+      message: `You just purchased some XP`,
+      extra: xpAmountTopup.toLocaleString("en-US"),
+      type: "xp", // Can be xp and rank
     });
   },
 });
@@ -652,6 +720,12 @@ export const activateBoost = mutation({
               { boostId: boost?.uuid, isActive: true },
             ]
           : [{ boostId: boost?.uuid, isActive: true }],
+      });
+
+      await db.insert("activity", {
+        userId: userId,
+        message: `You activated bot boost`,
+        type: "rank", // Can be xp and rank
       });
     } else {
       // If type is speed
@@ -735,11 +809,17 @@ export const activateBoost = mutation({
           },
         ],
       });
+
+      await db.insert("activity", {
+        userId: userId,
+        message: `You activated rate/duration boost`,
+        type: "rank", // Can be xp and rank
+      });
     }
   },
 });
 
-function activateMultiplier(currentXpCount: number): number | undefined {
+export function activateMultiplier(currentXpCount: number): number | undefined {
   // Check against array of multiplier values
   if (currentXpCount < 1000000 && currentXpCount >= 500000) {
     return 5;

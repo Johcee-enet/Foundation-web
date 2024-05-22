@@ -6,6 +6,7 @@ import { customAlphabet } from "nanoid";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { action, internalMutation, mutation } from "./_generated/server";
+import { activateMultiplier } from "./mutations";
 
 // Random OTP code
 const generateOTPCode = customAlphabet("0123456789", 6);
@@ -206,16 +207,45 @@ export const storeNickname = mutation({
         if (referree) {
           // Patch referree count
           console.log(referree, ":::Update referree xpCount");
+          const currentMultiEffectReward = referree?.multiplier
+            ? (config?.referralXpCount ?? 5000) * (referree?.multiplier / 100)
+            : 0;
+          const totalXpCount =
+            (referree?.xpCount ?? 0) +
+            (referree?.claimedXp ?? 0) +
+            (config?.referralXpCount ?? 5000) +
+            currentMultiEffectReward +
+            (referree?.referralXp ?? 0);
+          const multiplier = activateMultiplier(totalXpCount);
+
           await ctx.db.patch(referree?._id as Id<"user">, {
-            referralCount: (referree?.referralCount ?? 0) + 1,
-            xpCount: (config?.referralXpCount ?? 5000) + referree.xpCount,
+            referralCount: Number(referree?.referralCount) + 1,
+            referralXp:
+              (config?.referralXpCount ?? 5000) +
+              currentMultiEffectReward +
+              (referree?.referralXp ?? 0),
+            xpCount: totalXpCount,
+            multiplier,
           });
+
           await ctx.db.insert("activity", {
             userId: referree?._id,
             message: `${nickname} Joined using your referral code`,
-            extra: (config?.referralXpCount ?? 5000).toLocaleString("en-US"),
+            extra: (
+              (config?.referralXpCount ?? 5000) + currentMultiEffectReward
+            ).toLocaleString("en-US"),
             type: "xp", // Can be xp and rank
           });
+
+          // Add multiplier activity
+          if (multiplier) {
+            await ctx.db.insert("activity", {
+              userId: userId,
+              message: `You got a multiplier of ${multiplier}%`,
+              extra: `${multiplier}%`,
+              type: "xp", // Can be xp and rank
+            });
+          }
         }
 
         return userId;
