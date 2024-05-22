@@ -20,6 +20,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useSession } from "@/lib/sessionContext";
 import { delay, getErrorMsg } from "@/lib/utils";
 import { useMutation, useQuery } from "convex/react";
+import { Shovel } from "lucide-react";
 import { BsGlobe } from "react-icons/bs";
 import { FaDiscord, FaTelegramPlane } from "react-icons/fa";
 import { FaCircleCheck, FaXTwitter } from "react-icons/fa6";
@@ -49,11 +50,11 @@ const Events: FC<{ userId: string | null }> = ({ userId }) => {
   const completeEvent = useMutation(api.mutations.rewardEventXp);
   const updateEventTaskStatus = useMutation(api.mutations.updateEventsForUser);
 
-  // drawer controls
-  const [drawerOpen, setDrawerOpen] = useState(false);
-
   // Loader controls
   const [isLoading, setIsLoading] = useState(false);
+
+  // completed dialog controls
+  const [showCompletedDialog, setShowCompletedDialog] = useState(false);
 
   return (
     <div>
@@ -73,212 +74,17 @@ const Events: FC<{ userId: string | null }> = ({ userId }) => {
             );
 
             return (
-              <li key={ki} className="task-list">
-                <Drawer
-                  open={drawerOpen}
-                  // onOpenChange={(open) => setDrawerOpen(open)}
-                >
-                  <DrawerTrigger asChild>
-                    <button
-                      className={`w-full px-5 py-4 ${
-                        event?.completed ? "opacity-30" : ""
-                      } block space-y-2`}
-                      onClick={(e) => {
-                        setDrawerOpen(true);
-                        if (event) {
-                          e.preventDefault();
-                        }
-                      }}
-                    >
-                      <div className="flex w-full items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="icon-container rounded-md border border-white/20 p-1">
-                            <img
-                              src={item?.company?.logoUrl}
-                              width={"100%"}
-                              height={"100%"}
-                              alt="Company logo"
-                              className="rounded-sm"
-                            />
-                          </div>
-                          <div className="text-left">
-                            <h4 className="text-[22px] font-semibold">
-                              {item?.title}
-                            </h4>
-                          </div>
-                        </div>
-                        <div>
-                          {!event?.completed && (
-                            <IoIosArrowForward className="text-xl text-black dark:text-white" />
-                          )}
-                        </div>{" "}
-                      </div>
-                      <div className="text-left">
-                        <p className="background inline-block rounded-full px-2 py-1 text-lg font-semibold text-[#767676]">
-                          {event?.completed ? (
-                            "Completed"
-                          ) : (
-                            <span>
-                              +
-                              {Number(item?.reward ?? 0).toLocaleString(
-                                "en-US",
-                                {
-                                  maximumFractionDigits: 2,
-                                  minimumFractionDigits: 2,
-                                },
-                              )}{" "}
-                              XP
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    </button>
-                  </DrawerTrigger>
-
-                  <DrawerContent className="foreground large-screen pb-4">
-                    <div className="mx-auto h-fit max-h-[85vh] w-full overflow-y-auto px-5">
-                      <DrawerHeader className="h-auto">
-                        {/* {!item?.company?.logoUrl && ( */}
-                        {/* <DrawerTitle className="max-h-16 w-full"> */}
-                        <div className="relative">
-                          <img
-                            src={item?.company?.logoUrl}
-                            sizes="100%"
-                            alt="event"
-                            className="absolute left-2 top-2 h-14 w-14 rounded-md"
-                          />
-                          <img
-                            src={item?.coverUrl!}
-                            sizes="100%"
-                            alt="cover-img"
-                            className="rounded-lg"
-                          />
-                        </div>
-                        {/* </DrawerTitle> */}
-                        {/* )} */}
-
-                        <DrawerDescription className="flex items-center justify-between pt-2 text-black dark:text-white">
-                          <h2 className="text-2xl font-semibold text-white">
-                            {item?.title}
-                          </h2>{" "}
-                          <span className="text-bold rounded-2xl bg-[#D9D9D9] px-4 py-1 text-[#767676]">
-                            {Number(item?.reward ?? 0).toLocaleString("en-US", {
-                              maximumFractionDigits: 2,
-                              minimumFractionDigits: 2,
-                            })}{" "}
-                            XP
-                          </span>
-                        </DrawerDescription>
-                        <p className="text-left text-black dark:text-[#989898]">
-                          {item?.description}
-                        </p>
-                      </DrawerHeader>
-                      <div className="p-4 pb-0">
-                        <ul className="grid gap-5">
-                          {item?.actions?.map((action, idx) => {
-                            const completedAction = event?.actions?.find(
-                              (val) => val?.name === action?.name,
-                            );
-
-                            return (
-                              <li key={idx}>
-                                <Link
-                                  href={action?.link}
-                                  target="_blank"
-                                  className={`flex items-center justify-between py-2 ${
-                                    completedAction?.completed && "opacity-30"
-                                  }`}
-                                  onClick={async (e) => {
-                                    if (completedAction?.completed) {
-                                      e.preventDefault();
-                                    } else {
-                                      await delay(2);
-                                      await updateEventTaskStatus({
-                                        userId: (user?._id ??
-                                          userId) as Id<"user">,
-                                        eventId: item?._id,
-                                        actionName: action?.name!,
-                                      });
-                                    }
-                                  }}
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <div className="icon-container">
-                                      {/* Can be replaced with an image tag if image is to be rendered instead */}
-                                      {action.channel == "website" && (
-                                        <BsGlobe />
-                                      )}
-                                      {/* {action.channel == "invite" && <HiMiniUserGroup />} */}
-                                      {action.channel == "twitter" && (
-                                        <FaXTwitter />
-                                      )}
-                                      {action.channel == "discord" && (
-                                        <FaDiscord />
-                                      )}
-                                      {action.channel == "telegram" && (
-                                        <FaTelegramPlane />
-                                      )}
-                                    </div>
-                                    <div>
-                                      <h4 className="text-lg font-semibold">
-                                        {action.name}
-                                      </h4>
-                                    </div>
-                                  </div>
-                                  <div className="text-2xl">
-                                    {!completedAction?.completed ? (
-                                      <IoIosArrowForward className="text-black dark:text-white" />
-                                    ) : (
-                                      <FaCircleCheck className="text-black dark:text-white" />
-                                    )}
-                                  </div>
-                                </Link>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </div>
-                      <DrawerFooter>
-                        {/* Close event Drawer sheet and complete event if all tasks are completed */}
-                        <DrawerClose asChild>
-                          <TaskCompleted
-                            isEventCompleted={event?.completed}
-                            reward={item?.reward}
-                            onClick={async () => {
-                              try {
-                                setIsLoading(true);
-                                setDrawerOpen(false);
-
-                                if (event?.completed) {
-                                  setIsLoading(false);
-                                  toast({
-                                    title:
-                                      "All tasks in event has been completed!",
-                                  });
-                                } else {
-                                  await completeEvent({
-                                    userId: (user?._id ?? userId) as Id<"user">,
-                                    eventId: item?._id,
-                                    xpCount: item?.reward,
-                                  });
-                                  setIsLoading(false);
-                                }
-                              } catch (err: any) {
-                                setIsLoading(false);
-                                console.log(err, ":::OnEventComplete_error");
-                                const errMsg = getErrorMsg(err);
-                                return toast({
-                                  title: errMsg,
-                                });
-                              }
-                            }}
-                          />
-                        </DrawerClose>
-                      </DrawerFooter>
-                    </div>
-                  </DrawerContent>
-                </Drawer>
-              </li>
+              <EventItem
+                item={item}
+                event={event}
+                setIsLoading={setIsLoading}
+                ki={ki}
+                userId={(user?._id ?? userId) as string}
+                updateEventTaskStatus={updateEventTaskStatus}
+                completeEvent={completeEvent}
+                setShowCompletedDialog={setShowCompletedDialog}
+                showCompletedDialog={showCompletedDialog}
+              />
             );
           })}
       </ul>
@@ -288,6 +94,227 @@ const Events: FC<{ userId: string | null }> = ({ userId }) => {
         </p>
       )}
     </div>
+  );
+};
+
+const EventItem: FC<{
+  item: any;
+  event: any;
+  setIsLoading: any;
+  ki: number;
+  userId: string;
+  updateEventTaskStatus: any;
+  completeEvent: any;
+  setShowCompletedDialog: any;
+  showCompletedDialog: boolean;
+}> = ({
+  item,
+  event,
+  setIsLoading,
+  ki,
+  userId,
+  updateEventTaskStatus,
+  completeEvent,
+  setShowCompletedDialog,
+  showCompletedDialog,
+}) => {
+  // drawer controls
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const { toast } = useToast();
+
+  return (
+    <li key={ki} className="task-list">
+      <Drawer open={drawerOpen} onOpenChange={(open) => setDrawerOpen(open)}>
+        <DrawerTrigger asChild>
+          <button
+            className={`w-full px-5 py-4 ${
+              event?.completed ? "opacity-30" : ""
+            } block space-y-2`}
+            onClick={(e) => {
+              console.log(":::Dialog trigger clicked");
+              setDrawerOpen(true);
+              // if (event) {
+              //   e.preventDefault();
+              // }
+            }}
+          >
+            <div className="flex w-full items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="icon-container rounded-md border border-white/20 p-1">
+                  <img
+                    src={item?.company?.logoUrl}
+                    width={"100%"}
+                    height={"100%"}
+                    alt="Company logo"
+                    className="rounded-sm"
+                  />
+                </div>
+                <div className="text-left">
+                  <h4 className="text-[22px] font-semibold">{item?.title}</h4>
+                </div>
+              </div>
+              <div>
+                {!event?.completed && (
+                  <IoIosArrowForward className="text-xl text-black dark:text-white" />
+                )}
+              </div>{" "}
+            </div>
+            <div className="text-left">
+              <p className="background inline-block rounded-full px-2 py-1 text-lg font-semibold text-[#767676]">
+                {event?.completed ? (
+                  "Completed"
+                ) : (
+                  <span>
+                    +
+                    {Number(item?.reward ?? 0).toLocaleString("en-US", {
+                      maximumFractionDigits: 2,
+                      minimumFractionDigits: 2,
+                    })}{" "}
+                    XP
+                  </span>
+                )}
+              </p>
+            </div>
+          </button>
+        </DrawerTrigger>
+
+        <DrawerContent className="foreground large-screen pb-4">
+          <div className="mx-auto h-fit max-h-[85vh] w-full overflow-y-auto px-5">
+            <DrawerHeader className="h-auto">
+              {/* {!item?.company?.logoUrl && ( */}
+              {/* <DrawerTitle className="max-h-16 w-full"> */}
+              <div className="relative">
+                <img
+                  src={item?.company?.logoUrl}
+                  sizes="100%"
+                  alt="event"
+                  className="absolute left-2 top-2 h-14 w-14 rounded-md"
+                />
+                <img
+                  src={item?.coverUrl!}
+                  sizes="100%"
+                  alt="cover-img"
+                  className="rounded-lg"
+                />
+              </div>
+              {/* </DrawerTitle> */}
+              {/* )} */}
+
+              <DrawerDescription className="flex items-center justify-between pt-2 text-black dark:text-white">
+                <h2 className="text-2xl font-semibold text-white">
+                  {item?.title}
+                </h2>{" "}
+                <span className="text-bold rounded-2xl bg-[#D9D9D9] px-4 py-1 text-[#767676]">
+                  {Number(item?.reward ?? 0).toLocaleString("en-US", {
+                    maximumFractionDigits: 2,
+                    minimumFractionDigits: 2,
+                  })}{" "}
+                  XP
+                </span>
+              </DrawerDescription>
+              <p className="text-left text-black dark:text-[#989898]">
+                {item?.description}
+              </p>
+            </DrawerHeader>
+            <div className="p-4 pb-0">
+              <ul className="grid gap-5">
+                {item?.actions?.map((action: any, idx: number) => {
+                  const completedAction = event?.actions?.find(
+                    (val: any) => val?.name === action?.name,
+                  );
+
+                  return (
+                    <li key={idx}>
+                      <Link
+                        href={action?.link}
+                        target="_blank"
+                        className={`flex items-center justify-between py-2 ${
+                          completedAction?.completed && "opacity-30"
+                        }`}
+                        onClick={async (e) => {
+                          if (completedAction?.completed) {
+                            e.preventDefault();
+                          } else {
+                            await delay(5);
+                            await updateEventTaskStatus({
+                              userId: userId as Id<"user">,
+                              eventId: item?._id,
+                              actionName: action?.name!,
+                            });
+                          }
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="icon-container">
+                            {/* Can be replaced with an image tag if image is to be rendered instead */}
+                            {action.channel == "website" && <BsGlobe />}
+                            {/* {action.channel == "invite" && <HiMiniUserGroup />} */}
+                            {action.channel == "twitter" && <FaXTwitter />}
+                            {action.channel == "discord" && <FaDiscord />}
+                            {action.channel == "telegram" && (
+                              <FaTelegramPlane />
+                            )}
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-semibold">
+                              {action.name}
+                            </h4>
+                          </div>
+                        </div>
+                        <div className="text-2xl">
+                          {!completedAction?.completed ? (
+                            <IoIosArrowForward className="text-black dark:text-white" />
+                          ) : (
+                            <FaCircleCheck className="text-black dark:text-white" />
+                          )}
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+            <DrawerFooter>
+              {/* Close event Drawer sheet and complete event if all tasks are completed */}
+              <DrawerClose asChild>
+                <TaskCompleted
+                  showCompletedDialog={showCompletedDialog}
+                  reward={item?.reward}
+                  onClick={async () => {
+                    try {
+                      setIsLoading(true);
+                      setDrawerOpen(false);
+
+                      if (event?.completed) {
+                        setIsLoading(false);
+                        toast({
+                          title: "All tasks in event has been completed!",
+                        });
+                      } else {
+                        await completeEvent({
+                          userId: userId as Id<"user">,
+                          eventId: item?._id,
+                          xpCount: item?.reward,
+                        });
+                        setIsLoading(false);
+                        setShowCompletedDialog(true);
+                      }
+                    } catch (err: any) {
+                      setIsLoading(false);
+                      console.log(err, ":::OnEventComplete_error");
+                      const errMsg = getErrorMsg(err);
+                      toast({
+                        title: errMsg,
+                      });
+                    }
+                  }}
+                />
+              </DrawerClose>
+            </DrawerFooter>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    </li>
   );
 };
 

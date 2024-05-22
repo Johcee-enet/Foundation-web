@@ -9,9 +9,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-const TaskCompleted = ({ isEventCompleted, reward, onClick }: any) => {
+const TaskCompleted = ({ showCompletedDialog, reward, onClick }: any) => {
   return (
-    <Dialog open={!isEventCompleted}>
+    <Dialog open={showCompletedDialog}>
       <DialogTrigger asChild>
         <button
           className="block rounded-xl bg-black p-6 text-xl font-medium text-white dark:bg-white dark:text-black"

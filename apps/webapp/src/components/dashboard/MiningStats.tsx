@@ -35,7 +35,7 @@ const MiningStats: FC<Mining> = ({ mined, mining, time, rate, userId }) => {
       <h3 className="text-lg">
         $FOUND Mined: <span>{mined}</span>
       </h3>
-      <p>Mining: {mining}</p>
+      <p>Mining: {userDetail?.redeemableCount ?? 0}</p>
       <p>{time}</p>
       <div>
         <div className="tag">
@@ -65,11 +65,19 @@ const MiningStats: FC<Mining> = ({ mined, mining, time, rate, userId }) => {
                 Start Mining <BiCoinStack className="shrink-0" />
               </>
             )}
-            {userDetail?.mineActive && (
-              <>
-                Mining Active <BiCoinStack className="shrink-0" color="black" />
-              </>
-            )}
+          </Button>
+        )}
+        {userDetail?.mineActive && userDetail?.redeemableCount && (
+          <Button
+            className="bg-white"
+            // disabled
+            onClick={() => {
+              toast({
+                title: "There is a mining session currently active",
+              });
+            }}
+          >
+            Mining Active <BiCoinStack className="shrink-0" color="black" />
           </Button>
         )}
         {userDetail?.redeemableCount && !userDetail?.mineActive && (
