@@ -96,10 +96,10 @@ export const loginUser = action({
     // console.log(email, "::::Loging email");
     try {
       const user: any = await runQuery(internal.queries.getUserWithEmail, {
-        email: email.toLowerCase(),
+        email: email,
       });
       if (!user) {
-        throw new Error("User not found");
+        throw new ConvexError({ message: "User not found", code: 404, status: "failed" });
       }
 
       // Compare password
@@ -110,10 +110,12 @@ export const loginUser = action({
         });
         return user;
       } else {
-        throw new Error("Invalid email or password");
+        throw new ConvexError({ message: "Invalid email or password", code: 401, status: "failed" });
       }
     } catch (e: any) {
-      throw new Error("Issue with getting user");
+      console.log(e, ":::Error getting user detail");
+      const message = (e instanceof ConvexError) ? (e.data as { message: string })?.message : "Issue with getting user";
+      throw new ConvexError({ message, code: 500, status: "failed" });
     }
   },
 });
