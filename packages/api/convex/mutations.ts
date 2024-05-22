@@ -741,15 +741,15 @@ export const activateBoost = mutation({
 
 function activateMultiplier(currentXpCount: number): number | undefined {
   // Check against array of multiplier values
-  if (currentXpCount < 700000 && currentXpCount >= 500000) {
+  if (currentXpCount < 1000000 && currentXpCount >= 500000) {
     return 5;
-  } else if (currentXpCount < 5000000 && currentXpCount >= 700000) {
+  } else if (currentXpCount < 10000000 && currentXpCount >= 1000000) {
     return 10;
-  } else if (currentXpCount < 10000000 && currentXpCount >= 5000000) {
-    return 15;
   } else if (currentXpCount < 50000000 && currentXpCount >= 10000000) {
+    return 15;
+  } else if (currentXpCount < 100000000 && currentXpCount >= 50000000) {
     return 20;
-  } else if (currentXpCount >= 50000000) {
+  } else if (currentXpCount >= 100000000) {
     return 25;
   } else {
     return undefined;
