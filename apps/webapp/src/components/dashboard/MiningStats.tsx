@@ -67,9 +67,9 @@ const MiningStats: FC<Mining> = ({ mined, mining, time, rate, userId }) => {
             )}
           </Button>
         )}
-        {userDetail?.mineActive && !userDetail?.redeemableCount && (
+        {userDetail?.mineActive && !!userDetail?.redeemableCount && (
           <Button
-            className="bg-white text-black"
+            className="bg-white py-4 h-fit text-black gap-2"
             // disabled
             onClick={() => {
               toast({
@@ -82,7 +82,7 @@ const MiningStats: FC<Mining> = ({ mined, mining, time, rate, userId }) => {
         )}
         {!!userDetail?.redeemableCount && !userDetail?.mineActive && (
           <Button
-            className={`tag gap-2`}
+            className={`tag gap-2 h-fit py-4`}
             style={{
               backgroundColor: userDetail?.redeemableCount ? "white" : "black",
               color: userDetail?.redeemableCount ? "black" : "white",
