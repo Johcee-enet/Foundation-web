@@ -27,7 +27,7 @@ const MiningStats: FC<Mining> = ({ mined, mining, time, rate, userId }) => {
   const claimReward = useMutation(api.mutations.claimRewards);
 
   const userDetail = useQuery(api.queries.getUserDetails, {
-    userId: (session?.userId ?? userId) as Id<"user">,
+    userId: (session?.userId ?? userId) as Id<"user"> | undefined,
   });
 
   return (
@@ -72,7 +72,7 @@ const MiningStats: FC<Mining> = ({ mined, mining, time, rate, userId }) => {
             )}
           </Button>
         )}
-        {userDetail?.redeemableCount && (
+        {userDetail?.redeemableCount && !userDetail?.mineActive && (
           <Button
             className={`tag gap-2`}
             style={{
